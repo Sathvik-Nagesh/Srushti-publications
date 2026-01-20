@@ -104,6 +104,8 @@ export default function Footer() {
               <li><Link href="/books" className="footer-link">ಎಲ್ಲಾ ಪುಸ್ತಕಗಳು</Link></li>
               <li><Link href="/books?filter=new" className="footer-link">ಹೊಸ ಬಿಡುಗಡೆಗಳು</Link></li>
               <li><Link href="/books?filter=bestseller" className="footer-link">ಅತ್ಯುತ್ತಮ ಮಾರಾಟಗಾರರು</Link></li>
+              <li><Link href="/track-order" className="footer-link">ಆರ್ಡರ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ</Link></li>
+              <li><Link href="/wishlist" className="footer-link">ನನ್ನ ವಿಶ್‌ಲಿಸ್ಟ್</Link></li>
               <li><Link href="/faq" className="footer-link">FAQ / ಸಹಾಯ</Link></li>
               <li><Link href="/shipping" className="footer-link">ಶಿಪ್ಪಿಂಗ್ ಮಾಹಿತಿ</Link></li>
             </ul>

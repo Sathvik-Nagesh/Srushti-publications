@@ -1,108 +1,77 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Rate limiting store (in production, use Redis)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
+// Rate limiting map - in production, use Redis
+const rateLimit = new Map<string, { count: number; timestamp: number }>()
 
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 100 // 100 requests per minute
+const MAX_REQUESTS = 60 // 60 requests per minute
 
 function getRateLimitKey(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for')
-  const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'anonymous'
+  const ip = forwarded ? forwarded.split(',')[0] : 'anonymous'
   return ip
 }
 
-function isRateLimited(key: string): { limited: boolean; remaining: number } {
+function isRateLimited(key: string): boolean {
   const now = Date.now()
-  const record = rateLimitStore.get(key)
+  const entry = rateLimit.get(key)
   
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(key, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
-    return { limited: false, remaining: RATE_LIMIT_MAX_REQUESTS - 1 }
+  if (!entry || now - entry.timestamp > RATE_LIMIT_WINDOW) {
+    rateLimit.set(key, { count: 1, timestamp: now })
+    return false
   }
   
-  record.count++
-  
-  if (record.count > RATE_LIMIT_MAX_REQUESTS) {
-    return { limited: true, remaining: 0 }
+  if (entry.count >= MAX_REQUESTS) {
+    return true
   }
   
-  return { limited: false, remaining: RATE_LIMIT_MAX_REQUESTS - record.count }
+  entry.count++
+  return false
 }
 
-// Security headers
-const securityHeaders = {
-  // Prevent clickjacking
-  'X-Frame-Options': 'DENY',
-  // Prevent MIME type sniffing
-  'X-Content-Type-Options': 'nosniff',
-  // Enable XSS filter
-  'X-XSS-Protection': '1; mode=block',
-  // Control referrer information
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  // Permissions Policy (formerly Feature Policy)
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self), payment=(self)',
-  // Content Security Policy
-  'Content-Security-Policy': [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://api.razorpay.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com",
-    "frame-src https://api.razorpay.com https://checkout.razorpay.com",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "upgrade-insecure-requests"
-  ].join('; '),
-  // HSTS - enable in production with HTTPS
-  // 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+// Admin session check - simple password-based for now
+function isAdminAuthenticated(request: NextRequest): boolean {
+  const adminSession = request.cookies.get('admin_session')
+  // In production, verify this against a secure token
+  return adminSession?.value === 'authenticated'
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Rate limiting for API routes
-  if (pathname.startsWith('/api/')) {
-    const key = getRateLimitKey(request)
-    const { limited, remaining } = isRateLimited(key)
-    
-    if (limited) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
-        {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'Retry-After': '60',
-            'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
-            'X-RateLimit-Remaining': '0',
-          }
-        }
-      )
-    }
-    
-    // Add rate limit headers to API responses
-    const response = NextResponse.next()
-    response.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS.toString())
-    response.headers.set('X-RateLimit-Remaining', remaining.toString())
-    
-    // Add security headers
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value)
-    })
-    
-    return response
-  }
-  
-  // Add security headers to all other requests
+  // Add security headers to all responses
   const response = NextResponse.next()
   
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value)
-  })
+  // Security headers
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://api.razorpay.com https://api.cloudinary.com;"
+  )
+  
+  // Rate limiting for API routes
+  if (pathname.startsWith('/api')) {
+    const key = getRateLimitKey(request)
+    if (isRateLimited(key)) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+  
+  // Protect admin routes (except login)
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    if (!isAdminAuthenticated(request)) {
+      const loginUrl = new URL('/admin/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
   
   return response
 }
@@ -114,8 +83,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public files (public folder)
+     * - public files
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
