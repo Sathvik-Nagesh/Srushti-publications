@@ -2,15 +2,22 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import ScrollToTop from '@/components/ScrollToTop'
-import RecentlyViewed from '@/components/RecentlyViewed'
-import SaleTimer from '@/components/SaleTimer'
 import DynamicHero from '@/components/DynamicHero'
 import DynamicCategories from '@/components/DynamicCategories'
-import HomepageFAQ from '@/components/HomepageFAQ'
 import { Books, Star, TrendUp, Gift, CaretRight, Sparkle, BookOpen, GraduationCap, BookBookmark, Baby } from '@phosphor-icons/react'
+
+// Lazy load non-critical components to reduce initial bundle size
+// ScrollToTop: Interactive component only needed after scroll, uses window object
+const ScrollToTop = dynamic(() => import('@/components/ScrollToTop'), { ssr: false })
+// RecentlyViewed: Relies on localStorage (client-side only), no need for SSR
+const RecentlyViewed = dynamic(() => import('@/components/RecentlyViewed'), { ssr: false })
+// SaleTimer: Client-side logic for countdown, avoids hydration mismatch
+const SaleTimer = dynamic(() => import('@/components/SaleTimer'), { ssr: false })
+// HomepageFAQ: Static content below the fold, lazy loading improves initial load
+const HomepageFAQ = dynamic(() => import('@/components/HomepageFAQ'))
 
 // Mock data for initial display - will be replaced with API calls
 const featuredBooks = [
