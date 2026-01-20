@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { ShoppingCart, Search, Menu, X } from 'lucide-react'
+import { ShoppingCart, MagnifyingGlass, List, X } from '@phosphor-icons/react'
 import { useTranslations } from 'next-intl'
 import { useCartStore } from '@/lib/store'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -76,12 +76,12 @@ export default function Header() {
               className="cart-button"
               aria-label={t('search')}
             >
-              <Search size={20} />
+              <MagnifyingGlass size={22} weight="bold" />
             </button>
             
             {/* Cart */}
             <Link href="/cart" className="cart-button">
-              <ShoppingCart size={20} />
+              <ShoppingCart size={22} weight="bold" />
               {mounted && itemCount > 0 && (
                 <span className="cart-badge">{itemCount}</span>
               )}
@@ -93,7 +93,7 @@ export default function Header() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMenuOpen ? <X size={26} weight="bold" /> : <List size={26} weight="bold" />}
             </button>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function Header() {
                 autoFocus
               />
               <button type="submit" className="btn btn-primary">
-                <Search size={18} />
+                <MagnifyingGlass size={18} weight="bold" />
                 {t('search')}
               </button>
             </div>
@@ -126,3 +126,4 @@ export default function Header() {
     </header>
   )
 }
+

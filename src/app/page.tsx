@@ -1,3 +1,5 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import Header from '@/components/Header'
@@ -5,7 +7,10 @@ import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import SaleTimer from '@/components/SaleTimer'
-import { BookOpen, Star, TrendingUp, Gift, ChevronRight, Sparkles, BookMarked, GraduationCap, Baby } from 'lucide-react'
+import DynamicHero from '@/components/DynamicHero'
+import DynamicCategories from '@/components/DynamicCategories'
+import HomepageFAQ from '@/components/HomepageFAQ'
+import { Books, Star, TrendUp, Gift, CaretRight, Sparkle, BookOpen, GraduationCap, BookBookmark, Baby } from '@phosphor-icons/react'
 
 // Mock data for initial display - will be replaced with API calls
 const featuredBooks = [
@@ -78,7 +83,7 @@ const categories = [
     name: 'ಸಾಹಿತ್ಯ', 
     nameEn: 'Literature', 
     slug: 'literature',  
-    icon: BookMarked,
+    icon: BookBookmark,
     color: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
     count: 65
   },
@@ -105,7 +110,7 @@ const categories = [
     name: 'ಇತರೆ', 
     nameEn: 'Others', 
     slug: 'others',  
-    icon: Sparkles,
+    icon: Sparkle,
     color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
     count: 20
   }
@@ -134,81 +139,7 @@ export default function HomePage() {
               gap: '3rem',
               alignItems: 'center'
             }}>
-              <div className="hero-content">
-                <span className="hero-tagline">
-                  📚 ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು
-                </span>
-                <h1 className="hero-title">
-                  ಸೃಷ್ಟಿ <span>ಪಬ್ಲಿಕೇಷನ್ಸ್</span>
-                </h1>
-                <p className="hero-description">
-                  ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ, ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳ ಅತ್ಯುತ್ತಮ ಸಂಗ್ರಹ. 
-                  ನಿಮ್ಮ ಮನೆ ಬಾಗಿಲಿಗೆ ತಲುಪಿಸುತ್ತೇವೆ.
-                </p>
-                <div className="hero-actions">
-                  <Link href="/books" className="btn btn-primary btn-lg">
-                    <BookOpen size={20} />
-                    ಪುಸ್ತಕಗಳನ್ನು ಅನ್ವೇಷಿಸಿ
-                  </Link>
-                  <Link href="/books?filter=new" className="btn btn-outline btn-lg">
-                    ಹೊಸ ಬಿಡುಗಡೆಗಳು
-                  </Link>
-                </div>
-                
-                {/* Stats */}
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '2rem', 
-                  marginTop: '3rem',
-                  flexWrap: 'wrap'
-                }}>
-                  <div>
-                    <div style={{ 
-                      fontSize: '2rem', 
-                      fontWeight: 700, 
-                      color: 'var(--color-primary)' 
-                    }}>
-                      200+
-                    </div>
-                    <div style={{ 
-                      fontSize: '0.875rem', 
-                      color: 'var(--color-text-light)' 
-                    }}>
-                      ಪುಸ್ತಕಗಳು
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ 
-                      fontSize: '2rem', 
-                      fontWeight: 700, 
-                      color: 'var(--color-primary)' 
-                    }}>
-                      50+
-                    </div>
-                    <div style={{ 
-                      fontSize: '0.875rem', 
-                      color: 'var(--color-text-light)' 
-                    }}>
-                      ಲೇಖಕರು
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ 
-                      fontSize: '2rem', 
-                      fontWeight: 700, 
-                      color: 'var(--color-primary)' 
-                    }}>
-                      5000+
-                    </div>
-                    <div style={{ 
-                      fontSize: '0.875rem', 
-                      color: 'var(--color-text-light)' 
-                    }}>
-                      ಸಂತೋಷ ಗ್ರಾಹಕರು
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <DynamicHero />
               
               {/* Hero Image */}
               <div className="hero-image" style={{ position: 'relative' }}>
@@ -294,7 +225,7 @@ export default function HomePage() {
                 📂 ವಿಭಾಗಗಳು
               </h2>
               <Link href="/categories" className="btn btn-ghost">
-                ಎಲ್ಲಾ ನೋಡಿ <ChevronRight size={18} />
+                ಎಲ್ಲಾ ನೋಡಿ <CaretRight size={18} />
               </Link>
             </div>
             
@@ -372,7 +303,7 @@ export default function HomePage() {
                 ✨ ಹೊಸ ಬಿಡುಗಡೆಗಳು
               </h2>
               <Link href="/books?filter=new" className="btn btn-ghost">
-                ಎಲ್ಲಾ ನೋಡಿ <ChevronRight size={18} />
+                ಎಲ್ಲಾ ನೋಡಿ <CaretRight size={18} />
               </Link>
             </div>
             
@@ -457,11 +388,11 @@ export default function HomePage() {
               gap: '1rem'
             }}>
               <h2 className="section-title" style={{ marginBottom: 0 }}>
-                <TrendingUp size={28} style={{ display: 'inline-block', marginRight: '0.5rem', color: 'var(--color-primary)' }} />
+                <TrendUp size={28} style={{ display: 'inline-block', marginRight: '0.5rem', color: 'var(--color-primary)' }} />
                 ಅತ್ಯುತ್ತಮ ಮಾರಾಟಗಾರರು
               </h2>
               <Link href="/books?filter=bestseller" className="btn btn-ghost">
-                ಎಲ್ಲಾ ನೋಡಿ <ChevronRight size={18} />
+                ಎಲ್ಲಾ ನೋಡಿ <CaretRight size={18} />
               </Link>
             </div>
             
@@ -591,7 +522,7 @@ export default function HomePage() {
                     color: 'var(--color-primary)'
                   }}
                 >
-                  ರಿಯಾಯಿತಿ ಪುಸ್ತಕಗಳು <ChevronRight size={20} />
+                  ರಿಯಾಯಿತಿ ಪುಸ್ತಕಗಳು <CaretRight size={20} />
                 </Link>
               </div>
               <div style={{
@@ -652,7 +583,7 @@ export default function HomePage() {
                   description: 'ಪ್ರಕಾಶಕರಿಂದ ನೇರವಾಗಿ ಖರೀದಿಸುವ ಮೂಲಕ ಉತ್ತಮ ಬೆಲೆ ಪಡೆಯಿರಿ.'
                 },
                 {
-                  icon: TrendingUp,
+                  icon: TrendUp,
                   title: 'ವೇಗದ ವಿತರಣೆ',
                   description: 'ಭಾರತದ ಎಲ್ಲೆಡೆ 5-7 ದಿನಗಳಲ್ಲಿ ನಿಮ್ಮ ಮನೆ ಬಾಗಿಲಿಗೆ.'
                 },
@@ -710,6 +641,9 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* FAQ Section */}
+        <HomepageFAQ />
         
         {/* Newsletter / CTA Section */}
         <section className="section" style={{ 
@@ -737,7 +671,7 @@ export default function HomePage() {
                 ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ, ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು ಮತ್ತು ಹೆಚ್ಚಿನವುಗಳನ್ನು ಕಂಡುಹಿಡಿಯಿರಿ.
               </p>
               <Link href="/books" className="btn btn-primary btn-lg">
-                ಪುಸ್ತಕಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ <ChevronRight size={20} />
+                ಪುಸ್ತಕಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ <CaretRight size={20} />
               </Link>
             </div>
           </div>
