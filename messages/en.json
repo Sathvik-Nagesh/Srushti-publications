@@ -1,0 +1,121 @@
+{
+  "common": {
+    "home": "Home",
+    "books": "Books",
+    "categories": "Categories",
+    "about": "About Me",
+    "contact": "Contact",
+    "cart": "Cart",
+    "search": "Search",
+    "searchPlaceholder": "Search for books...",
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "viewAll": "View All",
+    "exploreBooks": "Explore Books",
+    "newReleases": "New Releases",
+    "bestSellers": "Best Sellers",
+    "free": "Free",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "loading": "Loading...",
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password"
+  },
+  "hero": {
+    "tagline": "Online Store for Kannada Books",
+    "title": "Srushti Publications",
+    "description": "Rich collection of Literature, Educational, Children's books and more. Get all my books at the best prices.",
+    "booksCount": "200+ Books",
+    "authorsCount": "50+ Authors",
+    "customersCount": "5000+ Happy Customers",
+    "viewNewReleases": "View New Releases"
+  },
+  "categories": {
+    "title": "Categories",
+    "browseByCategory": "Browse by Category",
+    "literature": "Literature",
+    "literatureDesc": "Novels, Poetry, Drama",
+    "academic": "Academic",
+    "academicDesc": "History, Science, Mathematics",
+    "children": "Children's Books",
+    "childrenDesc": "Stories, Moral Tales",
+    "examGuides": "Exam Guides",
+    "examGuidesDesc": "KAS, IAS, Bank Exams",
+    "others": "Others"
+  },
+  "badges": {
+    "new": "New",
+    "bestSeller": "Bestseller",
+    "sale": "Sale",
+    "discount": "Discount"
+  },
+  "features": {
+    "title": "Why Choose Me?",
+    "subtitle": "Srushti Publications is the best choice for buying Kannada books",
+    "qualityBooks": "Quality Books",
+    "qualityBooksDesc": "Premium printing quality and durability",
+    "fastDelivery": "Fast Delivery",
+    "fastDeliveryDesc": "Metro: 2-3 days | Others: 5-6 days",
+    "securePayment": "Secure Payment",
+    "securePaymentDesc": "100% secure online payment",
+    "support": "24/7 Support",
+    "supportDesc": "Always here to help you"
+  },
+  "offers": {
+    "title": "Special Offers",
+    "freeShipping": "Free shipping on orders above ₹500!",
+    "discount": "10% off on your first order",
+    "useCode": "Use code"
+  },
+  "cta": {
+    "title": "Explore My Books",
+    "subtitle": "Explore my rich collection of Kannada books. Find Literature, Educational, Children's books and more."
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "emptyMessage": "Explore my book collection and add something!",
+    "subtotal": "Subtotal",
+    "savings": "Savings",
+    "shipping": "Shipping",
+    "freeShipping": "Free Shipping",
+    "total": "Total",
+    "checkout": "Proceed to Checkout",
+    "continueShopping": "Continue Shopping",
+    "remove": "Remove",
+    "clearCart": "Clear Cart"
+  },
+  "footer": {
+    "tagline": "Publisher of Kannada Literature and Educational Books.",
+    "mission": "My goal is to promote Kannada language and share knowledge.",
+    "quickLinks": "Quick Links",
+    "allBooks": "All Books",
+    "newReleases": "New Releases",
+    "bestSellers": "Best Sellers",
+    "discountOffers": "Discount Offers",
+    "contactUs": "Contact Us",
+    "copyright": "© 2024 Srushti Publications. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "refund": "Refund Policy",
+    "securePayment": "Secure Payment",
+    "securePaymentDesc": "100% secure online payment",
+    "fastDelivery": "Fast Delivery",
+    "fastDeliveryDesc": "Metro: 2-3 days | Others: 5-6 days",
+    "kannadaPublisher": "Kannada Publisher",
+    "kannadaPublisherDesc": "Authentic Kannada Books",
+    "support": "24/7 Support",
+    "supportDesc": "Contact us for help"
+  },
+  "admin": {
+    "login": "Admin Login",
+    "welcome": "Srushti Publications Admin",
+    "enterCredentials": "Enter your login credentials",
+    "loginButton": "Login",
+    "loggingIn": "Logging in...",
+    "invalidCredentials": "Invalid email or password",
+    "backToSite": "Back to Main Site"
+  }
+}

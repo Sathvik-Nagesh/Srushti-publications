@@ -1,0 +1,329 @@
+// Srushti Publication - Kannada Books E-Commerce Database Schema
+// PostgreSQL with Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// BOOK MANAGEMENT
+// ============================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique // Kannada category name
+  nameEn      String?  // Optional English name for admin
+  slug        String   @unique
+  description String?
+  image       String?
+  discount    Float?   // Category-wide discount percentage
+  discountStart DateTime?
+  discountEnd   DateTime?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  books       Book[]
+}
+
+model Book {
+  id              String   @id @default(cuid())
+  title           String   // Kannada title
+  titleEn         String?  // Optional English title for admin/search
+  slug            String   @unique
+  author          String   // Author name in Kannada
+  authorEn        String?  // Optional English author name
+  description     String   @db.Text // Full Kannada description
+  descriptionEn   String?  @db.Text // Optional English description
+  coverImage      String   // Cover image URL
+  additionalImages String[] // Array of additional image URLs
+  
+  // Pricing
+  mrp             Float    // Maximum Retail Price
+  sellingPrice    Float    // Current selling price (after discount)
+  discount        Float?   // Discount percentage
+  discountStart   DateTime?
+  discountEnd     DateTime?
+  
+  // Inventory
+  stockQuantity   Int      @default(0)
+  lowStockAlert   Int      @default(10)
+  
+  // Book Details
+  isbn            String?  @unique
+  pages           Int?
+  publicationYear Int?
+  edition         String?
+  language        String   @default("ಕನ್ನಡ")
+  weight          Float?   // Weight in grams for shipping
+  dimensions      String?  // e.g., "20x15x2 cm"
+  
+  // Flags
+  isNewRelease    Boolean  @default(false)
+  isBestSeller    Boolean  @default(false)
+  isOnSale        Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  
+  // Auto-calculated
+  salesCount      Int      @default(0)
+  viewCount       Int      @default(0)
+  
+  // Timestamps
+  newReleaseUntil DateTime? // Auto-expire new release after this date
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  orderItems      OrderItem[]
+  cartItems       CartItem[]
+  
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive])
+  @@index([isNewRelease])
+  @@index([isBestSeller])
+  @@index([isOnSale])
+}
+
+// ============================================
+// CART MANAGEMENT (Session-based for guests)
+// ============================================
+
+model Cart {
+  id        String   @id @default(cuid())
+  sessionId String   @unique // Browser session ID
+  items     CartItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime // Cart expiration for cleanup
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int      @default(1)
+  price     Float    // Price at time of adding
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([cartId, bookId])
+  @@index([cartId])
+  @@index([bookId])
+}
+
+// ============================================
+// ORDER MANAGEMENT
+// ============================================
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique // Human-readable order number
+  
+  // Customer Details (Guest checkout)
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  
+  // Shipping Address
+  shippingAddress String   @db.Text
+  shippingCity    String
+  shippingState   String
+  shippingPincode String
+  
+  // Pricing
+  subtotal        Float    // Sum of item prices
+  discount        Float    @default(0) // Total discount
+  shippingCharge  Float    @default(0)
+  taxAmount       Float    // GST amount
+  totalAmount     Float    // Final payable amount
+  
+  // GST Details
+  gstBreakup      Json?    // JSON with CGST, SGST, IGST breakdown
+  
+  // Payment
+  paymentStatus   PaymentStatus @default(PENDING)
+  razorpayOrderId String?  @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+  paymentMethod   String?
+  paidAt          DateTime?
+  
+  // Order Status
+  status          OrderStatus @default(PENDING)
+  notes           String?
+  
+  // Tracking
+  courierName     String?
+  trackingNumber  String?
+  dispatchedAt    DateTime?
+  deliveredAt     DateTime?
+  
+  // Invoice
+  invoiceNumber   String?  @unique
+  invoiceUrl      String?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  items           OrderItem[]
+  
+  @@index([orderNumber])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  quantity    Int
+  unitPrice   Float    // Price per unit at time of order
+  totalPrice  Float    // quantity * unitPrice
+  discount    Float    @default(0)
+  
+  // Book snapshot (in case book is deleted/modified)
+  bookTitle   String
+  bookAuthor  String
+  bookCover   String?
+  bookIsbn    String?
+  
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  bookId      String
+  book        Book     @relation(fields: [bookId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([orderId])
+  @@index([bookId])
+}
+
+// ============================================
+// ADMIN & SETTINGS
+// ============================================
+
+model Admin {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String   // Hashed password
+  name          String
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SiteSettings {
+  id              String   @id @default(cuid())
+  
+  // Business Details
+  businessName    String   @default("ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್")
+  businessNameEn  String   @default("Srushti Publications")
+  tagline         String   @default("ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು")
+  
+  // Contact
+  email           String?
+  phone           String?
+  whatsapp        String?
+  address         String?  @db.Text
+  
+  // GST
+  gstNumber       String?
+  panNumber       String?
+  
+  // Bank Details (for reference)
+  bankName        String?
+  bankAccount     String?
+  bankIfsc        String?
+  
+  // Shipping
+  freeShippingMin Float?   // Minimum order for free shipping
+  defaultShipping Float    @default(50) // Default shipping charge
+  estimatedDays   String   @default("5-7 ದಿನಗಳು")
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  metaKeywords    String?
+  
+  // Social Media
+  facebook        String?
+  instagram       String?
+  twitter         String?
+  youtube         String?
+  
+  // Payment
+  razorpayKeyId   String?
+  razorpaySecret  String?
+  
+  // New Release Settings
+  newReleaseExpiryDays Int @default(30)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// OFFERS & BANNERS
+// ============================================
+
+model Banner {
+  id          String   @id @default(cuid())
+  title       String   // Kannada title
+  subtitle    String?
+  image       String
+  link        String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Offer {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  discountType String  // 'percentage' or 'fixed'
+  discountValue Float
+  minPurchase Float?
+  maxDiscount Float?
+  code        String?  @unique // Coupon code if applicable
+  isActive    Boolean  @default(true)
+  startDate   DateTime
+  endDate     DateTime
+  usageLimit  Int?
+  usedCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
