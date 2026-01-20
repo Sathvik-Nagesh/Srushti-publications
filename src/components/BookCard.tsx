@@ -21,7 +21,6 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
-    e.stopPropagation()
     
     if (isOutOfStock) {
       toast.error('ಈ ಪುಸ್ತಕ ಸ್ಟಾಕ್‌ನಲ್ಲಿಲ್ಲ')
@@ -33,19 +32,26 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   }
   
   return (
-    <Link href={`/books/${book.slug}`} className="book-card">
+    <div className="book-card group">
       {/* Cover Image */}
-      <div className="book-card-image">
-        <Image
-          src={book.coverImage || '/placeholder-book.jpg'}
-          alt={book.title}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          style={{ objectFit: 'cover' }}
-        />
+      <div className="book-card-image relative">
+        <Link
+          href={`/books/${book.slug}`}
+          className="block w-full h-full absolute inset-0 z-0"
+          tabIndex={-1}
+          aria-hidden="true"
+        >
+          <Image
+            src={book.coverImage || '/placeholder-book.jpg'}
+            alt={book.title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            style={{ objectFit: 'cover' }}
+          />
+        </Link>
         
         {/* Badges */}
-        <div className="book-card-badges">
+        <div className="book-card-badges pointer-events-none z-10">
           {book.isNewRelease && (
             <span className="badge badge-new">ಹೊಸ</span>
           )}
@@ -65,7 +71,8 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
             background: 'rgba(0, 0, 0, 0.6)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            zIndex: 20
           }}>
             <span style={{
               background: 'white',
@@ -91,15 +98,17 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
             display: 'flex',
             gap: '0.5rem',
             opacity: 0,
-            transition: 'opacity 0.3s ease'
+            transition: 'opacity 0.3s ease',
+            zIndex: 30
           }}
           className="book-card-actions">
             <button
               onClick={handleAddToCart}
               className="btn btn-primary btn-sm"
               style={{ flex: 1 }}
+              aria-label={`Add ${book.title} to cart`}
             >
-              <ShoppingCart size={16} />
+              <ShoppingCart size={16} aria-hidden="true" />
               ಕಾರ್ಟ್‌ಗೆ
             </button>
             <button
@@ -108,8 +117,9 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
                 background: 'white',
                 color: 'var(--color-text)'
               }}
+              aria-label={`Quick view ${book.title}`}
             >
-              <Eye size={16} />
+              <Eye size={16} aria-hidden="true" />
             </button>
           </div>
         )}
@@ -122,27 +132,29 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
           <span style={{
             fontSize: '0.75rem',
             color: 'var(--color-primary)',
-            fontWeight: 500
+            fontWeight: 600
           }}>
             {book.category.name}
           </span>
         )}
         
         {/* Title */}
-        <h3 style={{
-          fontSize: '1rem',
-          fontWeight: 600,
-          color: 'var(--color-text)',
-          marginTop: '0.25rem',
-          marginBottom: '0.25rem',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          lineHeight: 1.4
-        }}>
-          {book.title}
-        </h3>
+        <Link href={`/books/${book.slug}`} className="block decoration-none">
+          <h3 style={{
+            fontSize: '1rem',
+            fontWeight: 600,
+            color: 'var(--color-text)',
+            marginTop: '0.25rem',
+            marginBottom: '0.25rem',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            lineHeight: 1.4
+          }}>
+            {book.title}
+          </h3>
+        </Link>
         
         {/* Author */}
         <p style={{
@@ -172,10 +184,17 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
       </div>
       
       <style jsx>{`
-        .book-card:hover .book-card-actions {
+        .book-card:hover .book-card-actions,
+        .book-card-actions:focus-within {
           opacity: 1 !important;
         }
+
+        /* Ensure the title link inherits color properly and doesn't look like a standard blue link unless intended */
+        a {
+           text-decoration: none;
+           color: inherit;
+        }
       `}</style>
-    </Link>
+    </div>
   )
 }
