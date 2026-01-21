@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { verify } from '@/lib/auth-edge'
 
 // Rate limiting map - in production, use Redis
 const rateLimit = new Map<string, { count: number; timestamp: number }>()
@@ -30,14 +31,21 @@ function isRateLimited(key: string): boolean {
   return false
 }
 
-// Admin session check - simple password-based for now
-function isAdminAuthenticated(request: NextRequest): boolean {
+// Admin session check - verifies signed token
+async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
   const adminSession = request.cookies.get('admin_session')
-  // In production, verify this against a secure token
-  return adminSession?.value === 'authenticated'
+  if (!adminSession?.value) return false
+
+  const parts = adminSession.value.split('.')
+  if (parts.length !== 2) return false
+
+  const [payload, signature] = parts
+  if (payload !== 'authenticated') return false
+
+  return await verify(payload, signature)
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
   // Add security headers to all responses
@@ -66,7 +74,7 @@ export function middleware(request: NextRequest) {
   
   // Protect admin routes (except login)
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    if (!isAdminAuthenticated(request)) {
+    if (!(await isAdminAuthenticated(request))) {
       const loginUrl = new URL('/admin/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
