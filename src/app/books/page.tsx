@@ -7,6 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import BookCardSkeleton from '@/components/BookCardSkeleton'
+import BookCard from '@/components/BookCard'
 import { BookOpen, Filter, ChevronDown, X, Grid, List, SlidersHorizontal } from 'lucide-react'
 import type { Book, Category } from '@/lib/types'
 
@@ -518,68 +519,7 @@ function BooksContent() {
               ) : (
                 <div className="product-grid">
                   {books.map(book => (
-                    <Link
-                      key={book.id}
-                      href={`/books/${book.slug}`}
-                      className="book-card"
-                    >
-                      <div className="book-card-image" style={{
-                        background: 'linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <BookOpen size={60} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
-                        <div className="book-card-badges">
-                          {book.isNewRelease && (
-                            <span className="badge badge-new">ಹೊಸ</span>
-                          )}
-                          {book.isBestSeller && (
-                            <span className="badge badge-bestseller">ಬೆಸ್ಟ್ ಸೆಲ್ಲರ್</span>
-                          )}
-                          {book.isOnSale && book.mrp > book.sellingPrice && (
-                            <span className="badge badge-sale">
-                              {Math.round(((book.mrp - book.sellingPrice) / book.mrp) * 100)}% ರಿಯಾಯಿತಿ
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="card-body">
-                        <span style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--color-primary)',
-                          fontWeight: 500
-                        }}>
-                          {book.category?.name}
-                        </span>
-                        <h3 style={{
-                          fontSize: '1rem',
-                          fontWeight: 600,
-                          color: 'var(--color-text)',
-                          marginTop: '0.25rem',
-                          marginBottom: '0.25rem',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
-                        }}>
-                          {book.title}
-                        </h3>
-                        <p style={{
-                          fontSize: '0.875rem',
-                          color: 'var(--color-text-light)',
-                          marginBottom: '0.75rem'
-                        }}>
-                          {book.author}
-                        </p>
-                        <div className="price-group">
-                          <span className="price-current">{formatCurrency(book.sellingPrice)}</span>
-                          {book.mrp > book.sellingPrice && (
-                            <span className="price-original">{formatCurrency(book.mrp)}</span>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
+                    <BookCard key={book.id} book={book} />
                   ))}
                 </div>
               )}
