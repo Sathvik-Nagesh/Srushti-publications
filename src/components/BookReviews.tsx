@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Star, ThumbsUp, MessageSquare, User, Check, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -377,21 +377,24 @@ export default function BookReviews({ bookId, bookTitle }: BookReviewsProps) {
   const [showWriteReview, setShowWriteReview] = useState(false)
   const [sortBy, setSortBy] = useState<'newest' | 'highest' | 'lowest' | 'helpful'>('newest')
 
-  // Sort reviews
-  const sortedReviews = [...reviews].sort((a, b) => {
-    switch (sortBy) {
-      case 'newest':
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      case 'highest':
-        return b.rating - a.rating
-      case 'lowest':
-        return a.rating - b.rating
-      case 'helpful':
-        return b.helpful - a.helpful
-      default:
-        return 0
-    }
-  })
+  // ⚡ Performance: Memoize sorting to prevent expensive O(N log N) operation on every render.
+  // This ensures sorting only runs when reviews or sort criteria actually change.
+  const sortedReviews = useMemo(() => {
+    return [...reviews].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        case 'highest':
+          return b.rating - a.rating
+        case 'lowest':
+          return a.rating - b.rating
+        case 'helpful':
+          return b.helpful - a.helpful
+        default:
+          return 0
+      }
+    })
+  }, [reviews, sortBy])
 
   const handleSubmitReview = (newReview: { rating: number; title: string; comment: string; userName: string }) => {
     const review: Review = {
