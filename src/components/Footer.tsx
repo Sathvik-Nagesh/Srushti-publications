@@ -26,6 +26,7 @@ export default function Footer() {
                 href="https://facebook.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
+                aria-label="Facebook"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -44,6 +45,7 @@ export default function Footer() {
                 href="https://instagram.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
+                aria-label="Instagram"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -62,6 +64,7 @@ export default function Footer() {
                 href="https://twitter.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
+                aria-label="Twitter"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -80,6 +83,7 @@ export default function Footer() {
                 href="https://youtube.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
+                aria-label="YouTube"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
