@@ -26,18 +26,28 @@ export default function AdminLoginPage() {
 
     setIsLoading(true)
 
-    // Simulate login - in production, this would be an API call
-    await new Promise(r => setTimeout(r, 1500))
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-    // Check credentials (demo credentials)
-    if (email === 'admin@srushtipublication.com' && password === 'SrushtiAdmin@2024') {
-      // Set admin session
-      document.cookie = 'admin_session=authenticated; path=/admin; max-age=86400'
-      localStorage.setItem('admin_authenticated', 'true')
-      toast.success('ಯಶಸ್ವಿಯಾಗಿ ಲಾಗಿನ್ ಆಗಿದೆ!')
-      router.push('/admin')
-    } else {
-      setError('ತಪ್ಪಾದ ಇ-ಮೇಲ್ ಅಥವಾ ಪಾಸ್‌ವರ್ಡ್')
+      const data = await response.json()
+
+      if (data.success) {
+        localStorage.setItem('admin_authenticated', 'true')
+        toast.success('ಯಶಸ್ವಿಯಾಗಿ ಲಾಗಿನ್ ಆಗಿದೆ!')
+        router.push('/admin')
+      } else {
+        setError(data.error || 'ತಪ್ಪಾದ ಇ-ಮೇಲ್ ಅಥವಾ ಪಾಸ್‌ವರ್ಡ್')
+        setIsLoading(false)
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('ಲಾಗಿನ್ ಮಾಡುವಾಗ ದೋಷ ಸಂಭವಿಸಿದೆ')
       setIsLoading(false)
     }
   }

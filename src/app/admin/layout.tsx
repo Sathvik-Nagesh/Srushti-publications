@@ -49,6 +49,7 @@ export default function AdminLayout({
     
     // Check authentication
     const isAuth = localStorage.getItem('admin_authenticated') === 'true'
+    // Avoid setting state during render if possible, but here we are in useEffect
     setIsAuthenticated(isAuth)
     
     if (!isAuth && !pathname.includes('/admin/login')) {
@@ -60,10 +61,17 @@ export default function AdminLayout({
     return () => window.removeEventListener('resize', checkMobile)
   }, [pathname, router])
   
-  const handleLogout = () => {
-    localStorage.removeItem('admin_authenticated')
-    document.cookie = 'admin_session=; path=/admin; max-age=0'
-    router.push('/admin/login')
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' })
+      localStorage.removeItem('admin_authenticated')
+      router.push('/admin/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force redirect anyway
+      localStorage.removeItem('admin_authenticated')
+      router.push('/admin/login')
+    }
   }
   
   // Show nothing while checking auth
