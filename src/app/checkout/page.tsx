@@ -343,12 +343,7 @@ export default function CheckoutPage() {
         </div>
         
         <div className="container" style={{ paddingBottom: '3rem' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 380px',
-            gap: '2rem',
-            alignItems: 'start'
-          }}>
+          <div className="checkout-grid">
             {/* Main Content */}
             <div>
               {currentStep === 1 && (
@@ -383,7 +378,7 @@ export default function CheckoutPage() {
                     </div>
                     
                     {/* Email & Phone Row */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-row">
                       <div className="form-group">
                         <label className="label">
                           ಇ-ಮೇಲ್ <span style={{ color: 'var(--color-error)' }}>*</span>
@@ -439,7 +434,7 @@ export default function CheckoutPage() {
                     </div>
                     
                     {/* City, State, Pincode Row */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                    <div className="form-row-3">
                       <div className="form-group">
                         <label className="label">
                           ನಗರ <span style={{ color: 'var(--color-error)' }}>*</span>
@@ -903,6 +898,43 @@ export default function CheckoutPage() {
         </div>
       </main>
       <Footer />
+
+      <style jsx global>{`
+        .checkout-grid {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 1.5rem;
+          align-items: start;
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+
+        .form-row-3 {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 1rem;
+        }
+
+        @media (max-width: 900px) {
+          .checkout-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 600px) {
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+
+          .form-row-3 {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </>
   )
 }
