@@ -3,13 +3,18 @@
 import { useState, use, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import QuantitySelector from '@/components/QuantitySelector'
 import RecentlyViewed, { addToRecentlyViewed } from '@/components/RecentlyViewed'
-import BookReviews from '@/components/BookReviews'
+// Dynamic import for heavy component - loads on demand after hydration
+const BookReviews = dynamic(() => import('@/components/BookReviews'), {
+  ssr: false,
+  loading: () => <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-xl)' }} />
+})
 import { useCartStore } from '@/lib/store'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { 

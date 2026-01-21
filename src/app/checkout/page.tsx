@@ -64,7 +64,9 @@ export default function CheckoutPage() {
   const [couponApplied, setCouponApplied] = useState(false)
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
   
-  const [formData, setFormData] = useState<FormData>({
+  // Lazy state initialization - defers object creation until needed
+  // Per Vercel best practices: rerender-lazy-state-init
+  const [formData, setFormData] = useState<FormData>(() => ({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
@@ -72,9 +74,9 @@ export default function CheckoutPage() {
     shippingCity: '',
     shippingState: 'Karnataka',
     shippingPincode: ''
-  })
+  }))
   
-  const [errors, setErrors] = useState<FormErrors>({})
+  const [errors, setErrors] = useState<FormErrors>(() => ({}))
   
   useEffect(() => {
     setMounted(true)
