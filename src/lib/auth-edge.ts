@@ -2,6 +2,10 @@
 
 const SECRET_KEY = process.env.ADMIN_SECRET || 'fallback-secret-key-change-this-in-production';
 
+if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_SECRET) {
+  console.error('🚨 SECURITY WARNING: ADMIN_SECRET is not set! Using insecure fallback key.');
+}
+
 async function getKey() {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(SECRET_KEY);
@@ -12,6 +16,21 @@ async function getKey() {
     false,
     ['sign', 'verify']
   );
+}
+
+/**
+ * Verify admin session token
+ */
+export async function verifyAdminSession(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+
+  const [payload, signature] = parts;
+  if (payload !== 'authenticated') return false;
+
+  return await verify(payload, signature);
 }
 
 /**
