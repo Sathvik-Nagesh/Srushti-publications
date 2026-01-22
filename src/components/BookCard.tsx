@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingCart, Eye } from 'lucide-react'
@@ -13,7 +14,7 @@ interface BookCardProps {
   showQuickAdd?: boolean
 }
 
-export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
+function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   const addItem = useCartStore(state => state.addItem)
   
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
@@ -198,3 +199,6 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
     </div>
   )
 }
+
+// Optimized with React.memo to prevent unnecessary re-renders when parent updates (e.g. filters)
+export default memo(BookCard)
