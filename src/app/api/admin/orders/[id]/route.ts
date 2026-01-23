@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { sendShippingUpdate } from '@/lib/email'
+
+// Helper to generate tracking URL
+function getTrackingUrl(courier: string, trackingNumber: string): string {
+  const c = courier.toLowerCase().replace(/\s/g, '')
+  if (c.includes('indiapost') || c.includes('speedpost')) {
+    return `https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx`
+  }
+  if (c.includes('delhivery')) {
+    return `https://www.delhivery.com/track/package/${trackingNumber}`
+  }
+  if (c.includes('dtdc')) {
+    return `https://www.dtdc.in/tracking/shipment-tracking.asp`
+  }
+  if (c.includes('bluedart')) {
+    return `https://www.bluedart.com/tracking`
+  }
+  // Default fallback
+  return `https://www.google.com/search?q=${courier}+tracking+${trackingNumber}`
+}
 
 // GET /api/admin/orders/[id] - Get single order
 export async function GET(
@@ -80,7 +100,28 @@ export async function PATCH(
       include: { items: true }
     })
     
-    // If status changed to DISPATCHED or DELIVERED, update book sales count
+    // Send email notification for dispatch
+    if (body.status === 'DISPATCHED' && existing.status !== 'DISPATCHED') {
+      try {
+        const courier = updateData.courierName || existing.courierName || 'Courier'
+        const trackingNo = updateData.trackingNumber || existing.trackingNumber || ''
+        
+        await sendShippingUpdate({
+          orderNumber: existing.orderNumber,
+          customerName: existing.customerName,
+          customerEmail: existing.customerEmail,
+          courierName: courier,
+          trackingNumber: trackingNo,
+          trackingUrl: getTrackingUrl(courier, trackingNo),
+          estimatedDelivery: '3-5 ದಿನಗಳು (Days)'
+        })
+      } catch (emailError) {
+        console.error('Failed to send shipping email:', emailError)
+        // Don't fail the request, just log it
+      }
+    }
+    
+    // If status changed to DELIVERED, update book sales count
     if (body.status === 'DELIVERED' && existing.status !== 'DELIVERED') {
       for (const item of order.items) {
         await prisma.book.update({
