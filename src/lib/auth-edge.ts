@@ -51,3 +51,18 @@ export async function verify(data: string, signature: string): Promise<boolean> 
     encoder.encode(data)
   );
 }
+
+/**
+ * Verify admin session token
+ */
+export async function verifyAdminSession(token: string | undefined): Promise<boolean> {
+  if (!token) return false
+
+  const parts = token.split('.')
+  if (parts.length !== 2) return false
+
+  const [payload, signature] = parts
+  if (payload !== 'authenticated') return false
+
+  return verify(payload, signature)
+}

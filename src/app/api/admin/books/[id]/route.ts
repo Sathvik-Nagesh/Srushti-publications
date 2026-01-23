@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/admin/books/[id] - Get book by ID for admin
 export async function GET(
@@ -7,6 +8,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = request.cookies.get('admin_session')?.value
+    if (!await verifyAdminSession(token)) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     
     const book = await prisma.book.findUnique({
@@ -42,6 +51,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = request.cookies.get('admin_session')?.value
+    if (!await verifyAdminSession(token)) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const body = await request.json()
     
@@ -130,6 +147,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = request.cookies.get('admin_session')?.value
+    if (!await verifyAdminSession(token)) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     
     const existingBook = await prisma.book.findUnique({
