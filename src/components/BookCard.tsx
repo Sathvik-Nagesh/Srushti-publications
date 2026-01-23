@@ -98,6 +98,7 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
             display: 'flex',
             gap: '0.5rem',
             opacity: 0,
+            pointerEvents: 'none',
             transition: 'opacity 0.3s ease',
             zIndex: 30
           }}
@@ -111,16 +112,17 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
               <ShoppingCart size={16} aria-hidden="true" />
               ಕಾರ್ಟ್‌ಗೆ
             </button>
-            <button
+            <Link
+              href={`/books/${book.slug}`}
               className="btn btn-outline btn-sm"
               style={{ 
                 background: 'white',
                 color: 'var(--color-text)'
               }}
-              aria-label={`Quick view ${book.title}`}
+              aria-label={`View details for ${book.title}`}
             >
               <Eye size={16} aria-hidden="true" />
-            </button>
+            </Link>
           </div>
         )}
       </div>
@@ -187,6 +189,7 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
         .book-card:hover .book-card-actions,
         .book-card-actions:focus-within {
           opacity: 1 !important;
+          pointer-events: auto !important;
         }
 
         /* Ensure the title link inherits color properly and doesn't look like a standard blue link unless intended */
