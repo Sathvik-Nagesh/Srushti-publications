@@ -29,11 +29,13 @@ export async function GET(
       day: 'numeric'
     })
     
-    // Calculate GST breakdown
-    const gstRate = 0.05 // 5% total
+    // Calculate GST breakdown (Only if tax exists)
     const baseAmount = order.subtotal - (order.discount || 0)
-    const cgst = baseAmount * 0.025
-    const sgst = baseAmount * 0.025
+    
+    // We trust the DB taxAmount. If it's 0, we don't show tax.
+    const hasTax = (order.taxAmount || 0) > 0
+    const cgst = hasTax ? (order.taxAmount / 2) : 0
+    const sgst = hasTax ? (order.taxAmount / 2) : 0
     
     // Generate professional HTML invoice
     const html = `
@@ -262,8 +264,10 @@ export async function GET(
       <table class="totals">
         <tr><td>ಉಪಮೊತ್ತ</td><td class="text-right">₹${order.subtotal.toFixed(2)}</td></tr>
         ${order.discount > 0 ? `<tr class="discount-row"><td>ರಿಯಾಯಿತಿ</td><td class="text-right">-₹${order.discount.toFixed(2)}</td></tr>` : ''}
+        ${hasTax ? `
         <tr><td>CGST (2.5%)</td><td class="text-right">₹${cgst.toFixed(2)}</td></tr>
         <tr><td>SGST (2.5%)</td><td class="text-right">₹${sgst.toFixed(2)}</td></tr>
+        ` : ''}
         <tr><td>ಶಿಪ್ಪಿಂಗ್</td><td class="text-right">${order.shippingCharge === 0 ? '<span style="color:#10b981">ಉಚಿತ</span>' : `₹${order.shippingCharge.toFixed(2)}`}</td></tr>
         <tr class="total-row"><td>ಒಟ್ಟು ಮೊತ್ತ</td><td class="text-right">₹${order.totalAmount.toFixed(2)}</td></tr>
       </table>

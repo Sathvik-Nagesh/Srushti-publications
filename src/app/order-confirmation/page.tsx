@@ -22,51 +22,32 @@ import {
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams()
-  const orderNumber = searchParams.get('orderNumber')
+  const orderNumber = searchParams.get('orderNumber') || searchParams.get('order')
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   
   useEffect(() => {
-    // In real app, fetch order from API
-    // For demo, we'll show mock data
-    setLoading(false)
-    setOrder({
-      orderNumber: orderNumber || 'SP-DEMO-12345',
-      status: 'PAID',
-      paymentStatus: 'SUCCESS',
-      createdAt: new Date(),
-      customerName: 'ರಾಜೇಶ್ ಕುಮಾರ್',
-      customerEmail: 'rajesh@example.com',
-      customerPhone: '9876543210',
-      shippingAddress: '123, 4ನೇ ಮುಖ್ಯ ರಸ್ತೆ, ಜಯನಗರ',
-      shippingCity: 'ಬೆಂಗಳೂರು',
-      shippingState: 'ಕರ್ನಾಟಕ',
-      shippingPincode: '560041',
-      items: [
-        {
-          id: '1',
-          bookTitle: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು',
-          bookAuthor: 'ಕುವೆಂಪು',
-          quantity: 2,
-          unitPrice: 399,
-          totalPrice: 798
-        },
-        {
-          id: '2',
-          bookTitle: 'ಕರ್ನಾಟಕ ಇತಿಹಾಸ',
-          bookAuthor: 'ಡಾ. ಸೂರ್ಯನಾಥ ಕಾಮತ್',
-          quantity: 1,
-          unitPrice: 495,
-          totalPrice: 495
+    const fetchOrder = async () => {
+      if (!orderNumber) {
+        setLoading(false)
+        return
+      }
+      
+      try {
+        const response = await fetch(`/api/orders/${orderNumber}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          setOrder(data.data)
         }
-      ],
-      subtotal: 1293,
-      discount: 106,
-      shippingCharge: 0,
-      taxAmount: 65,
-      totalAmount: 1358,
-      invoiceNumber: 'INV2401-ABCD12'
-    })
+      } catch (error) {
+        console.error('Failed to fetch order:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchOrder()
   }, [orderNumber])
   
   if (loading) {
@@ -391,10 +372,16 @@ function OrderConfirmationContent() {
                   ಇನ್‌ವಾಯ್ಸ್ ಸಂಖ್ಯೆ: <strong>{order.invoiceNumber}</strong>
                 </p>
                 
-                <button className="btn btn-outline" style={{ width: '100%' }}>
+                <a 
+                  href={`/api/invoice/${order.orderNumber}`} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline" 
+                  style={{ width: '100%', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
                   <Download size={18} />
                   ಇನ್‌ವಾಯ್ಸ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ
-                </button>
+                </a>
                 
                 <p style={{
                   fontSize: '0.75rem',
