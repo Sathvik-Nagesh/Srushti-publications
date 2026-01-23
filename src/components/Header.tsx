@@ -129,7 +129,7 @@ export default function Header() {
             )}
             
             {/* Cart */}
-            <Link href="/cart" className="cart-button">
+            <Link href="/cart" className="cart-button" aria-label={t('cart')}>
               <ShoppingCart size={22} weight="bold" />
               {mounted && itemCount > 0 && (
                 <span className="cart-badge">{itemCount}</span>
