@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyRazorpaySignature } from '@/lib/razorpay'
+import { sendOrderConfirmation } from '@/lib/email'
 
 // POST /api/orders/verify-payment - Verify Razorpay payment
 export async function POST(request: NextRequest) {
@@ -75,6 +76,31 @@ export async function POST(request: NextRequest) {
         }
       })
     }
+    
+    // Send order confirmation email (async, don't block response)
+    sendOrderConfirmation({
+      orderNumber: updatedOrder.orderNumber,
+      customerName: updatedOrder.customerName,
+      customerEmail: updatedOrder.customerEmail,
+      customerPhone: updatedOrder.customerPhone,
+      items: updatedOrder.items.map(item => ({
+        title: item.bookTitle,
+        author: item.bookAuthor,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice
+      })),
+      subtotal: updatedOrder.subtotal,
+      discount: updatedOrder.discount,
+      shippingCharge: updatedOrder.shippingCharge,
+      taxAmount: updatedOrder.taxAmount,
+      totalAmount: updatedOrder.totalAmount,
+      shippingAddress: updatedOrder.shippingAddress,
+      shippingCity: updatedOrder.shippingCity,
+      shippingState: updatedOrder.shippingState,
+      shippingPincode: updatedOrder.shippingPincode,
+      invoiceUrl: `/api/orders/${updatedOrder.orderNumber}/invoice`
+    }).catch(err => console.error('Failed to send confirmation email:', err))
     
     return NextResponse.json({
       success: true,

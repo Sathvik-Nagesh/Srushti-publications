@@ -117,5 +117,31 @@
     "loggingIn": "ಲಾಗಿನ್ ಆಗುತ್ತಿದೆ...",
     "invalidCredentials": "ತಪ್ಪಾದ ಇ-ಮೇಲ್ ಅಥವಾ ಪಾಸ್ವರ್ಡ್",
     "backToSite": "ಮುಖ್ಯ ಸೈಟ್‌ಗೆ ಹಿಂತಿರುಗಿ"
+  },
+  "Login": {
+    "title": "ಲಾಗಿನ್",
+    "signupTitle": "ಖಾತೆ ರಚಿಸಿ",
+    "welcomeBack": "ನಿಮ್ಮ ಖಾತೆಗೆ ಲಾಗಿನ್ ಆಗಿ",
+    "welcomeNew": "ಹೊಸ ಖಾತೆಯನ್ನು ರಚಿಸಿ",
+    "name": "ಹೆಸರು",
+    "phone": "ಫೋನ್ (ಐಚ್ಛಿಕ)",
+    "email": "ಇ-ಮೇಲ್",
+    "password": "ಪಾಸ್ವರ್ಡ್",
+    "confirmPassword": "ಪಾಸ್ವರ್ಡ್ ದೃಢೀಕರಿಸಿ",
+    "loginButton": "ಲಾಗಿನ್",
+    "signupButton": "ಖಾತೆ ರಚಿಸಿ",
+    "or": "ಅಥವಾ",
+    "continueGuest": "ಅತಿಥಿಯಾಗಿ ಮುಂದುವರಿಸಿ",
+    "backHome": "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ",
+    "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+    "errors": {
+      "nameRequired": "ಹೆಸರು ಅಗತ್ಯ",
+      "emailRequired": "ಇ-ಮೇಲ್ ಅಗತ್ಯ",
+      "emailInvalid": "ಅಮಾನ್ಯ ಇ-ಮೇಲ್",
+      "passwordRequired": "ಪಾಸ್ವರ್ಡ್ ಅಗತ್ಯ",
+      "passwordMin": "ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳು",
+      "passwordMismatch": "ಪಾಸ್ವರ್ಡ್ ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ",
+      "generic": "ದೋಷ ಸಂಭವಿಸಿದೆ"
+    }
   }
 }

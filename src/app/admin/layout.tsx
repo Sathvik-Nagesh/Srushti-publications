@@ -16,14 +16,19 @@ import {
   Package,
   TrendingUp,
   Users,
-  FolderOpen
+  FolderOpen,
+  Star,
+  Boxes
 } from 'lucide-react'
 
 const navItems = [
   { label: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್', labelEn: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { label: 'ಪುಸ್ತಕಗಳು', labelEn: 'Books', href: '/admin/books', icon: BookOpen },
   { label: 'ಆರ್ಡರ್‌ಗಳು', labelEn: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { label: 'ಗ್ರಾಹಕರು', labelEn: 'Customers', href: '/admin/customers', icon: Users },
   { label: 'ವಿಭಾಗಗಳು', labelEn: 'Categories', href: '/admin/categories', icon: FolderOpen },
+  { label: 'ಸ್ಟಾಕ್', labelEn: 'Inventory', href: '/admin/inventory', icon: Boxes },
+  { label: 'ವಿಮರ್ಶೆಗಳು', labelEn: 'Reviews', href: '/admin/reviews', icon: Star },
   { label: 'ರಿಯಾಯಿತಿಗಳು', labelEn: 'Offers', href: '/admin/offers', icon: Tag },
   { label: 'ಸೆಟ್ಟಿಂಗ್ಸ್', labelEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]
@@ -47,15 +52,50 @@ export default function AdminLayout({
       }
     }
     
-    // Check authentication
-    const isAuth = localStorage.getItem('admin_authenticated') === 'true'
-    // Avoid setting state during render if possible, but here we are in useEffect
-    setIsAuthenticated(isAuth)
-    
-    if (!isAuth && !pathname.includes('/admin/login')) {
-      router.push('/admin/login')
+    // Check authentication via server-side API
+    const checkAuth = async () => {
+      // Skip auth check on login page
+      if (pathname.includes('/admin/login')) {
+        setIsAuthenticated(false)
+        return
+      }
+      
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+        const response = await fetch('/api/admin/auth/check', {
+          signal: controller.signal,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        })
+        clearTimeout(timeoutId)
+
+        if (!response.ok) {
+           throw new Error(`Auth check failed with status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        
+        if (data.authenticated) {
+          setIsAuthenticated(true)
+          localStorage.setItem('admin_authenticated', 'true')
+        } else {
+          setIsAuthenticated(false)
+          localStorage.removeItem('admin_authenticated')
+          router.push('/admin/login')
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        setIsAuthenticated(false)
+        localStorage.removeItem('admin_authenticated')
+        router.push('/admin/login')
+      }
     }
     
+    checkAuth()
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)

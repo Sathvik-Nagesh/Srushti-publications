@@ -39,10 +39,14 @@ async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
   const parts = adminSession.value.split('.')
   if (parts.length !== 2) return false
 
-  const [payload, signature] = parts
-  if (payload !== 'authenticated') return false
-
-  return await verify(payload, signature)
+  const [encodedPayload, signature] = parts
+  
+  try {
+    const payload = atob(encodedPayload)
+    return await verify(payload, signature)
+  } catch (e) {
+    return false
+  }
 }
 
 export async function middleware(request: NextRequest) {

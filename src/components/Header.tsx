@@ -3,31 +3,37 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { ShoppingCart, MagnifyingGlass, List, X } from '@phosphor-icons/react'
+import { ShoppingCart, MagnifyingGlass, List, X, User } from '@phosphor-icons/react'
 import { useTranslations } from 'next-intl'
 import { useCartStore } from '@/lib/store'
+import { useAuth } from '@/contexts/AuthContext'
 import LanguageSwitcher from './LanguageSwitcher'
+import SearchAutocomplete from './SearchAutocomplete'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
   const [mounted, setMounted] = useState(false)
   
   const t = useTranslations('common')
   const itemCount = useCartStore(state => state.getItemCount())
+  const { customer, isAuthenticated, isLoading: authLoading } = useAuth()
   
   // Fix hydration mismatch - only show cart count after mounting on client
   useEffect(() => {
     setMounted(true)
   }, [])
   
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`
+  // Close search on escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false)
+      }
     }
-  }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [])
   
   return (
     <header className="header">
@@ -75,9 +81,43 @@ export default function Header() {
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="cart-button"
               aria-label={t('search')}
+              style={{
+                background: isSearchOpen ? 'var(--color-primary)' : undefined,
+                color: isSearchOpen ? 'white' : undefined
+              }}
             >
-              <MagnifyingGlass size={22} weight="bold" />
+              {isSearchOpen ? <X size={22} weight="bold" /> : <MagnifyingGlass size={22} weight="bold" />}
             </button>
+            
+            {/* Account/Login */}
+            {mounted && !authLoading && (
+              <Link 
+                href={isAuthenticated ? '/account' : '/login'}
+                className="cart-button"
+                aria-label={isAuthenticated ? 'ಖಾತೆ' : 'ಲಾಗಿನ್'}
+                title={isAuthenticated ? customer?.name : 'ಲಾಗಿನ್ / ಸೈನ್ ಅಪ್'}
+                style={{
+                  background: isAuthenticated ? 'var(--color-primary)' : undefined,
+                  color: isAuthenticated ? 'white' : undefined,
+                  fontWeight: 600,
+                  fontSize: '0.875rem'
+                }}
+              >
+                {isAuthenticated && customer?.name ? (
+                  <span style={{ 
+                    width: 22, 
+                    height: 22, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
+                  }}>
+                    {customer.name.charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <User size={22} weight="bold" />
+                )}
+              </Link>
+            )}
             
             {/* Cart */}
             <Link href="/cart" className="cart-button" aria-label={t('cart')}>
@@ -98,32 +138,34 @@ export default function Header() {
           </div>
         </div>
         
-        {/* Search Bar - Expandable */}
+        {/* Search Autocomplete - Expandable */}
         {isSearchOpen && (
-          <form onSubmit={handleSearch} style={{ 
+          <div style={{ 
             padding: '1rem 0',
             borderTop: '1px solid var(--color-border)',
             animation: 'fadeIn 0.3s ease'
           }}>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="text"
-                placeholder={t('searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="input"
-                style={{ flex: 1 }}
-                autoFocus
-              />
-              <button type="submit" className="btn btn-primary">
-                <MagnifyingGlass size={18} weight="bold" />
-                {t('search')}
-              </button>
-            </div>
-          </form>
+            <SearchAutocomplete 
+              placeholder={t('searchPlaceholder')}
+              onClose={() => setIsSearchOpen(false)}
+            />
+          </div>
         )}
       </div>
+      
+      {/* Search Overlay for mobile */}
+      {isSearchOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            top: '140px',
+            background: 'rgba(0,0,0,0.3)',
+            zIndex: 40
+          }}
+          onClick={() => setIsSearchOpen(false)}
+        />
+      )}
     </header>
   )
 }
-

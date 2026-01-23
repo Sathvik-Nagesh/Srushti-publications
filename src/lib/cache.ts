@@ -15,7 +15,7 @@ const defaultOptions: CacheOptions = {
 }
 
 // Create a generic cache factory
-export function createCache<T>(options: CacheOptions = {}) {
+export function createCache<T extends {}>(options: CacheOptions = {}) {
   const opts = { ...defaultOptions, ...options }
   return new LRUCache<string, T>({
     max: opts.max!,
@@ -42,7 +42,7 @@ export const settingsCache = createCache<any>({
 })
 
 // Helper function with auto-cache pattern
-export async function withCache<T>(
+export async function withCache<T extends {}>(
   cache: LRUCache<string, T>,
   key: string,
   fetcher: () => Promise<T>

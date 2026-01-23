@@ -117,5 +117,31 @@
     "loggingIn": "Logging in...",
     "invalidCredentials": "Invalid email or password",
     "backToSite": "Back to Main Site"
+  },
+  "Login": {
+    "title": "Login",
+    "signupTitle": "Create Account",
+    "welcomeBack": "Login to your account",
+    "welcomeNew": "Create a new account",
+    "name": "Name",
+    "phone": "Phone (Optional)",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "loginButton": "Login",
+    "signupButton": "Sign Up",
+    "or": "OR",
+    "continueGuest": "Continue as Guest",
+    "backHome": "Back to Home",
+    "loading": "Loading...",
+    "errors": {
+      "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email",
+      "passwordRequired": "Password is required",
+      "passwordMin": "Minimum 6 characters",
+      "passwordMismatch": "Passwords do not match",
+      "generic": "An error occurred"
+    }
   }
 }

@@ -52,7 +52,7 @@ interface SiteSettings {
 const defaultSettings: SiteSettings = {
   heroTagline: 'ಕನ್ನಡ ಸಾಹಿತ್ಯದ ಸಮೃದ್ಧ ಸಂಗ್ರಹ',
   heroTitle: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
-  heroDescription: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ, ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು ಮತ್ತು ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ. ನಿಮ್ಮ ಮನೆ ಬಾಗಿಲಿಗೆ ತಲುಪಿಸಲಾಗುತ್ತದೆ.',
+  heroDescription: 'ವಿಶ್ವದ ಅತ್ಯುತ್ತಮ  ಪುಸ್ತಕಗಳು ಕನ್ನಡ‌  ಓದುಗರಿಗಾಗಿ...ನಿಮ್ಮ ಮನೆ ಬಾಗಿಲಿಗೆ ತಲುಪಿಸಲಾಗುತ್ತದೆ.',
   heroButtonText: 'ಪುಸ್ತಕಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ',
   
   saleTimerEnabled: true,
@@ -80,18 +80,36 @@ const SETTINGS_KEY = 'srushti_site_settings'
 export default function SiteConfigPage() {
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings)
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'homepage' | 'sale' | 'social' | 'contact' | 'seo'>('homepage')
   
-  // Load settings from localStorage on mount
+  // Load settings from database on mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem(SETTINGS_KEY)
-    if (savedSettings) {
+    const loadSettings = async () => {
       try {
-        setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) })
+        const response = await fetch('/api/site-settings')
+        const data = await response.json()
+        
+        if (data.success && data.data) {
+          setSettings({ ...defaultSettings, ...data.data })
+        }
       } catch (e) {
-        console.error('Failed to parse settings:', e)
+        console.error('Failed to load settings:', e)
+        // Fallback to localStorage
+        const savedSettings = localStorage.getItem(SETTINGS_KEY)
+        if (savedSettings) {
+          try {
+            setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) })
+          } catch (parseError) {
+            console.error('Failed to parse local settings:', parseError)
+          }
+        }
+      } finally {
+        setIsLoading(false)
       }
     }
+    
+    loadSettings()
   }, [])
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -112,26 +130,56 @@ export default function SiteConfigPage() {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      // Save to localStorage (in production, this would be an API call)
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+      // Save to database
+      const response = await fetch('/api/site-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      })
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const data = await response.json()
       
-      toast.success('ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!')
+      if (data.success) {
+        // Also save to localStorage as backup
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+        toast.success('ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಡೇಟಾಬೇಸ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ!')
+      } else {
+        throw new Error(data.error)
+      }
     } catch (error) {
+      console.error('Save error:', error)
       toast.error('ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಉಳಿಸಲು ವಿಫಲವಾಗಿದೆ')
     } finally {
       setIsSaving(false)
     }
   }
   
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm('ಎಲ್ಲಾ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಡೀಫಾಲ್ಟ್‌ಗೆ ಮರುಹೊಂದಿಸಬೇಕೇ?')) {
       setSettings(defaultSettings)
       localStorage.removeItem(SETTINGS_KEY)
+      
+      // Save defaults to database
+      try {
+        await fetch('/api/site-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(defaultSettings)
+        })
+      } catch (e) {
+        console.error('Failed to reset in DB:', e)
+      }
+      
       toast.success('ಡೀಫಾಲ್ಟ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಮರುಸ್ಥಾಪಿಸಲಾಗಿದೆ')
     }
+  }
+  
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+        <span className="spinner" style={{ width: 40, height: 40 }} />
+      </div>
+    )
   }
   
   const tabs = [
