@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Noto_Sans_Kannada } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { Toaster } from 'react-hot-toast'
@@ -9,6 +10,12 @@ import SkipToContent from '@/components/SkipToContent'
 import { ScreenReaderAnnouncer } from '@/components/AccessibilityUtils'
 import { AuthProvider } from '@/contexts/AuthContext'
 import './globals.css'
+
+const notoSansKannada = Noto_Sans_Kannada({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-kannada',
+})
 
 export const metadata: Metadata = {
   title: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ | ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ',
@@ -42,26 +49,10 @@ export default async function RootLayout({
   const messages = await getMessages()
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning className={notoSansKannada.variable}>
       <head>
         <link rel="icon" href="/logo.jpg" />
         <meta name="theme-color" content="#d97706" />
-        {/* Preload critical fonts for performance */}
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap"
-        />
         {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="dns-prefetch" href="https://api.razorpay.com" />
