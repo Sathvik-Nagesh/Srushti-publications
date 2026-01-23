@@ -22,6 +22,15 @@ export default function Header() {
   // Fix hydration mismatch - only show cart count after mounting on client
   useEffect(() => {
     setMounted(true)
+    
+    // Clean up any zombie service workers that might be blocking requests
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().catch(console.error)
+        }
+      }).catch(console.error)
+    }
   }, [])
   
   // Close search on escape
@@ -47,7 +56,7 @@ export default function Header() {
               width={50}
               height={50}
               className="logo-image"
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', width: 'auto' }}
             />
             <span className="logo-text hide-mobile">ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</span>
           </Link>

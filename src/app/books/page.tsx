@@ -8,141 +8,20 @@ import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import BookCardSkeleton from '@/components/BookCardSkeleton'
 import BookCard from '@/components/BookCard'
-import { BookOpen, Filter, ChevronDown, X, Grid, List, SlidersHorizontal } from 'lucide-react'
+import { BookOpen, Filter, ChevronDown, X, Grid, List, SlidersHorizontal, ArrowLeft, ArrowRight } from 'lucide-react'
 import type { Book, Category } from '@/lib/types'
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('kn-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-// Mock data - will be replaced with API calls
-const mockBooks: Book[] = [
-  {
-    id: '1',
-    title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು',
-    slug: 'malegalli-madhumagalu',
-    author: 'ಕುವೆಂಪು',
-    description: 'ಕುವೆಂಪು ಅವರ ಅತ್ಯುತ್ತಮ ಕಾದಂಬರಿ',
-    coverImage: '/books/book1.jpg',
-    additionalImages: [],
-    mrp: 450,
-    sellingPrice: 399,
-    stockQuantity: 25,
-    lowStockAlert: 10,
-    language: 'ಕನ್ನಡ',
-    isNewRelease: true,
-    isBestSeller: true,
-    isOnSale: true,
-    isFeatured: true,
-    isActive: true,
-    salesCount: 150,
-    viewCount: 500,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '1',
-    category: { id: '1', name: 'ಸಾಹಿತ್ಯ', slug: 'literature', isActive: true, sortOrder: 1, createdAt: new Date(), updatedAt: new Date() }
-  },
-  {
-    id: '2',
-    title: 'ಕರ್ನಾಟಕ ಇತಿಹಾಸ',
-    slug: 'karnataka-itihasa',
-    author: 'ಡಾ. ಸೂರ್ಯನಾಥ ಕಾಮತ್',
-    description: 'ಕರ್ನಾಟಕದ ಸಂಪೂರ್ಣ ಇತಿಹಾಸ',
-    coverImage: '/books/book2.jpg',
-    additionalImages: [],
-    mrp: 550,
-    sellingPrice: 495,
-    stockQuantity: 15,
-    lowStockAlert: 10,
-    language: 'ಕನ್ನಡ',
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: false,
-    isFeatured: false,
-    isActive: true,
-    salesCount: 200,
-    viewCount: 800,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '2',
-    category: { id: '2', name: 'ಶೈಕ್ಷಣಿಕ', slug: 'academic', isActive: true, sortOrder: 2, createdAt: new Date(), updatedAt: new Date() }
-  },
-  {
-    id: '3',
-    title: 'ಪಂಚತಂತ್ರ ಕಥೆಗಳು',
-    slug: 'panchatantra-kathegalu',
-    author: 'ವಿಷ್ಣುಶರ್ಮ',
-    description: 'ಮಕ್ಕಳಿಗಾಗಿ ಪಂಚತಂತ್ರ ಕಥೆಗಳು',
-    coverImage: '/books/book3.jpg',
-    additionalImages: [],
-    mrp: 199,
-    sellingPrice: 149,
-    stockQuantity: 50,
-    lowStockAlert: 10,
-    language: 'ಕನ್ನಡ',
-    isNewRelease: true,
-    isBestSeller: false,
-    isOnSale: true,
-    isFeatured: false,
-    isActive: true,
-    salesCount: 80,
-    viewCount: 300,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '3',
-    category: { id: '3', name: 'ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು', slug: 'children', isActive: true, sortOrder: 3, createdAt: new Date(), updatedAt: new Date() }
-  },
-  {
-    id: '4',
-    title: 'ಕೆಎಎಸ್ ಮಾರ್ಗದರ್ಶಿ',
-    slug: 'kas-margadarshi',
-    author: 'ಶ್ರೀಕಾಂತ್ ಎನ್',
-    description: 'ಕೆಎಎಸ್ ಪರೀಕ್ಷೆಗೆ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ',
-    coverImage: '/books/book4.jpg',
-    additionalImages: [],
-    mrp: 799,
-    sellingPrice: 699,
-    stockQuantity: 30,
-    lowStockAlert: 10,
-    language: 'ಕನ್ನಡ',
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: true,
-    isFeatured: true,
-    isActive: true,
-    salesCount: 300,
-    viewCount: 1000,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '4',
-    category: { id: '4', name: 'ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ', slug: 'exam-guides', isActive: true, sortOrder: 4, createdAt: new Date(), updatedAt: new Date() }
-  }
-]
-
-const mockCategories: Category[] = [
-  { id: '1', name: 'ಸಾಹಿತ್ಯ', nameEn: 'Literature', slug: 'literature', isActive: true, sortOrder: 1, createdAt: new Date(), updatedAt: new Date() },
-  { id: '2', name: 'ಶೈಕ್ಷಣಿಕ', nameEn: 'Academic', slug: 'academic', isActive: true, sortOrder: 2, createdAt: new Date(), updatedAt: new Date() },
-  { id: '3', name: 'ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು', nameEn: 'Children', slug: 'children', isActive: true, sortOrder: 3, createdAt: new Date(), updatedAt: new Date() },
-  { id: '4', name: 'ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ', nameEn: 'Exam Guides', slug: 'exam-guides', isActive: true, sortOrder: 4, createdAt: new Date(), updatedAt: new Date() },
-  { id: '5', name: 'ಇತರೆ', nameEn: 'Others', slug: 'others', isActive: true, sortOrder: 5, createdAt: new Date(), updatedAt: new Date() }
-]
 
 function BooksContent() {
   const searchParams = useSearchParams()
-  const [books, setBooks] = useState<Book[]>(mockBooks)
-  const [categories] = useState<Category[]>(mockCategories)
-  const [loading, setLoading] = useState(false)
+  const [books, setBooks] = useState<Book[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000])
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000])
   const [sortBy, setSortBy] = useState('newest')
   const [filterLabels, setFilterLabels] = useState({
     newRelease: false,
@@ -151,7 +30,18 @@ function BooksContent() {
     inStock: false
   })
   
-  // Get filter from URL params
+  // Pagination
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+
+  useEffect(() => {
+     // Fetch available categories
+     fetch('/api/categories').then(r => r.json()).then(d => {
+        if(d.success) setCategories(d.data)
+     })
+  }, [])
+
+  // Get init filter from URL
   useEffect(() => {
     const filter = searchParams.get('filter')
     const category = searchParams.get('category')
@@ -169,52 +59,54 @@ function BooksContent() {
     }
   }, [searchParams])
   
-  // Apply filters whenever any filter changes
+  // Fetch Books with Filters
   useEffect(() => {
-    let filtered = [...mockBooks]
-    
-    // Category filter
-    if (selectedCategory) {
-      filtered = filtered.filter(b => b.categoryId === selectedCategory)
+    const fetchBooks = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.set('page', page.toString())
+        params.set('limit', '12') // Pagination
+        params.set('isActive', 'true')
+        
+        if (selectedCategory) params.set('categoryId', selectedCategory)
+        
+        // Only send price if modified from default wide range or strictly needed
+        if (priceRange[0] > 0) params.set('minPrice', priceRange[0].toString())
+        if (priceRange[1] < 2000) params.set('maxPrice', priceRange[1].toString())
+        
+        if (filterLabels.newRelease) params.set('isNewRelease', 'true')
+        if (filterLabels.bestSeller) params.set('isBestSeller', 'true')
+        if (filterLabels.onSale) params.set('isOnSale', 'true')
+        if (filterLabels.inStock) params.set('inStock', 'true')
+        
+        params.set('sortBy', sortBy)
+
+        const res = await fetch(`/api/books?${params.toString()}`)
+        const data = await res.json()
+        
+        if (data.success) {
+           setBooks(data.data.items)
+           setTotalPages(data.data.totalPages)
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
     }
     
-    // Price range filter
-    filtered = filtered.filter(b => 
-      b.sellingPrice >= priceRange[0] && b.sellingPrice <= priceRange[1]
-    )
-    
-    // Label filters
-    if (filterLabels.newRelease) {
-      filtered = filtered.filter(b => b.isNewRelease)
-    }
-    if (filterLabels.bestSeller) {
-      filtered = filtered.filter(b => b.isBestSeller)
-    }
-    if (filterLabels.onSale) {
-      filtered = filtered.filter(b => b.isOnSale)
-    }
-    if (filterLabels.inStock) {
-      filtered = filtered.filter(b => b.stockQuantity > 0)
-    }
-    
-    // Sort
-    switch (sortBy) {
-      case 'price_asc':
-        filtered.sort((a, b) => a.sellingPrice - b.sellingPrice)
-        break
-      case 'price_desc':
-        filtered.sort((a, b) => b.sellingPrice - a.sellingPrice)
-        break
-      case 'popular':
-        filtered.sort((a, b) => b.salesCount - a.salesCount)
-        break
-      case 'title':
-        filtered.sort((a, b) => a.title.localeCompare(b.title))
-        break
-    }
-    
-    setBooks(filtered)
-  }, [selectedCategory, priceRange, filterLabels, sortBy])
+    // Debounce slightly to avoid rapid reloading on slider
+    const timer = setTimeout(() => {
+       fetchBooks()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [selectedCategory, priceRange, filterLabels, sortBy, page])
+
+  // Reset page when filters change
+  useEffect(() => {
+     setPage(1)
+  }, [selectedCategory, filterLabels, priceRange, sortBy])
   
   const handleApplyFilters = () => {
     setShowFilters(false)
@@ -222,7 +114,7 @@ function BooksContent() {
   
   const clearFilters = () => {
     setSelectedCategory('')
-    setPriceRange([0, 1000])
+    setPriceRange([0, 2000])
     setSortBy('newest')
     setFilterLabels({
       newRelease: false,
@@ -297,12 +189,7 @@ function BooksContent() {
               
               {/* Categories */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 600, 
-                  marginBottom: '0.75rem',
-                  color: 'var(--color-text)'
-                }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
                   ವಿಭಾಗ
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -333,12 +220,7 @@ function BooksContent() {
               
               {/* Price Range */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 600, 
-                  marginBottom: '0.75rem',
-                  color: 'var(--color-text)'
-                }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
                   ಬೆಲೆ ವ್ಯಾಪ್ತಿ
                 </h4>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -353,9 +235,9 @@ function BooksContent() {
                   <span>-</span>
                   <input
                     type="number"
-                    placeholder="₹1000"
+                    placeholder="₹2000"
                     value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 1000])}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 2000])}
                     className="input"
                     style={{ width: '100px', padding: '0.5rem' }}
                   />
@@ -364,12 +246,7 @@ function BooksContent() {
               
               {/* Labels */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 600, 
-                  marginBottom: '0.75rem',
-                  color: 'var(--color-text)'
-                }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
                   ಲೇಬಲ್‌ಗಳು
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -434,7 +311,7 @@ function BooksContent() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <span style={{ color: 'var(--color-text-light)' }}>
-                    {books.length} ಪುಸ್ತಕಗಳು ಕಂಡುಬಂದಿವೆ
+                    {loading ? '...' : books.length} ಪುಸ್ತಕಗಳು
                   </span>
                   
                   {/* Mobile Filter Toggle */}
@@ -451,10 +328,7 @@ function BooksContent() {
                   {/* Sort Dropdown */}
                   <select
                     value={sortBy}
-                    onChange={(e) => {
-                      setSortBy(e.target.value)
-                      handleApplyFilters()
-                    }}
+                    onChange={(e) => setSortBy(e.target.value)}
                     className="input select"
                     style={{ width: 'auto', padding: '0.5rem 2.5rem 0.5rem 1rem' }}
                   >
@@ -517,10 +391,33 @@ function BooksContent() {
                   </button>
                 </div>
               ) : (
-                <div className="product-grid">
+                <div className={viewMode === 'grid' ? "product-grid" : "product-list"}>
                   {books.map(book => (
                     <BookCard key={book.id} book={book} />
                   ))}
+                </div>
+              )}
+
+             {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+                   <button 
+                     disabled={page === 1} 
+                     onClick={() => setPage(page - 1)}
+                     className="btn btn-outline"
+                    >
+                      <ArrowLeft size={16} /> ಹಿಂದೆ
+                   </button>
+                   <span style={{ display: 'flex', alignItems: 'center' }}>
+                      ಪುಟ {page} / {totalPages}
+                   </span>
+                   <button 
+                     disabled={page === totalPages} 
+                     onClick={() => setPage(page + 1)}
+                     className="btn btn-outline"
+                    >
+                      ಮುಂದೆ <ArrowRight size={16} />
+                   </button>
                 </div>
               )}
             </div>
@@ -566,11 +463,19 @@ function BooksContent() {
                 </button>
               </div>
               
-              {/* Same filter content as sidebar */}
-              {/* Categories */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem' }}>ವಿಭಾಗ</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="category-mobile"
+                      checked={selectedCategory === ''}
+                      onChange={() => setSelectedCategory('')}
+                      style={{ accentColor: 'var(--color-primary)' }}
+                    />
+                    <span>ಎಲ್ಲಾ ವಿಭಾಗಗಳು</span>
+                  </label>
                   {categories.map(cat => (
                     <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                       <input

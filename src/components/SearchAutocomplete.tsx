@@ -179,6 +179,8 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          id="site-search"
+          name="q"
           style={{
             flex: 1,
             border: 'none',

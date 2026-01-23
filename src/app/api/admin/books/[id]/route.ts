@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-// GET /api/admin/books/[id] - Get book by ID for admin
+// GET /api/admin/books/[id] - Get book by slug (ID) for Admin (includes inactive)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id: slug } = await params
     
+    // Fetch by slug, NO isActive filter
     const book = await prisma.book.findUnique({
-      where: { id },
+      where: { slug },
       include: {
-        category: true
+        category: {
+          select: {
+            id: true,
+            name: true,
+            nameEn: true,
+            slug: true
+          }
+        }
       }
     })
     
@@ -36,17 +44,17 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/books/[id] - Update book by ID
+// PATCH /api/admin/books/[id] - Update book
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id: slug } = await params
     const body = await request.json()
     
     const existingBook = await prisma.book.findUnique({
-      where: { id }
+      where: { slug }
     })
     
     if (!existingBook) {
@@ -56,58 +64,24 @@ export async function PATCH(
       )
     }
     
-    // Generate slug if title changed
-    let slug = existingBook.slug
-    if (body.title && body.title !== existingBook.title) {
-      slug = body.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\u0C80-\u0CFF\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim()
-      
-      // Check if slug exists
-      const slugExists = await prisma.book.findFirst({
-        where: { slug, id: { not: id } }
-      })
-      
-      if (slugExists) {
-        slug = `${slug}-${Date.now()}`
-      }
+    const updateData = {
+      ...body,
+      mrp: body.mrp ? parseFloat(body.mrp) : undefined,
+      sellingPrice: body.sellingPrice ? parseFloat(body.sellingPrice) : undefined,
+      stockQuantity: body.stockQuantity !== undefined ? parseInt(body.stockQuantity) : undefined,
+      lowStockAlert: body.lowStockAlert !== undefined ? parseInt(body.lowStockAlert) : undefined,
+      pages: body.pages !== undefined ? parseInt(body.pages) : undefined,
+      publicationYear: body.publicationYear !== undefined ? parseInt(body.publicationYear) : undefined,
+      weight: body.weight !== undefined ? parseFloat(body.weight) : undefined,
     }
-    
+
+    // Protect immutable fields
+    delete updateData.id
+    // Note: We allow slug updates if sent, but handle with care in frontend.
+
     const book = await prisma.book.update({
-      where: { id },
-      data: {
-        title: body.title,
-        titleEn: body.titleEn,
-        slug,
-        author: body.author,
-        authorEn: body.authorEn,
-        description: body.description,
-        descriptionEn: body.descriptionEn,
-        categoryId: body.categoryId,
-        mrp: body.mrp,
-        sellingPrice: body.sellingPrice,
-        stockQuantity: body.stockQuantity,
-        lowStockAlert: body.lowStockAlert,
-        isbn: body.isbn,
-        pages: body.pages,
-        publicationYear: body.publicationYear,
-        edition: body.edition,
-        language: body.language,
-        weight: body.weight,
-        dimensions: body.dimensions,
-        coverImage: body.coverImage,
-        isNewRelease: body.isNewRelease,
-        isBestSeller: body.isBestSeller,
-        isOnSale: body.isOnSale,
-        isFeatured: body.isFeatured,
-        isActive: body.isActive,
-      },
-      include: {
-        category: true
-      }
+      where: { slug },
+      data: updateData
     })
     
     return NextResponse.json({
@@ -124,40 +98,35 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/admin/books/[id] - Delete book by ID
+// DELETE /api/admin/books/[id]
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id: slug } = await params
     
-    const existingBook = await prisma.book.findUnique({
-      where: { id }
+    const existingBook = await prisma.book.findUnique({ where: { slug } })
+    if (!existingBook) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 })
+
+    // Hard delete to remove it completely as per Admin "Trash" intent
+    await prisma.book.delete({
+      where: { slug }
     })
     
-    if (!existingBook) {
-      return NextResponse.json(
-        { success: false, error: 'Book not found' },
-        { status: 404 }
-      )
-    }
-    
-    // Soft delete by setting isActive to false
-    await prisma.book.update({
-      where: { id },
-      data: { isActive: false }
-    })
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Book deleted successfully'
-    })
+    return NextResponse.json({ success: true, message: 'Book deleted completely' })
   } catch (error) {
     console.error('Error deleting book:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete book' },
-      { status: 500 }
-    )
+    // Fallback to soft delete if FK constraint fails
+    try {
+        const { id: slug } = await params
+        await prisma.book.update({
+            where: { slug },
+            data: { isActive: false }
+        })
+        return NextResponse.json({ success: true, message: 'Book marked as inactive (cannot delete due to orders/reviews)' })
+    } catch (e) {
+        return NextResponse.json({ success: false, error: 'Failed to delete' }, { status: 500 })
+    }
   }
 }

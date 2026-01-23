@@ -91,7 +91,13 @@ export default function SiteConfigPage() {
         const data = await response.json()
         
         if (data.success && data.data) {
-          setSettings({ ...defaultSettings, ...data.data })
+          // Ensure no null values exist in the settings object to prevent controlled/uncontrolled input errors
+          const sanitizedData = Object.entries(data.data).reduce((acc: any, [key, value]) => {
+            acc[key] = value === null ? '' : value
+            return acc
+          }, {})
+          
+          setSettings({ ...defaultSettings, ...sanitizedData })
         }
       } catch (e) {
         console.error('Failed to load settings:', e)
@@ -116,7 +122,7 @@ export default function SiteConfigPage() {
     const { name, value, type } = e.target
     setSettings(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseInt(value) : value
+      [name]: type === 'number' ? (parseInt(value) || 0) : value
     }))
   }
   

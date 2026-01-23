@@ -244,10 +244,7 @@ p {
   transition: all 0.3s ease;
 }
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
-}
+/* .card:hover removed to prevent movement */
 
 .card-body {
   padding: 1.25rem;
@@ -1731,5 +1728,45 @@ h6 {
   input[type="radio"] {
     min-height: 44px;
     min-width: 44px;
+  }
+}
+
+/* ============================================
+   SKELETON ANIMATIONS & UTILS
+   ============================================ */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #e0e0e0 20%,
+    #f0f0f0 40%,
+    #f0f0f0 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(217, 119, 6, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

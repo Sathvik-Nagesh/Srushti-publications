@@ -228,7 +228,7 @@ export function generateInvoiceHTML(data: InvoiceData): string {
           <td class="label">Shipping:</td>
           <td class="text-right">${data.shippingCharge === 0 ? 'FREE' : `₹${data.shippingCharge.toFixed(2)}`}</td>
         </tr>
-        ${data.isSameState ? `
+        ${(data.isSameState && data.totalTax > 0) ? `
           <tr>
             <td class="label">CGST (${data.gstRate / 2}%):</td>
             <td class="text-right">₹${data.cgst.toFixed(2)}</td>
@@ -237,12 +237,12 @@ export function generateInvoiceHTML(data: InvoiceData): string {
             <td class="label">SGST (${data.gstRate / 2}%):</td>
             <td class="text-right">₹${data.sgst.toFixed(2)}</td>
           </tr>
-        ` : `
+        ` : (data.totalTax > 0) ? `
           <tr>
             <td class="label">IGST (${data.gstRate}%):</td>
             <td class="text-right">₹${data.igst.toFixed(2)}</td>
           </tr>
-        `}
+        ` : ''}
         <tr class="total">
           <td class="label">Grand Total:</td>
           <td class="text-right">₹${data.grandTotal.toFixed(2)}</td>
@@ -262,12 +262,12 @@ export function generateInvoiceHTML(data: InvoiceData): string {
             <td>Taxable Amount:</td>
             <td class="text-right">₹${(data.subtotal - data.discount).toFixed(2)}</td>
           </tr>
-          ${data.isSameState ? `
+          ${(data.isSameState && data.totalTax > 0) ? `
             <tr><td>CGST:</td><td class="text-right">₹${data.cgst.toFixed(2)}</td></tr>
             <tr><td>SGST:</td><td class="text-right">₹${data.sgst.toFixed(2)}</td></tr>
-          ` : `
+          ` : (data.totalTax > 0) ? `
             <tr><td>IGST:</td><td class="text-right">₹${data.igst.toFixed(2)}</td></tr>
-          `}
+          ` : ''}
           <tr style="font-weight: bold;">
             <td>Total Tax:</td>
             <td class="text-right">₹${data.totalTax.toFixed(2)}</td>
@@ -341,9 +341,9 @@ export function prepareInvoiceData(order: {
   const gstRate = 5 // 5% GST for books in India
   
   const gstBreakup = order.gstBreakup || {
-    cgst: isSameState ? order.taxAmount / 2 : 0,
-    sgst: isSameState ? order.taxAmount / 2 : 0,
-    igst: !isSameState ? order.taxAmount : 0
+    cgst: (isSameState && order.taxAmount > 0) ? order.taxAmount / 2 : 0,
+    sgst: (isSameState && order.taxAmount > 0) ? order.taxAmount / 2 : 0,
+    igst: (!isSameState && order.taxAmount > 0) ? order.taxAmount : 0
   }
   
   return {

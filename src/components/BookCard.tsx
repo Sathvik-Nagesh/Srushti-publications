@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ShoppingCart, Eye } from 'lucide-react'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { useCartStore } from '@/lib/store'
@@ -14,6 +15,7 @@ interface BookCardProps {
 }
 
 export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
+  const router = useRouter()
   const addItem = useCartStore(state => state.addItem)
   
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
@@ -21,6 +23,7 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     
     if (isOutOfStock) {
       toast.error('ಈ ಪುಸ್ತಕ ಸ್ಟಾಕ್‌ನಲ್ಲಿಲ್ಲ')
@@ -32,14 +35,20 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   }
   
   return (
-    <div className="book-card group">
+    <div 
+      className="book-card group"
+      onClick={(e) => {
+        if (!e.defaultPrevented && !e.ctrlKey && !e.metaKey) {
+          router.push(`/books/${book.slug}`)
+        }
+      }}
+      style={{ cursor: 'pointer' }}
+    >
       {/* Cover Image */}
       <div className="book-card-image relative">
         <Link
           href={`/books/${book.slug}`}
           className="block w-full h-full absolute inset-0 z-0"
-          tabIndex={-1}
-          aria-hidden="true"
         >
           <Image
             src={book.coverImage || '/placeholder-book.jpg'}
@@ -72,7 +81,8 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 20
+            zIndex: 20,
+            pointerEvents: 'none'
           }}>
             <span style={{
               background: 'white',
@@ -99,13 +109,14 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
             gap: '0.5rem',
             opacity: 0,
             transition: 'opacity 0.3s ease',
-            zIndex: 30
+            zIndex: 30,
+            pointerEvents: 'none'
           }}
           className="book-card-actions">
             <button
               onClick={handleAddToCart}
               className="btn btn-primary btn-sm"
-              style={{ flex: 1 }}
+              style={{ flex: 1, pointerEvents: 'auto' }}
               aria-label={`Add ${book.title} to cart`}
             >
               <ShoppingCart size={16} aria-hidden="true" />
@@ -115,7 +126,8 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
               className="btn btn-outline btn-sm"
               style={{ 
                 background: 'white',
-                color: 'var(--color-text)'
+                color: 'var(--color-text)',
+                pointerEvents: 'auto'
               }}
               aria-label={`Quick view ${book.title}`}
             >
