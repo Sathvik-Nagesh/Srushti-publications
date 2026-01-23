@@ -195,6 +195,8 @@ model Order {
   
   // Relations
   items           OrderItem[]
+  customerId      String?
+  customer        Customer? @relation("CustomerOrders", fields: [customerId], references: [id])
   
   @@index([orderNumber])
   @@index([customerEmail])
@@ -326,4 +328,186 @@ model Offer {
   usedCount   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// REVIEWS & RATINGS
+// ============================================
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5 stars
+  title       String?
+  comment     String   @db.Text
+  authorName  String
+  authorEmail String
+  isVerified  Boolean  @default(false) // Verified purchase
+  isApproved  Boolean  @default(false) // Admin approved
+  
+  bookId      String
+  orderId     String?  // Link to order for verification
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([bookId])
+  @@index([isApproved])
+}
+
+// ============================================
+// WISHLIST
+// ============================================
+
+model Wishlist {
+  id          String   @id @default(cuid())
+  sessionId   String   // For guest users
+  userId      String?  // For future authenticated users
+  
+  bookId      String
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([sessionId, bookId])
+  @@index([sessionId])
+  @@index([bookId])
+}
+
+// ============================================
+// EMAIL LOGS
+// ============================================
+
+model EmailLog {
+  id          String   @id @default(cuid())
+  type        String   // 'order_confirmation', 'shipping_update', 'delivery', etc.
+  to          String
+  subject     String
+  status      String   @default("pending") // 'pending', 'sent', 'failed'
+  orderId     String?
+  templateData Json?
+  errorMessage String?
+  sentAt      DateTime?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([orderId])
+  @@index([type])
+  @@index([status])
+}
+
+// ============================================
+// SITE SETTINGS EXTENSIONS
+// ============================================
+
+model HeroSettings {
+  id              String   @id @default(cuid())
+  heroTagline     String   @default("📚 ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು")
+  heroTitle       String   @default("ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್")
+  heroDescription String   @db.Text
+  heroButtonText  String   @default("ಪುಸ್ತಕಗಳನ್ನು ಅನ್ವೇಷಿಸಿ")
+  heroImage       String?
+  statsBooks      String   @default("200+")
+  statsAuthors    String   @default("50+")
+  statsCustomers  String   @default("5000+")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// ADMIN USERS (with password hashing)
+// ============================================
+
+model AdminUser {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String   // bcrypt hashed password
+  name          String?
+  role          String   @default("admin") // 'superadmin', 'admin', 'editor'
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================
+// CUSTOMER ACCOUNTS
+// ============================================
+
+model Customer {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?  // null for guest-converted accounts that haven't set password
+  name          String
+  phone         String?
+  
+  // Default shipping address
+  address       String?
+  city          String?
+  state         String?  @default("Karnataka")
+  pincode       String?
+  
+  // Account status
+  isVerified    Boolean  @default(false)
+  verifyToken   String?
+  resetToken    String?
+  resetTokenExp DateTime?
+  
+  // Preferences
+  receiveEmails Boolean  @default(true)
+  
+  // Relations
+  orders        Order[]  @relation("CustomerOrders")
+  
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([email])
+  @@index([phone])
+}
+
+// ============================================
+// FULL SITE SETTINGS (stored in DB)
+// ============================================
+
+model SiteSettingsV2 {
+  id                    String   @id @default(cuid())
+  
+  // Hero Section
+  heroTagline           String   @default("📚 ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು")
+  heroTitle             String   @default("ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್")
+  heroDescription       String   @db.Text
+  heroButtonText        String   @default("ಪುಸ್ತಕಗಳನ್ನು ಅನ್ವೇಷಿಸಿ")
+  
+  // Stats
+  statsBooks            String   @default("200+")
+  statsAuthors          String   @default("50+")
+  statsCustomers        String   @default("5000+")
+  
+  // Sale Timer
+  saleTimerEnabled      Boolean  @default(false)
+  saleTimerTitle        String?
+  saleTimerEndDate      DateTime?
+  saleTimerDiscountText String?
+  
+  // Social Proof
+  socialProofEnabled    Boolean  @default(true)
+  socialProofInterval   Int      @default(15000)
+  
+  // Contact
+  whatsappNumber        String   @default("919876543210")
+  whatsappMessage       String   @default("ನಮಸ್ಕಾರ, ನನಗೆ ಪುಸ್ತಕಗಳ ಬಗ್ಗೆ ಮಾಹಿತಿ ಬೇಕು.")
+  
+  // Footer
+  footerDescription     String?
+  copyrightText         String?
+  
+  // SEO
+  siteTitle             String?
+  siteDescription       String?
+  siteKeywords          String?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

@@ -8,6 +8,7 @@ import Footer from '@/components/Footer'
 import CheckoutProgress from '@/components/CheckoutProgress'
 import TrustBadges from '@/components/TrustBadges'
 import { useCartStore, useCartTotals } from '@/lib/store'
+import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency, INDIAN_STATES, isValidEmail, isValidPhone, isValidPincode, calculateGST } from '@/lib/utils'
 import { 
   Lock, 
@@ -18,7 +19,8 @@ import {
   ShoppingBag,
   Check,
   AlertCircle,
-  BookOpen
+  BookOpen,
+  User
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Script from 'next/script'
@@ -37,6 +39,7 @@ interface FormData {
   shippingCity: string
   shippingState: string
   shippingPincode: string
+  password?: string // Optional password for account creation
 }
 
 interface FormErrors {
@@ -47,15 +50,19 @@ interface FormErrors {
   shippingCity?: string
   shippingState?: string
   shippingPincode?: string
+  password?: string
 }
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, clearCart } = useCartStore()
   const { subtotal, itemCount, totalMrp, savings } = useCartTotals()
+  const { customer, isAuthenticated, register } = useAuth()
   const [mounted, setMounted] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
+  const [createAccount, setCreateAccount] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   
   // Coupon code state
   const [couponCode, setCouponCode] = useState('')
@@ -63,6 +70,15 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState('')
   const [couponApplied, setCouponApplied] = useState(false)
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
+  const [appliedCouponName, setAppliedCouponName] = useState('')
+  
+  // Available coupons from backend
+  const [availableCoupons, setAvailableCoupons] = useState<{
+    eligible: Array<{ code: string; name: string; description?: string; calculatedDiscount: number; discountType: string; discountValue: number; minPurchase?: number }>
+    upcoming: Array<{ code: string; name: string; amountNeeded: number; minPurchase?: number }>
+    bestOffer: { code: string; name: string; calculatedDiscount: number } | null
+  }>({ eligible: [], upcoming: [], bestOffer: null })
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(false)
   
   // Lazy state initialization - defers object creation until needed
   // Per Vercel best practices: rerender-lazy-state-init
@@ -73,7 +89,8 @@ export default function CheckoutPage() {
     shippingAddress: '',
     shippingCity: '',
     shippingState: 'Karnataka',
-    shippingPincode: ''
+    shippingPincode: '',
+    password: ''
   }))
   
   const [errors, setErrors] = useState<FormErrors>(() => ({}))
@@ -82,6 +99,44 @@ export default function CheckoutPage() {
     setMounted(true)
   }, [])
   
+  // Pre-fill customer data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && customer && mounted) {
+      setFormData(prev => ({
+        ...prev,
+        customerName: prev.customerName || customer.name || '',
+        customerEmail: prev.customerEmail || customer.email || '',
+        customerPhone: prev.customerPhone || customer.phone || '',
+        shippingAddress: prev.shippingAddress || customer.address || '',
+        shippingCity: prev.shippingCity || customer.city || '',
+        shippingState: prev.shippingState || customer.state || 'Karnataka',
+        shippingPincode: prev.shippingPincode || customer.pincode || ''
+      }))
+    }
+  }, [isAuthenticated, customer, mounted])
+  
+  // Fetch available coupons when subtotal changes
+  useEffect(() => {
+    if (!mounted || subtotal <= 0) return
+    
+    const fetchCoupons = async () => {
+      setIsLoadingCoupons(true)
+      try {
+        const response = await fetch(`/api/coupons?subtotal=${subtotal}`)
+        const data = await response.json()
+        if (data.success && data.data) {
+          setAvailableCoupons(data.data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch coupons:', error)
+      } finally {
+        setIsLoadingCoupons(false)
+      }
+    }
+    
+    fetchCoupons()
+  }, [mounted, subtotal])
+  
   // Redirect if cart is empty
   useEffect(() => {
     if (mounted && items.length === 0) {
@@ -89,47 +144,44 @@ export default function CheckoutPage() {
     }
   }, [mounted, items, router])
   
-  // Available coupons (mock data - in production, validate via API)
-  const availableCoupons = [
-    { code: 'NEWYEAR24', type: 'PERCENTAGE', value: 20, minOrder: 500, maxDiscount: 200 },
-    { code: 'SANKRANTI', type: 'FIXED', value: 100, minOrder: 400, maxDiscount: null },
-    { code: 'FIRST10', type: 'PERCENTAGE', value: 10, minOrder: 200, maxDiscount: 100 },
-    { code: 'SRUSHTI50', type: 'FIXED', value: 50, minOrder: 300, maxDiscount: null }
-  ]
-  
-  // Apply coupon function
-  const handleApplyCoupon = () => {
+  // Apply coupon function - now uses backend API
+  const handleApplyCoupon = async (codeToApply?: string) => {
+    const code = codeToApply || couponCode
+    if (!code) return
+    
     setCouponError('')
     setIsApplyingCoupon(true)
     
-    // Simulate API call
-    setTimeout(() => {
-      const coupon = availableCoupons.find(c => c.code === couponCode.toUpperCase())
+    try {
+      const response = await fetch('/api/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: code.toUpperCase(),
+          subtotal
+        })
+      })
       
-      if (!coupon) {
-        setCouponError('ಅಮಾನ್ಯ ಕೂಪನ್ ಕೋಡ್')
-        setCouponDiscount(0)
-        setCouponApplied(false)
-      } else if (subtotal < coupon.minOrder) {
-        setCouponError(`ಕನಿಷ್ಠ ₹${coupon.minOrder} ಆರ್ಡರ್ ಅಗತ್ಯ`)
+      const data = await response.json()
+      
+      if (!data.success || !data.valid) {
+        setCouponError(data.error || 'ಅಮಾನ್ಯ ಕೂಪನ್ ಕೋಡ್')
         setCouponDiscount(0)
         setCouponApplied(false)
       } else {
-        let discount = 0
-        if (coupon.type === 'PERCENTAGE') {
-          discount = Math.round((subtotal * coupon.value) / 100)
-          if (coupon.maxDiscount && discount > coupon.maxDiscount) {
-            discount = coupon.maxDiscount
-          }
-        } else {
-          discount = coupon.value
-        }
-        setCouponDiscount(discount)
+        setCouponCode(data.data.code)
+        setCouponDiscount(data.data.calculatedDiscount)
+        setAppliedCouponName(data.data.name)
         setCouponApplied(true)
-        toast.success(`🎉 ₹${discount} ರಿಯಾಯಿತಿ ಅನ್ವಯಿಸಲಾಗಿದೆ!`)
+        toast.success(`🎉 ₹${data.data.calculatedDiscount} ರಿಯಾಯಿತಿ ಅನ್ವಯಿಸಲಾಗಿದೆ!`)
       }
+    } catch (error) {
+      console.error('Coupon apply error:', error)
+      setCouponError('ಕೂಪನ್ ಪರಿಶೀಲನೆ ವಿಫಲ')
+      setCouponApplied(false)
+    } finally {
       setIsApplyingCoupon(false)
-    }, 500)
+    }
   }
   
   // Remove coupon
@@ -138,6 +190,7 @@ export default function CheckoutPage() {
     setCouponDiscount(0)
     setCouponApplied(false)
     setCouponError('')
+    setAppliedCouponName('')
     toast.success('ಕೂಪನ್ ತೆಗೆದುಹಾಕಲಾಗಿದೆ')
   }
   
@@ -193,12 +246,40 @@ export default function CheckoutPage() {
       newErrors.shippingPincode = 'ಅಮಾನ್ಯ ಪಿನ್‌ಕೋಡ್'
     }
     
+    if (createAccount && !isAuthenticated) {
+      if (!formData.password?.trim()) {
+        newErrors.password = 'ಪಾಸ್ವರ್ಡ್ ಅಗತ್ಯವಿದೆ'
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'ಪಾಸ್ವರ್ಡ್ ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳಿರಬೇಕು'
+      }
+    }
+    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
   
-  const handleContinueToPayment = () => {
+  const handleContinueToPayment = async () => {
     if (validateForm()) {
+      if (createAccount && !isAuthenticated) {
+        setIsProcessing(true)
+        const result = await register({
+          name: formData.customerName,
+          email: formData.customerEmail,
+          phone: formData.customerPhone,
+          password: formData.password || ''
+        })
+        setIsProcessing(false)
+        
+        if (!result.success) {
+          toast.error(result.error || 'ಖಾತೆ ರಚಿಸಲು ವಿಫಲವಾಗಿದೆ')
+          // Optional: Ask if they want to continue as guest despite error?
+          // For now, let them fix error or uncheck box
+          return
+        }
+        
+        toast.success('ಖಾತೆ ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ!')
+      }
+      
       setCurrentStep(2)
     } else {
       toast.error('ದಯವಿಟ್ಟು ಎಲ್ಲಾ ಅಗತ್ಯ ಕ್ಷೇತ್ರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ')
@@ -415,6 +496,70 @@ export default function CheckoutPage() {
                         )}
                       </div>
                     </div>
+
+                    {/* Optional Account Creation */}
+                    {!isAuthenticated && (
+                      <div className="form-group" style={{ 
+                        background: 'var(--color-bg-alt)', 
+                        padding: '1rem', 
+                        borderRadius: 'var(--radius-md)',
+                        marginTop: '-0.5rem'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: createAccount ? '1rem' : 0 }}>
+                          <input
+                            type="checkbox"
+                            id="createAccount"
+                            checked={createAccount}
+                            onChange={(e) => setCreateAccount(e.target.checked)}
+                            style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                          />
+                          <label htmlFor="createAccount" style={{ cursor: 'pointer', fontWeight: 500, fontSize: '0.9375rem' }}>
+                            ನನಗಾಗಿ ಖಾತೆಯನ್ನು ರಚಿಸಿ (ಐಚ್ಛಿಕ)
+                          </label>
+                        </div>
+                        
+                        {createAccount && (
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="label">
+                              ಪಾಸ್ವರ್ಡ್ ರಚಿಸಿ <span style={{ color: 'var(--color-error)' }}>*</span>
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                className={`input ${errors.password ? 'input-error' : ''}`}
+                                placeholder="ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳು"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                  position: 'absolute',
+                                  right: '0.75rem',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  background: 'none',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: 'var(--color-text-muted)'
+                                }}
+                              >
+                                {showPassword ? (
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                ) : (
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                )}
+                              </button>
+                            </div>
+                            {errors.password && (
+                              <p className="form-error">{errors.password}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     {/* Address */}
                     <div className="form-group">
@@ -498,11 +643,21 @@ export default function CheckoutPage() {
                   
                   <button
                     onClick={handleContinueToPayment}
+                    disabled={isProcessing}
                     className="btn btn-primary btn-lg"
-                    style={{ width: '100%', marginTop: '1.5rem' }}
+                    style={{ width: '100%', marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                   >
-                    ಪಾವತಿಗೆ ಮುಂದುವರಿಸಿ
-                    <ChevronRight size={20} />
+                    {isProcessing ? (
+                      <>
+                        <span className="spinner" style={{ width: 20, height: 20 }} />
+                        ಪ್ರಕ್ರಿಯೆಯಲ್ಲಿದೆ...
+                      </>
+                    ) : (
+                      <>
+                        ಪಾವತಿಗೆ ಮುಂದುವರಿಸಿ
+                        <ChevronRight size={20} />
+                      </>
+                    )}
                   </button>
                 </div>
               )}
@@ -759,7 +914,7 @@ export default function CheckoutPage() {
                         }}
                       />
                       <button
-                        onClick={handleApplyCoupon}
+                        onClick={() => handleApplyCoupon()}
                         disabled={!couponCode || isApplyingCoupon}
                         className="btn btn-outline"
                         style={{
@@ -784,14 +939,92 @@ export default function CheckoutPage() {
                         {couponError}
                       </p>
                     )}
-                    <p style={{
-                      fontSize: '0.625rem',
-                      color: 'var(--color-text-muted)',
-                      marginTop: '0.5rem',
-                      margin: '0.5rem 0 0 0'
-                    }}>
-                      ಟ್ರೈ: FIRST10, SRUSHTI50, NEWYEAR24
-                    </p>
+                    
+                    {/* Smart Coupon Suggestions */}
+                    {!couponApplied && availableCoupons.eligible.length > 0 && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <p style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: 'var(--color-text)',
+                          marginBottom: '0.5rem'
+                        }}>
+                          🎁 ಲಭ್ಯವಿರುವ ಕೂಪನ್‌ಗಳು:
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {availableCoupons.eligible.slice(0, 3).map((coupon) => (
+                            <button
+                              key={coupon.code}
+                              onClick={() => handleApplyCoupon(coupon.code)}
+                              disabled={isApplyingCoupon}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '0.5rem 0.75rem',
+                                background: availableCoupons.bestOffer?.code === coupon.code 
+                                  ? 'linear-gradient(135deg, #10b98120 0%, #10b98110 100%)' 
+                                  : 'white',
+                                border: availableCoupons.bestOffer?.code === coupon.code 
+                                  ? '1px solid #10b981' 
+                                  : '1px dashed var(--color-border)',
+                                borderRadius: 'var(--radius-md)',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              <div style={{ textAlign: 'left' }}>
+                                <span style={{ 
+                                  fontWeight: 600, 
+                                  color: 'var(--color-primary)',
+                                  display: 'block'
+                                }}>
+                                  {coupon.code}
+                                  {availableCoupons.bestOffer?.code === coupon.code && (
+                                    <span style={{
+                                      marginLeft: '0.5rem',
+                                      background: '#10b981',
+                                      color: 'white',
+                                      padding: '0.125rem 0.375rem',
+                                      borderRadius: '9999px',
+                                      fontSize: '0.625rem'
+                                    }}>
+                                      ಅತ್ಯುತ್ತಮ
+                                    </span>
+                                  )}
+                                </span>
+                                <span style={{ color: 'var(--color-text-light)', fontSize: '0.6875rem' }}>
+                                  {coupon.discountType === 'percentage' 
+                                    ? `${coupon.discountValue}% ರಿಯಾಯಿತಿ` 
+                                    : `₹${coupon.discountValue} ರಿಯಾಯಿತಿ`}
+                                </span>
+                              </div>
+                              <span style={{
+                                fontWeight: 700,
+                                color: '#10b981',
+                                fontSize: '0.8125rem'
+                              }}>
+                                -₹{coupon.calculatedDiscount}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Show upcoming offers if no eligible ones */}
+                    {!couponApplied && availableCoupons.eligible.length === 0 && availableCoupons.upcoming.length > 0 && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <p style={{
+                          fontSize: '0.6875rem',
+                          color: 'var(--color-text-muted)',
+                          margin: 0
+                        }}>
+                          💡 ₹{Math.ceil(availableCoupons.upcoming[0].amountNeeded)} ಹೆಚ್ಚು ಸೇರಿಸಿ {availableCoupons.upcoming[0].code} ಕೂಪನ್ ಅನ್ಲಾಕ್ ಮಾಡಿ!
+                        </p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

@@ -9,66 +9,47 @@ import {
   Tag,
   IndianRupee,
   Package,
-  Eye,
   ArrowUpRight,
   ArrowDownRight,
   Clock,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
-// Mock dashboard data
-const mockStats = {
-  totalRevenue: 256780,
-  revenueChange: 12.5,
-  totalOrders: 145,
-  ordersChange: 8.2,
-  totalBooks: 200,
-  activeOffers: 5,
-  pendingOrders: 12
+interface DashboardStats {
+  totalRevenue: number
+  revenueChange: number
+  totalOrders: number
+  ordersChange: number
+  totalBooks: number
+  activeOffers: number
+  pendingOrders: number
 }
 
-const mockRecentOrders = [
-  {
-    id: '1',
-    orderNumber: 'SP-2024-001',
-    customerName: 'ರಾಜೇಶ್ ಕುಮಾರ್',
-    totalAmount: 1250,
-    status: 'PAID',
-    createdAt: new Date()
-  },
-  {
-    id: '2',
-    orderNumber: 'SP-2024-002',
-    customerName: 'ಪ್ರಿಯಾ ಶ್ರೀನಿವಾಸ್',
-    totalAmount: 899,
-    status: 'DISPATCHED',
-    createdAt: new Date(Date.now() - 3600000)
-  },
-  {
-    id: '3',
-    orderNumber: 'SP-2024-003',
-    customerName: 'ಮಹೇಶ್ ಗೌಡ',
-    totalAmount: 2150,
-    status: 'PENDING',
-    createdAt: new Date(Date.now() - 7200000)
-  },
-  {
-    id: '4',
-    orderNumber: 'SP-2024-004',
-    customerName: 'ಲಕ್ಷ್ಮಿ ದೇವಿ',
-    totalAmount: 450,
-    status: 'DELIVERED',
-    createdAt: new Date(Date.now() - 86400000)
-  }
-]
+interface RecentOrder {
+  id: string
+  orderNumber: string
+  customerName: string
+  totalAmount: number
+  status: string
+  createdAt: string
+}
 
-const mockBestSellers = [
-  { id: '1', title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು', salesCount: 150, revenue: 59850 },
-  { id: '2', title: 'ಕೆಎಎಸ್ ಮಾರ್ಗದರ್ಶಿ', salesCount: 120, revenue: 83880 },
-  { id: '3', title: 'ಕರ್ನಾಟಕ ಇತಿಹಾಸ', salesCount: 95, revenue: 47025 },
-  { id: '4', title: 'ಪಂಚತಂತ್ರ ಕಥೆಗಳು', salesCount: 80, revenue: 11920 }
-]
+interface BestSeller {
+  id: string
+  title: string
+  salesCount: number
+  revenue: number
+}
+
+interface WeeklyRevenue {
+  day: string
+  revenue: number
+  orders: number
+}
 
 const statusColors: Record<string, string> = {
   PENDING: '#f59e0b',
@@ -89,12 +70,85 @@ const statusLabels: Record<string, string> = {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState(mockStats)
-  const [recentOrders, setRecentOrders] = useState(mockRecentOrders)
-  const [bestSellers, setBestSellers] = useState(mockBestSellers)
-  
+  const [stats, setStats] = useState<DashboardStats>({
+    totalRevenue: 0,
+    revenueChange: 0,
+    totalOrders: 0,
+    ordersChange: 0,
+    totalBooks: 0,
+    activeOffers: 0,
+    pendingOrders: 0
+  })
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
+  const [bestSellers, setBestSellers] = useState<BestSeller[]>([])
+  const [weeklyRevenue, setWeeklyRevenue] = useState<WeeklyRevenue[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchDashboardData = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/admin/dashboard')
+      const data = await response.json()
+      if (data.success) {
+        setStats(data.data.stats)
+        setRecentOrders(data.data.recentOrders)
+        setBestSellers(data.data.bestSellers)
+        setWeeklyRevenue(data.data.weeklyRevenue)
+      } else {
+        throw new Error(data.error || 'Failed to fetch dashboard')
+      }
+    } catch (err) {
+      console.error('Dashboard error:', err)
+      setError('ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
+
+  // Find max revenue for chart scaling
+  const maxRevenue = Math.max(...weeklyRevenue.map(d => d.revenue), 1)
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <div className="spinner" style={{ width: '40px', height: '40px' }} />
+      </div>
+    )
+  }
+
   return (
     <div>
+      {/* Header with Refresh */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>📊 ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಸಾರಾಂಶ</h2>
+        <button onClick={fetchDashboardData} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <RefreshCw size={16} /> ರಿಫ್ರೆಶ್
+        </button>
+      </div>
+
+      {error && (
+        <div style={{ 
+          background: '#fef2f2', 
+          border: '1px solid #fecaca', 
+          borderRadius: 'var(--radius-lg)', 
+          padding: '1rem', 
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          color: '#dc2626'
+        }}>
+          <AlertCircle size={20} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div style={{
         display: 'grid',
@@ -127,17 +181,19 @@ export default function AdminDashboard() {
             }}>
               <IndianRupee size={24} />
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              color: stats.revenueChange >= 0 ? 'var(--color-success)' : 'var(--color-error)',
-              fontSize: '0.875rem',
-              fontWeight: 500
-            }}>
-              {stats.revenueChange >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-              {Math.abs(stats.revenueChange)}%
-            </div>
+            {stats.revenueChange !== 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                color: stats.revenueChange >= 0 ? 'var(--color-success)' : 'var(--color-error)',
+                fontSize: '0.875rem',
+                fontWeight: 500
+              }}>
+                {stats.revenueChange >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                {Math.abs(stats.revenueChange)}%
+              </div>
+            )}
           </div>
           <p style={{ 
             fontSize: '2rem', 
@@ -151,7 +207,7 @@ export default function AdminDashboard() {
             color: 'var(--color-text-light)',
             margin: 0
           }}>
-            ಒಟ್ಟು ಆದಾಯ
+            ಕಳೆದ 30 ದಿನಗಳ ಆದಾಯ
           </p>
         </div>
         
@@ -180,17 +236,19 @@ export default function AdminDashboard() {
             }}>
               <ShoppingCart size={24} />
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              color: stats.ordersChange >= 0 ? 'var(--color-success)' : 'var(--color-error)',
-              fontSize: '0.875rem',
-              fontWeight: 500
-            }}>
-              {stats.ordersChange >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-              {Math.abs(stats.ordersChange)}%
-            </div>
+            {stats.ordersChange !== 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                color: stats.ordersChange >= 0 ? 'var(--color-success)' : 'var(--color-error)',
+                fontSize: '0.875rem',
+                fontWeight: 500
+              }}>
+                {stats.ordersChange >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                {Math.abs(stats.ordersChange)}%
+              </div>
+            )}
           </div>
           <p style={{ 
             fontSize: '2rem', 
@@ -204,7 +262,7 @@ export default function AdminDashboard() {
             color: 'var(--color-text-light)',
             margin: 0
           }}>
-            ಒಟ್ಟು ಆರ್ಡರ್‌ಗಳು
+            ಕಳೆದ 30 ದಿನಗಳ ಆರ್ಡರ್‌ಗಳು
           </p>
         </div>
         
@@ -266,7 +324,9 @@ export default function AdminDashboard() {
             <div style={{
               width: '48px',
               height: '48px',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              background: stats.pendingOrders > 0 
+                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               borderRadius: 'var(--radius-lg)',
               display: 'flex',
               alignItems: 'center',
@@ -275,6 +335,18 @@ export default function AdminDashboard() {
             }}>
               <Clock size={24} />
             </div>
+            {stats.pendingOrders > 0 && (
+              <span style={{
+                background: '#fef3c7',
+                color: '#d97706',
+                padding: '0.25rem 0.5rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.75rem',
+                fontWeight: 600
+              }}>
+                ಗಮನ ಬೇಕು
+              </span>
+            )}
           </div>
           <p style={{ 
             fontSize: '2rem', 
@@ -292,11 +364,45 @@ export default function AdminDashboard() {
           </p>
         </div>
       </div>
+
+      {/* Charts and Revenue Section */}
+      {weeklyRevenue.length > 0 && (
+        <div style={{
+          background: 'white',
+          borderRadius: 'var(--radius-xl)',
+          padding: '1.5rem',
+          boxShadow: 'var(--shadow-sm)',
+          marginBottom: '2rem'
+        }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BarChart3 size={20} style={{ color: 'var(--color-primary)' }} />
+            ವಾರದ ಆದಾಯ
+          </h3>
+          <div style={{ display: 'flex', gap: '0.5rem', height: '140px', alignItems: 'flex-end' }}>
+            {weeklyRevenue.map((day, index) => (
+              <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                <div 
+                  style={{ 
+                    width: '100%', 
+                    maxWidth: '40px',
+                    height: `${Math.max((day.revenue / maxRevenue) * 100, 5)}px`,
+                    background: day.revenue > 0 ? 'linear-gradient(180deg, var(--color-primary), var(--color-primary-dark))' : '#e5e7eb',
+                    borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
+                    transition: 'height 0.3s ease'
+                  }}
+                  title={`₹${day.revenue} (${day.orders} ಆರ್ಡರ್)`}
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{day.day}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Main Content Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '2rem'
       }}>
         {/* Recent Orders */}
@@ -327,99 +433,53 @@ export default function AdminDashboard() {
             </Link>
           </div>
           
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                <th style={{ 
-                  padding: '0.75rem', 
-                  textAlign: 'left',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--color-text-light)',
-                  textTransform: 'uppercase'
-                }}>
-                  ಆರ್ಡರ್
-                </th>
-                <th style={{ 
-                  padding: '0.75rem', 
-                  textAlign: 'left',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--color-text-light)',
-                  textTransform: 'uppercase'
-                }}>
-                  ಗ್ರಾಹಕ
-                </th>
-                <th style={{ 
-                  padding: '0.75rem', 
-                  textAlign: 'right',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--color-text-light)',
-                  textTransform: 'uppercase'
-                }}>
-                  ಮೊತ್ತ
-                </th>
-                <th style={{ 
-                  padding: '0.75rem', 
-                  textAlign: 'center',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--color-text-light)',
-                  textTransform: 'uppercase'
-                }}>
-                  ಸ್ಥಿತಿ
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+          {recentOrders.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+              <Package size={32} style={{ marginBottom: '0.5rem' }} />
+              <p>ಯಾವುದೇ ಆರ್ಡರ್‌ಗಳಿಲ್ಲ</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {recentOrders.map((order) => (
-                <tr 
+                <Link
                   key={order.id}
-                  style={{ borderBottom: '1px solid var(--color-border)' }}
+                  href={`/admin/orders/${order.id}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.75rem',
+                    background: 'var(--color-bg-alt)',
+                    borderRadius: 'var(--radius-lg)',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    transition: 'transform 0.15s'
+                  }}
                 >
-                  <td style={{ padding: '1rem 0.75rem' }}>
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      style={{
-                        color: 'var(--color-primary)',
-                        textDecoration: 'none',
-                        fontWeight: 500
-                      }}
-                    >
-                      {order.orderNumber}
-                    </Link>
-                  </td>
-                  <td style={{ padding: '1rem 0.75rem' }}>
-                    {order.customerName}
-                  </td>
-                  <td style={{ 
-                    padding: '1rem 0.75rem',
-                    textAlign: 'right',
-                    fontWeight: 600
-                  }}>
-                    {formatCurrency(order.totalAmount)}
-                  </td>
-                  <td style={{ 
-                    padding: '1rem 0.75rem',
-                    textAlign: 'center'
-                  }}>
+                  <div>
+                    <p style={{ fontWeight: 500, marginBottom: '0.125rem' }}>{order.orderNumber}</p>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-light)', margin: 0 }}>
+                      {order.customerName}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontWeight: 600, marginBottom: '0.125rem' }}>{formatCurrency(order.totalAmount)}</p>
                     <span style={{
                       display: 'inline-block',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: 'var(--radius-md)',
-                      fontSize: '0.75rem',
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.6875rem',
                       fontWeight: 600,
                       background: `${statusColors[order.status]}20`,
                       color: statusColors[order.status]
                     }}>
                       {statusLabels[order.status]}
                     </span>
-                  </td>
-                </tr>
+                  </div>
+                </Link>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
         </div>
         
         {/* Best Sellers */}
@@ -441,61 +501,71 @@ export default function AdminDashboard() {
             </h2>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {bestSellers.map((book, index) => (
-              <div
-                key={book.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '0.75rem',
-                  background: 'var(--color-bg-alt)',
-                  borderRadius: 'var(--radius-lg)'
-                }}
-              >
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: index === 0 ? '#fbbf24' : index === 1 ? '#9ca3af' : index === 2 ? '#f97316' : 'var(--color-border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '0.875rem',
-                  color: index < 3 ? 'white' : 'var(--color-text)'
-                }}>
-                  {index + 1}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ 
-                    fontWeight: 500, 
-                    marginBottom: '0.125rem',
-                    fontSize: '0.9375rem'
+          {bestSellers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+              <BookOpen size={32} style={{ marginBottom: '0.5rem' }} />
+              <p>ಮಾರಾಟ ಡೇಟಾ ಇಲ್ಲ</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {bestSellers.map((book, index) => (
+                <div
+                  key={book.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    padding: '0.75rem',
+                    background: 'var(--color-bg-alt)',
+                    borderRadius: 'var(--radius-lg)'
+                  }}
+                >
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: index === 0 ? '#fbbf24' : index === 1 ? '#9ca3af' : index === 2 ? '#f97316' : 'var(--color-border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    color: index < 3 ? 'white' : 'var(--color-text)'
                   }}>
-                    {book.title}
-                  </p>
-                  <p style={{ 
-                    fontSize: '0.75rem', 
-                    color: 'var(--color-text-light)',
-                    margin: 0
-                  }}>
-                    {book.salesCount} ಮಾರಾಟ
-                  </p>
+                    {index + 1}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ 
+                      fontWeight: 500, 
+                      marginBottom: '0.125rem',
+                      fontSize: '0.9375rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {book.title}
+                    </p>
+                    <p style={{ 
+                      fontSize: '0.75rem', 
+                      color: 'var(--color-text-light)',
+                      margin: 0
+                    }}>
+                      {book.salesCount} ಮಾರಾಟ
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ 
+                      fontWeight: 600, 
+                      color: 'var(--color-success)',
+                      marginBottom: 0
+                    }}>
+                      {formatCurrency(book.revenue)}
+                    </p>
+                  </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ 
-                    fontWeight: 600, 
-                    color: 'var(--color-success)',
-                    marginBottom: 0
-                  }}>
-                    {formatCurrency(book.revenue)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       
@@ -523,20 +593,12 @@ export default function AdminDashboard() {
           ಆರ್ಡರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ
         </Link>
         <Link
-          href="/admin/offers/new"
+          href="/admin/offers"
           className="btn btn-outline btn-lg"
           style={{ justifyContent: 'center' }}
         >
           <Tag size={20} />
-          ಹೊಸ ಆಫರ್ ರಚಿಸಿ
-        </Link>
-        <Link
-          href="/admin/analytics"
-          className="btn btn-outline btn-lg"
-          style={{ justifyContent: 'center', background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', color: 'white', border: 'none' }}
-        >
-          <BarChart3 size={20} />
-          ವಿಶ್ಲೇಷಣೆ ನೋಡಿ
+          ಆಫರ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ
         </Link>
       </div>
     </div>

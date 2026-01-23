@@ -7,6 +7,7 @@ import WhatsAppButton from '@/components/WhatsAppButton'
 import SocialProofPopup from '@/components/SocialProofPopup'
 import SkipToContent from '@/components/SkipToContent'
 import { ScreenReaderAnnouncer } from '@/components/AccessibilityUtils'
+import { AuthProvider } from '@/contexts/AuthContext'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -72,7 +73,12 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ScreenReaderAnnouncer>
             <Toaster
-              position="top-right"
+              position="bottom-right"
+              containerStyle={{
+                bottom: 80, // Above WhatsApp button
+                right: 20,
+                zIndex: 9999
+              }}
               toastOptions={{
                 duration: 3000,
                 style: {
@@ -97,7 +103,9 @@ export default async function RootLayout({
                 },
               }}
             />
-            {children}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
             
             {/* Global Components */}
             <WhatsAppButton />
