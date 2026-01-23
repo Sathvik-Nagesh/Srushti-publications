@@ -1,58 +1,25 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Star, ThumbsUp, MessageSquare, User, Check, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Review {
   id: string
-  userName: string
+  authorName: string // Changed from userName to match API
   rating: number
   title: string
   comment: string
   createdAt: string
-  helpful: number
-  verified: boolean
+  helpful: number // Note: API doesn't support 'helpful' yet, might need schema update or ignore
+  isVerified: boolean // Changed from verified
 }
 
 interface BookReviewsProps {
   bookId: string
   bookTitle: string
 }
-
-// Mock reviews data
-const mockReviews: Review[] = [
-  {
-    id: '1',
-    userName: 'ರಾಜೇಶ್ ಕುಮಾರ್',
-    rating: 5,
-    title: 'ಅತ್ಯುತ್ತಮ ಪುಸ್ತಕ!',
-    comment: 'ಕುವೆಂಪು ಅವರ ಬರವಣಿಗೆ ಅದ್ಭುತವಾಗಿದೆ. ಪ್ರತಿ ಪುಟವೂ ಮನಸ್ಸನ್ನು ತಟ್ಟುತ್ತದೆ. ಖಂಡಿತವಾಗಿ ಓದಲೇಬೇಕಾದ ಪುಸ್ತಕ.',
-    createdAt: '2024-01-15',
-    helpful: 12,
-    verified: true
-  },
-  {
-    id: '2',
-    userName: 'ಪ್ರಿಯಾ ಎಸ್',
-    rating: 4,
-    title: 'ಚೆನ್ನಾಗಿದೆ, ಆದರೆ ಸ್ವಲ್ಪ ಉದ್ದ',
-    comment: 'ಕಥೆ ಚೆನ್ನಾಗಿದೆ ಆದರೆ ಸ್ವಲ್ಪ ಉದ್ದವಾಗಿದೆ. ಮುದ್ರಣ ಗುಣಮಟ್ಟ ಉತ್ತಮ.',
-    createdAt: '2024-01-10',
-    helpful: 5,
-    verified: true
-  },
-  {
-    id: '3',
-    userName: 'ಸುರೇಶ್ ಬಿ',
-    rating: 5,
-    title: 'ಕ್ಲಾಸಿಕ್ ಕನ್ನಡ ಸಾಹಿತ್ಯ',
-    comment: 'ಇದು ಪ್ರತಿಯೊಂದು ಕನ್ನಡಿಗನೂ ಓದಬೇಕಾದ ಪುಸ್ತಕ. ವಿತರಣೆ ಸಮಯಕ್ಕೆ ಸರಿಯಾಗಿ ಬಂತು.',
-    createdAt: '2024-01-05',
-    helpful: 8,
-    verified: false
-  }
-]
 
 // Star Rating Component
 function StarRating({ 
@@ -99,12 +66,9 @@ function StarRating({
 }
 
 // Rating Summary Component
-function RatingSummary({ reviews }: { reviews: Review[] }) {
-  const totalReviews = reviews.length
-  const avgRating = totalReviews > 0 
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews 
-    : 0
-
+function RatingSummary({ reviews, stats }: { reviews: Review[], stats: { averageRating: number, totalReviews: number } }) {
+  const { totalReviews, averageRating } = stats
+  
   const ratingCounts = [5, 4, 3, 2, 1].map(star => ({
     star,
     count: reviews.filter(r => r.rating === star).length,
@@ -125,9 +89,9 @@ function RatingSummary({ reviews }: { reviews: Review[] }) {
       {/* Average Rating */}
       <div style={{ textAlign: 'center', minWidth: '120px' }}>
         <p style={{ fontSize: '3rem', fontWeight: 700, margin: 0, lineHeight: 1 }}>
-          {avgRating.toFixed(1)}
+          {averageRating.toFixed(1)}
         </p>
-        <StarRating rating={Math.round(avgRating)} />
+        <StarRating rating={Math.round(averageRating)} />
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-light)', marginTop: '0.5rem' }}>
           {totalReviews} ವಿಮರ್ಶೆಗಳು
         </p>
@@ -197,8 +161,8 @@ function ReviewCard({ review }: { review: Review }) {
           </div>
           <div>
             <p style={{ fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {review.userName}
-              {review.verified && (
+              {review.authorName}
+              {review.isVerified && (
                 <span style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -248,7 +212,7 @@ function ReviewCard({ review }: { review: Review }) {
           }}
         >
           <ThumbsUp size={16} />
-          ಉಪಯುಕ್ತ ({review.helpful + (helpfulClicked ? 1 : 0)})
+          ಉಪಯುಕ್ತ ({review.helpful || 0 + (helpfulClicked ? 1 : 0)})
         </button>
       </div>
     </div>
@@ -257,18 +221,22 @@ function ReviewCard({ review }: { review: Review }) {
 
 // Write Review Form Component
 function WriteReviewForm({ 
+  bookId,
   bookTitle, 
   onSubmit, 
   onCancel 
 }: { 
+  bookId: string
   bookTitle: string
-  onSubmit: (review: { rating: number; title: string; comment: string; userName: string }) => void
+  onSubmit: (review: any) => Promise<boolean>
   onCancel: () => void
 }) {
+  const { customer, isAuthenticated } = useAuth()
   const [rating, setRating] = useState(0)
   const [title, setTitle] = useState('')
   const [comment, setComment] = useState('')
-  const [userName, setUserName] = useState('')
+  const [userName, setUserName] = useState(customer?.name || '')
+  const [userEmail, setUserEmail] = useState(customer?.email || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -284,12 +252,22 @@ function WriteReviewForm({
       return
     }
 
+    if (!userEmail.trim()) {
+      toast.error('ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ನಮೂದಿಸಿ')
+      return
+    }
+
     setIsSubmitting(true)
     
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1000))
+    const success = await onSubmit({ 
+       bookId,
+       rating, 
+       title, 
+       comment, 
+       authorName: userName,
+       authorEmail: userEmail
+    })
     
-    onSubmit({ rating, title, comment, userName })
     setIsSubmitting(false)
   }
 
@@ -324,6 +302,20 @@ function WriteReviewForm({
         />
       </div>
 
+      {/* Email (Hidden if logged in? No, explicit helps) */}
+      <div style={{ marginBottom: '1rem' }}>
+        <label className="label">ನಿಮ್ಮ ಇಮೇಲ್ *</label>
+        <input
+          type="email"
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.target.value)}
+          className="input"
+          placeholder="ನಿಮ್ಮ ಇಮೇಲ್"
+          required
+          disabled={isAuthenticated && !!customer?.email} // Disable if logged in (from auth)
+        />
+      </div>
+
       {/* Title */}
       <div style={{ marginBottom: '1rem' }}>
         <label className="label">ವಿಮರ್ಶೆ ಶೀರ್ಷಿಕೆ</label>
@@ -355,9 +347,14 @@ function WriteReviewForm({
           type="submit"
           disabled={isSubmitting}
           className="btn btn-primary"
-          style={{ flex: 1 }}
+          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          {isSubmitting ? 'ಸಲ್ಲಿಸಲಾಗುತ್ತಿದೆ...' : 'ವಿಮರ್ಶೆ ಸಲ್ಲಿಸಿ'}
+           {isSubmitting ? (
+             <>
+               <span className="spinner" style={{ width: 16, height: 16, marginRight: 8 }} />
+               ಸಲ್ಲಿಸಲಾಗುತ್ತಿದೆ...
+             </>
+           ) : 'ವಿಮರ್ಶೆ ಸಲ್ಲಿಸಿ'}
         </button>
         <button
           type="button"
@@ -373,44 +370,73 @@ function WriteReviewForm({
 
 // Main Book Reviews Component
 export default function BookReviews({ bookId, bookTitle }: BookReviewsProps) {
-  const [reviews, setReviews] = useState<Review[]>(mockReviews)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0 })
   const [showWriteReview, setShowWriteReview] = useState(false)
-  const [sortBy, setSortBy] = useState<'newest' | 'highest' | 'lowest' | 'helpful'>('newest')
+  const [sortBy, setSortBy] = useState<'newest' | 'highest' | 'lowest'>('newest')
 
-  // ⚡ Performance: Memoize sorting to prevent expensive O(N log N) operation on every render.
-  // This ensures sorting only runs when reviews or sort criteria actually change.
-  const sortedReviews = useMemo(() => {
-    return [...reviews].sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        case 'highest':
-          return b.rating - a.rating
-        case 'lowest':
-          return a.rating - b.rating
-        case 'helpful':
-          return b.helpful - a.helpful
-        default:
-          return 0
+  const fetchReviews = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/reviews?bookId=${bookId}&limit=50`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setReviews(data.data || [])
+        setStats(data.stats || { averageRating: 0, totalReviews: 0 })
       }
-    })
-  }, [reviews, sortBy])
-
-  const handleSubmitReview = (newReview: { rating: number; title: string; comment: string; userName: string }) => {
-    const review: Review = {
-      id: Date.now().toString(),
-      userName: newReview.userName,
-      rating: newReview.rating,
-      title: newReview.title || 'ವಿಮರ್ಶೆ',
-      comment: newReview.comment,
-      createdAt: new Date().toISOString().split('T')[0],
-      helpful: 0,
-      verified: false
+    } catch (error) {
+      console.error('Error fetching reviews:', error)
+      toast.error('ವಿಮರ್ಶೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ')
+    } finally {
+      setIsLoading(false)
     }
-    
-    setReviews([review, ...reviews])
-    setShowWriteReview(false)
-    toast.success('ವಿಮರ್ಶೆ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ! ಧನ್ಯವಾದಗಳು.')
+  }, [bookId])
+
+  useEffect(() => {
+    fetchReviews()
+  }, [fetchReviews])
+
+  // Sort reviews
+  const sortedReviews = [...reviews].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'highest':
+        return b.rating - a.rating
+      case 'lowest':
+        return a.rating - b.rating
+      default:
+        return 0
+    }
+  })
+
+  const handleSubmitReview = async (reviewData: any) => {
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reviewData)
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        toast.success(result.message || 'ವಿಮರ್ಶೆ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!')
+        setShowWriteReview(false)
+        // Note: New review might not show up immediately if it requires approval
+        // Fetch to update stats if any approved
+        fetchReviews()
+        return true
+      } else {
+        toast.error(result.error || 'ವಿಮರ್ಶೆ ಸಲ್ಲಿಸಲು ವಿಫಲವಾಗಿದೆ')
+        return false
+      }
+    } catch (error) {
+      toast.error('ದೋಷ ಸಂಭವಿಸಿದೆ')
+      return false
+    }
   }
 
   return (
@@ -421,12 +447,13 @@ export default function BookReviews({ bookId, bookTitle }: BookReviewsProps) {
       </h2>
 
       {/* Rating Summary */}
-      <RatingSummary reviews={reviews} />
+      <RatingSummary reviews={reviews} stats={stats} />
 
       {/* Write Review Button / Form */}
       <div style={{ marginTop: '1.5rem' }}>
         {showWriteReview ? (
           <WriteReviewForm
+            bookId={bookId}
             bookTitle={bookTitle}
             onSubmit={handleSubmitReview}
             onCancel={() => setShowWriteReview(false)}
@@ -464,14 +491,17 @@ export default function BookReviews({ bookId, bookTitle }: BookReviewsProps) {
             <option value="newest">ಹೊಸವು ಮೊದಲು</option>
             <option value="highest">ಅತಿ ಹೆಚ್ಚು ರೇಟಿಂಗ್</option>
             <option value="lowest">ಅತಿ ಕಡಿಮೆ ರೇಟಿಂಗ್</option>
-            <option value="helpful">ಅತಿ ಉಪಯುಕ್ತ</option>
           </select>
         </div>
       )}
 
       {/* Reviews List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-        {sortedReviews.length > 0 ? (
+        {isLoading ? (
+             <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <span className="spinner" />
+             </div>
+        ) : sortedReviews.length > 0 ? (
           sortedReviews.map(review => (
             <ReviewCard key={review.id} review={review} />
           ))
@@ -485,7 +515,7 @@ export default function BookReviews({ bookId, bookTitle }: BookReviewsProps) {
             <AlertCircle size={48} style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }} />
             <p style={{ fontWeight: 500, marginBottom: '0.5rem' }}>ಇನ್ನೂ ವಿಮರ್ಶೆಗಳಿಲ್ಲ</p>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-              ಈ ಪುಸ್ತಕಕ್ಕೆ ಮೊದಲ ವಿಮರ್ಶೆ ಬರೆಯಿರಿ!
+              ಈ ಪುಸ್ತಕಕ್ಕೆ ಮೊದಲ ವಿಮರ್ಶೆ ಬರೆಯಿರಿ! (ಅನುಮೋದನೆಯ ನಂತರ ಕಾಣಿಸುತ್ತದೆ)
             </p>
           </div>
         )}

@@ -159,3 +159,17 @@ export async function PUT(request: NextRequest) {
     )
   }
 }
+
+// DELETE /api/site-settings - Reset to defaults
+export async function DELETE() {
+  try {
+    await prisma.siteSettingsV2.deleteMany()
+    invalidateCache(CACHE_KEY)
+    invalidateCache('settings:hero')
+    return NextResponse.json({ success: true, message: 'Settings reset to defaults' })
+  } catch (error) {
+    console.error('Error resetting settings:', error)
+    return NextResponse.json({ success: false, error: 'Failed to reset' }, { status: 500 })
+  }
+}
+

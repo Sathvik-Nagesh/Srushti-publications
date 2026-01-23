@@ -10,11 +10,6 @@ import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import QuantitySelector from '@/components/QuantitySelector'
 import RecentlyViewed, { addToRecentlyViewed } from '@/components/RecentlyViewed'
-// Dynamic import for heavy component - loads on demand after hydration
-const BookReviews = dynamic(() => import('@/components/BookReviews'), {
-  ssr: false,
-  loading: () => <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-xl)' }} />
-})
 import { useCartStore } from '@/lib/store'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { 
@@ -30,203 +25,53 @@ import {
   AlertCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import type { Book } from '@/lib/types'
 
-// All books database - shared across the app
-const allBooksDB = [
-  {
-    id: '1',
-    title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು',
-    titleEn: 'Malegalalli Madumagalu',
-    slug: 'malegalli-madhumagalu',
-    author: 'ಕುವೆಂಪು',
-    authorEn: 'Kuvempu',
-    description: `ಕುವೆಂಪು ಅವರ ಅದ್ಭುತ ಕಾದಂಬರಿ "ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು" ಕನ್ನಡ ಸಾಹಿತ್ಯದ ಅತ್ಯಂತ ಮಹತ್ವದ ಕೃತಿಗಳಲ್ಲಿ ಒಂದು. ಪಶ್ಚಿಮ ಘಟ್ಟಗಳ ಸುಂದರ ಪರಿಸರದಲ್ಲಿ ನಡೆಯುವ ಈ ಕಥೆಯು ಪ್ರೀತಿ, ಸಂಸ್ಕೃತಿ, ಮತ್ತು ಮಾನವ ಸಂಬಂಧಗಳ ಆಳವಾದ ಚಿತ್ರಣವನ್ನು ನೀಡುತ್ತದೆ.`,
-    coverImage: '/books/book1.jpg',
-    additionalImages: [],
-    mrp: 450,
-    sellingPrice: 399,
-    discount: 11,
-    stockQuantity: 25,
-    lowStockAlert: 10,
-    isbn: '978-81-7286-123-4',
-    pages: 560,
-    publicationYear: 2023,
-    edition: '15ನೇ ಆವೃತ್ತಿ',
-    language: 'ಕನ್ನಡ',
-    weight: 650,
-    dimensions: '22 x 14 x 3.5 cm',
-    isNewRelease: true,
-    isBestSeller: true,
-    isOnSale: true,
-    isFeatured: true,
-    isActive: true,
-    salesCount: 150,
-    viewCount: 500,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '1',
-    category: { id: '1', name: 'ಸಾಹಿತ್ಯ', nameEn: 'Literature', slug: 'literature' }
-  },
-  {
-    id: '2',
-    title: 'ಕರ್ನಾಟಕ ಇತಿಹಾಸ',
-    titleEn: 'Karnataka Itihasa',
-    slug: 'karnataka-itihasa',
-    author: 'ಡಾ. ಸೂರ್ಯನಾಥ ಕಾಮತ್',
-    authorEn: 'Dr. Suryanath Kamath',
-    description: 'ಕರ್ನಾಟಕದ ಸಂಪೂರ್ಣ ಇತಿಹಾಸ - ಪ್ರಾಚೀನ ಕಾಲದಿಂದ ಆಧುನಿಕ ಯುಗದವರೆಗೆ. ಈ ಪುಸ್ತಕವು ಕರ್ನಾಟಕದ ರಾಜಕೀಯ, ಸಾಂಸ್ಕೃತಿಕ, ಮತ್ತು ಸಾಮಾಜಿಕ ಇತಿಹಾಸವನ್ನು ವಿವರಿಸುತ್ತದೆ.',
-    coverImage: '/books/book2.jpg',
-    additionalImages: [],
-    mrp: 550,
-    sellingPrice: 495,
-    discount: 10,
-    stockQuantity: 15,
-    lowStockAlert: 10,
-    isbn: '978-81-7286-456-7',
-    pages: 620,
-    publicationYear: 2022,
-    edition: '8ನೇ ಆವೃತ್ತಿ',
-    language: 'ಕನ್ನಡ',
-    weight: 700,
-    dimensions: '24 x 16 x 4 cm',
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: false,
-    isFeatured: false,
-    isActive: true,
-    salesCount: 200,
-    viewCount: 800,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '2',
-    category: { id: '2', name: 'ಶೈಕ್ಷಣಿಕ', nameEn: 'Academic', slug: 'academic' }
-  },
-  {
-    id: '3',
-    title: 'ಪಂಚತಂತ್ರ ಕಥೆಗಳು',
-    titleEn: 'Panchatantra Kathegalu',
-    slug: 'panchatantra-kathegalu',
-    author: 'ವಿಷ್ಣುಶರ್ಮ',
-    authorEn: 'Vishnusharma',
-    description: 'ಮಕ್ಕಳಿಗಾಗಿ ಪಂಚತಂತ್ರ ಕಥೆಗಳು. ಪ್ರಾಣಿಗಳ ಮೂಲಕ ಜೀವನದ ಪಾಠಗಳನ್ನು ಕಲಿಸುವ ಈ ಕಥೆಗಳು ಮಕ್ಕಳಿಗೆ ಅತ್ಯುತ್ತಮ.',
-    coverImage: '/books/book3.jpg',
-    additionalImages: [],
-    mrp: 199,
-    sellingPrice: 149,
-    discount: 25,
-    stockQuantity: 50,
-    lowStockAlert: 10,
-    isbn: '978-81-7286-789-0',
-    pages: 180,
-    publicationYear: 2024,
-    edition: '3ನೇ ಆವೃತ್ತಿ',
-    language: 'ಕನ್ನಡ',
-    weight: 300,
-    dimensions: '20 x 14 x 2 cm',
-    isNewRelease: true,
-    isBestSeller: false,
-    isOnSale: true,
-    isFeatured: false,
-    isActive: true,
-    salesCount: 80,
-    viewCount: 300,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '3',
-    category: { id: '3', name: 'ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು', nameEn: 'Children', slug: 'children' }
-  },
-  {
-    id: '4',
-    title: 'ಕೆಎಎಸ್ ಮಾರ್ಗದರ್ಶಿ',
-    titleEn: 'KAS Margadarshi',
-    slug: 'kas-margadarshi',
-    author: 'ಶ್ರೀಕಾಂತ್ ಎನ್',
-    authorEn: 'Srikanth N',
-    description: 'ಕೆಎಎಸ್ ಪರೀಕ್ಷೆಗೆ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ. ಪ್ರಿಲಿಮ್ಸ್, ಮೈನ್ಸ್ ಮತ್ತು ಸಂದರ್ಶನಕ್ಕೆ ಸಂಪೂರ್ಣ ತಯಾರಿಕೆ.',
-    coverImage: '/books/book4.jpg',
-    additionalImages: [],
-    mrp: 799,
-    sellingPrice: 699,
-    discount: 12,
-    stockQuantity: 30,
-    lowStockAlert: 10,
-    isbn: '978-81-7286-012-3',
-    pages: 850,
-    publicationYear: 2024,
-    edition: '2024 ಆವೃತ್ತಿ',
-    language: 'ಕನ್ನಡ',
-    weight: 950,
-    dimensions: '28 x 20 x 5 cm',
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: true,
-    isFeatured: true,
-    isActive: true,
-    salesCount: 300,
-    viewCount: 1000,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    categoryId: '4',
-    category: { id: '4', name: 'ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ', nameEn: 'Exam Guides', slug: 'exam-guides' }
-  }
-]
-
-// Related books function
-const getRelatedBooks = (currentId: string, categoryId: string) => {
-  return allBooksDB
-    .filter(b => b.id !== currentId)
-    .slice(0, 3)
-    .map(b => ({
-      id: b.id,
-      title: b.title,
-      slug: b.slug,
-      author: b.author,
-      mrp: b.mrp,
-      sellingPrice: b.sellingPrice,
-      isNewRelease: b.isNewRelease,
-      isBestSeller: b.isBestSeller
-    }))
-}
+// Dynamic import for heavy component - loads on demand after hydration
+const BookReviews = dynamic(() => import('@/components/BookReviews'), {
+  ssr: false,
+  loading: () => <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-xl)' }} />
+})
 
 export default function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
   const addItem = useCartStore(state => state.addItem)
   
+  const [book, setBook] = useState<Book | null>(null)
+  const [relatedBooks, setRelatedBooks] = useState<Book[]>([])
+  const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   
-  // Find book by slug from the database
-  const book = allBooksDB.find(b => b.slug === resolvedParams.slug)
-  
-  // Handle book not found
+  // Fetch book data
   useEffect(() => {
-    if (!book) {
-      toast.error('ಪುಸ್ತಕ ಕಂಡುಬಂದಿಲ್ಲ')
-      router.push('/books')
+    const fetchBook = async () => {
+        try {
+            setLoading(true)
+            const res = await fetch(`/api/books/${resolvedParams.slug}`)
+            const data = await res.json()
+            
+            if (data.success && data.data.book) {
+                setBook(data.data.book)
+                setRelatedBooks(data.data.relatedBooks || [])
+            } else {
+                toast.error('ಪುಸ್ತಕ ಕಂಡುಬಂದಿಲ್ಲ')
+                router.push('/books')
+            }
+        } catch (error) {
+            console.error('Error fetching book:', error)
+            toast.error('ದೋಷ ಉಂಟಾಗಿದೆ')
+            router.push('/books')
+        } finally {
+            setLoading(false)
+        }
     }
-  }, [book, router])
-  
-  // If no book found, show loading or redirect
-  if (!book) {
-    return (
-      <>
-        <Header />
-        <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <BookOpen size={60} style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }} />
-            <h2>ಪುಸ್ತಕ ಲೋಡ್ ಆಗುತ್ತಿದೆ...</h2>
-          </div>
-        </main>
-        <Footer />
-      </>
-    )
-  }
-  
-  const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
-  const isOutOfStock = book.stockQuantity <= 0
-  const isLowStock = book.stockQuantity > 0 && book.stockQuantity <= book.lowStockAlert
-  const relatedBooks = getRelatedBooks(book.id, book.categoryId)
+    
+    if (resolvedParams.slug) {
+        fetchBook()
+    }
+  }, [resolvedParams.slug, router])
   
   // Track recently viewed books
   useEffect(() => {
@@ -243,7 +88,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
   }, [book])
   
   const handleAddToCart = () => {
-    if (isOutOfStock) {
+    if (!book) return;
+    
+    if (book.stockQuantity <= 0) {
       toast.error('ಈ ಪುಸ್ತಕ ಸ್ಟಾಕ್‌ನಲ್ಲಿಲ್ಲ')
       return
     }
@@ -266,6 +113,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
   }
   
   const handleShare = async () => {
+    if (!book) return;
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -283,6 +132,42 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
     }
   }
   
+  // Loading state
+  if (loading) {
+    return (
+      <>
+        <Header />
+         <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div className="spinner" style={{ 
+                width: '40px', 
+                height: '40px', 
+                border: '4px solid var(--color-primary-100)', 
+                borderTopColor: 'var(--color-primary)', 
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 1rem'
+            }}></div>
+            <h2>ಪುಸ್ತಕ ಲೋಡ್ ಆಗುತ್ತಿದೆ...</h2>
+          </div>
+          <style jsx>{`
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+  
+  if (!book) return null;
+
+  const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
+  const isOutOfStock = book.stockQuantity <= 0
+  const isLowStock = book.stockQuantity > 0 && book.stockQuantity <= (book.lowStockAlert || 10)
+
   return (
     <>
       <Header />
@@ -295,7 +180,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
               <ChevronRight size={14} style={{ color: 'var(--color-text-muted)' }} />
               <Link href="/books" style={{ color: 'var(--color-text-light)', textDecoration: 'none' }}>ಪುಸ್ತಕಗಳು</Link>
               <ChevronRight size={14} style={{ color: 'var(--color-text-muted)' }} />
-              <Link href={`/categories/${book.category.slug}`} style={{ color: 'var(--color-text-light)', textDecoration: 'none' }}>{book.category.name}</Link>
+              <Link href={book.category ? `/categories/${book.category.slug}` : '#'} style={{ color: 'var(--color-text-light)', textDecoration: 'none' }}>{book.category?.name || 'Category'}</Link>
               <ChevronRight size={14} style={{ color: 'var(--color-text-muted)' }} />
               <span style={{ color: 'var(--color-text)' }}>{book.title}</span>
             </nav>
@@ -326,7 +211,18 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <BookOpen size={100} style={{ color: 'var(--color-primary)', opacity: 0.4 }} />
+                   {book.coverImage ? (
+                    <Image
+                      src={book.coverImage}
+                      alt={book.title}
+                      fill
+                      style={{ objectFit: 'cover' }}
+                      sizes="(max-width: 600px) 100vw, 50vw"
+                      priority
+                    />
+                  ) : (
+                    <BookOpen size={100} style={{ color: 'var(--color-primary)', opacity: 0.4 }} />
+                  )}
                   
                   {/* Badges */}
                   <div style={{
@@ -335,7 +231,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
                     left: '1rem',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    zIndex: 10
                   }}>
                     {book.isNewRelease && (
                       <span className="badge badge-new">ಹೊಸ ಬಿಡುಗಡೆ</span>
@@ -377,22 +274,24 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
               {/* Right - Book Info */}
               <div>
                 {/* Category */}
-                <Link 
-                  href={`/categories/${book.category.slug}`}
-                  style={{
-                    display: 'inline-block',
-                    padding: '0.25rem 0.75rem',
-                    background: 'var(--color-primary-50)',
-                    color: 'var(--color-primary)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    textDecoration: 'none',
-                    marginBottom: '1rem'
-                  }}
-                >
-                  {book.category.name}
-                </Link>
+                 {book.category && (
+                    <Link 
+                        href={`/categories/${book.category.slug}`}
+                        style={{
+                            display: 'inline-block',
+                            padding: '0.25rem 0.75rem',
+                            background: 'var(--color-primary-50)',
+                            color: 'var(--color-primary)',
+                            borderRadius: 'var(--radius-md)',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            textDecoration: 'none',
+                            marginBottom: '1rem'
+                        }}
+                    >
+                    {book.category.name}
+                    </Link>
+                )}
                 
                 {/* Title */}
                 <h1 style={{ 
@@ -654,7 +553,17 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <BookOpen size={50} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
+                     {book.coverImage ? (
+                        <Image
+                          src={book.coverImage}
+                          alt={book.title}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          sizes="(max-width: 600px) 100vw, 33vw"
+                        />
+                      ) : (
+                        <BookOpen size={50} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
+                      )}
                     <div className="book-card-badges">
                       {book.isNewRelease && <span className="badge badge-new">ಹೊಸ</span>}
                       {book.isBestSeller && <span className="badge badge-bestseller">ಬೆಸ್ಟ್ ಸೆಲ್ಲರ್</span>}

@@ -233,7 +233,7 @@ export default function AdminOffersPage() {
           {offers.map(offer => {
             const active = isOfferActive(offer)
             return (
-              <div key={offer.id} style={{ background: 'white', borderRadius: 'var(--radius-xl)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '1.25rem', opacity: active ? 1 : 0.6, borderLeft: `4px solid ${active ? 'var(--color-success)' : 'var(--color-text-muted)'}` }}>
+              <div key={offer.id} style={{ background: 'white', borderRadius: 'var(--radius-xl)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '1.25rem', opacity: active ? 1 : 0.7, borderLeft: `4px solid ${active ? 'var(--color-success)' : 'var(--color-text-muted)'}` }}>
                 <div style={{ width: '56px', height: '56px', borderRadius: 'var(--radius-lg)', background: offer.discountType === 'percentage' ? '#8b5cf620' : '#10b98120', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {offer.discountType === 'percentage' ? <Percent size={24} style={{ color: '#8b5cf6' }} /> : <Tag size={24} style={{ color: '#10b981' }} />}
                 </div>

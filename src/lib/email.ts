@@ -112,10 +112,12 @@ const emailTemplates = {
           <span>ಶಿಪ್ಪಿಂಗ್</span>
           <span>${data.shippingCharge === 0 ? 'ಉಚಿತ' : `₹${data.shippingCharge.toFixed(2)}`}</span>
         </div>
+        ${data.taxAmount > 0 ? `
         <div class="summary-row">
           <span>GST</span>
           <span>₹${data.taxAmount.toFixed(2)}</span>
         </div>
+        ` : ''}
         <div class="summary-row total-row">
           <span>ಒಟ್ಟು</span>
           <span style="color: #d97706;">₹${data.totalAmount.toFixed(2)}</span>

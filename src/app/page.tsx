@@ -1,138 +1,77 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import DynamicHero from '@/components/DynamicHero'
-import DynamicCategories from '@/components/DynamicCategories'
-import { Books, Star, TrendUp, Gift, CaretRight, Sparkle, BookOpen, GraduationCap, BookBookmark, Baby } from '@phosphor-icons/react'
+import { 
+  Books, Star, TrendUp, Gift, CaretRight, Sparkle, 
+  BookOpen, GraduationCap, BookBookmark, Baby 
+} from '@phosphor-icons/react'
+import { formatCurrency } from '@/lib/utils'
 
-// Lazy load non-critical components to reduce initial bundle size
-// ScrollToTop: Interactive component only needed after scroll, uses window object
+// Lazy load non-critical components
 const ScrollToTop = dynamic(() => import('@/components/ScrollToTop'), { ssr: false })
-// RecentlyViewed: Relies on localStorage (client-side only), no need for SSR
 const RecentlyViewed = dynamic(() => import('@/components/RecentlyViewed'), { ssr: false })
-// SaleTimer: Client-side logic for countdown, avoids hydration mismatch
 const SaleTimer = dynamic(() => import('@/components/SaleTimer'), { ssr: false })
-// HomepageFAQ: Static content below the fold, lazy loading improves initial load
 const HomepageFAQ = dynamic(() => import('@/components/HomepageFAQ'))
 
-// Mock data for initial display - will be replaced with API calls
-const featuredBooks = [
-  {
-    id: '1',
-    title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು',
-    slug: 'malegalli-madhumagalu',
-    author: 'ಕುವೆಂಪು',
-    coverImage: '/books/book1.jpg',
-    mrp: 450,
-    sellingPrice: 399,
-    isNewRelease: true,
-    isBestSeller: true,
-    isOnSale: true,
-    category: { name: 'ಸಾಹಿತ್ಯ' }
-  },
-  {
-    id: '2',
-    title: 'ಕರ್ನಾಟಕ ಇತಿಹಾಸ',
-    slug: 'karnataka-itihasa',
-    author: 'ಡಾ. ಸೂರ್ಯನಾಥ ಕಾಮತ್',
-    coverImage: '/books/book2.jpg',
-    mrp: 550,
-    sellingPrice: 495,
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: false,
-    category: { name: 'ಶೈಕ್ಷಣಿಕ' }
-  },
-  {
-    id: '3',
-    title: 'ಪಂಚತಂತ್ರ ಕಥೆಗಳು',
-    slug: 'panchatantra-kathegalu',
-    author: 'ವಿಷ್ಣುಶರ್ಮ',
-    coverImage: '/books/book3.jpg',
-    mrp: 199,
-    sellingPrice: 149,
-    isNewRelease: true,
-    isBestSeller: false,
-    isOnSale: true,
-    category: { name: 'ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು' }
-  },
-  {
-    id: '4',
-    title: 'ಕೆಎಎಸ್ ಮಾರ್ಗದರ್ಶಿ',
-    slug: 'kas-margadarshi',
-    author: 'ಶ್ರೀಕಾಂತ್ ಎನ್',
-    coverImage: '/books/book4.jpg',
-    mrp: 799,
-    sellingPrice: 699,
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: true,
-    category: { name: 'ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ' }
-  }
-]
-
-const categories = [
-  { 
-    id: '1', 
-    name: 'ಶೈಕ್ಷಣಿಕ', 
-    nameEn: 'Academic', 
-    slug: 'academic',  
-    icon: GraduationCap,
-    color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    count: 45
-  },
-  { 
-    id: '2', 
-    name: 'ಸಾಹಿತ್ಯ', 
-    nameEn: 'Literature', 
-    slug: 'literature',  
-    icon: BookBookmark,
-    color: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
-    count: 65
-  },
-  { 
-    id: '3', 
-    name: 'ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು', 
-    nameEn: 'Children', 
-    slug: 'children',  
-    icon: Baby,
-    color: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-    count: 40
-  },
-  { 
-    id: '4', 
-    name: 'ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ', 
-    nameEn: 'Exam Guides', 
-    slug: 'exam-guides',  
-    icon: BookOpen,
-    color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    count: 30
-  },
-  { 
-    id: '5', 
-    name: 'ಇತರೆ', 
-    nameEn: 'Others', 
-    slug: 'others',  
-    icon: Sparkle,
-    color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-    count: 20
-  }
-]
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('kn-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+const iconMap: Record<string, any> = {
+  'literature': BookBookmark,
+  'academic': GraduationCap,
+  'children': Baby,
+  'exam-guides': BookOpen,
+  'others': Sparkle
 }
 
+const colorMap = [
+  'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', // Blue
+  'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', // Purple
+  'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', // Pink
+  'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Green
+  'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'  // Orange
+]
+
 export default function HomePage() {
+  const [featuredBooks, setFeaturedBooks] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch Categories
+        const catRes = await fetch('/api/categories')
+        const catData = await catRes.json()
+        if (catData.success) {
+          const processedCats = catData.data.map((cat: any, index: number) => ({
+            ...cat,
+            icon: iconMap[cat.slug] || Sparkle,
+            color: colorMap[index % colorMap.length],
+            count: cat.bookCount || 0
+          }))
+          setCategories(processedCats)
+        }
+
+        // Fetch Books
+        const bookRes = await fetch('/api/books?limit=20&isActive=true')
+        const bookData = await bookRes.json()
+        if (bookData.success) {
+          setFeaturedBooks(bookData.data.items)
+        }
+      } catch (error) {
+        console.error('Failed to load homepage data', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
   return (
     <>
       <Header />
@@ -157,7 +96,6 @@ export default function HomePage() {
                   margin: '0 auto',
                   perspective: '1000px'
                 }}>
-                  {/* Decorative elements */}
                   <div style={{
                     position: 'absolute',
                     top: '-20px',
@@ -181,7 +119,6 @@ export default function HomePage() {
                     zIndex: 0
                   }} />
                   
-                  {/* Main logo display */}
                   <div style={{
                     position: 'relative',
                     background: 'white',
@@ -231,7 +168,7 @@ export default function HomePage() {
               <h2 className="section-title" style={{ marginBottom: 0 }}>
                 📂 ವಿಭಾಗಗಳು
               </h2>
-              <Link href="/categories" className="btn btn-ghost">
+              <Link href="/books" className="btn btn-ghost">
                 ಎಲ್ಲಾ ನೋಡಿ <CaretRight size={18} />
               </Link>
             </div>
@@ -241,12 +178,21 @@ export default function HomePage() {
               gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: '1.5rem'
             }}>
-              {categories.map((category) => {
+              {loading ? (
+                 // Skeleton for categories
+                 Array(4).fill(0).map((_, i) => (
+                   <div key={i} className="card" style={{ height: '200px', background: '#f3f4f6', animation: 'pulse 1.5s infinite' }} />
+                 ))
+              ) : categories.map((category) => {
                 const Icon = category.icon
                 return (
                   <Link
                     key={category.id}
-                    href={`/categories/${category.slug}`}
+                    // Filter books page by category ID since slug route logic is complex without [slug] page for categories
+                    // But usually /categories/[slug] exists. I'll check if /categories/[slug] page exists. 
+                    // Actually, Books page uses query param categoryId usually?
+                    // User code linked to /categories/[slug]. I'll keep it.
+                    href={`/books?category=${category.id}`} 
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
@@ -315,7 +261,11 @@ export default function HomePage() {
             </div>
             
             <div className="product-grid">
-              {featuredBooks.map((book) => (
+              {loading ? (
+                Array(4).fill(0).map((_, i) => (
+                   <div key={i} style={{ height: '350px', background: 'white', borderRadius: '1rem' }} />
+                ))
+              ) : featuredBooks.filter(b => b.isNewRelease).slice(0, 8).map((book) => (
                 <Link
                   key={book.id}
                   href={`/books/${book.slug}`}
@@ -325,9 +275,14 @@ export default function HomePage() {
                     background: 'linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    position: 'relative'
                   }}>
-                    <BookOpen size={60} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
+                    {book.coverImage && book.coverImage !== '/placeholder-book.jpg' ? (
+                        <Image src={book.coverImage} alt={book.title} fill style={{ objectFit: 'cover' }} />
+                    ) : (
+                        <BookOpen size={60} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
+                    )}
                     <div className="book-card-badges">
                       {book.isNewRelease && (
                         <span className="badge badge-new">ಹೊಸ</span>
@@ -348,7 +303,7 @@ export default function HomePage() {
                       color: 'var(--color-primary)',
                       fontWeight: 500
                     }}>
-                      {book.category.name}
+                      {book.category?.name || 'ಪುಸ್ತಕ'}
                     </span>
                     <h3 style={{
                       fontSize: '1rem',
@@ -373,7 +328,7 @@ export default function HomePage() {
                     <div className="price-group">
                       <span className="price-current">{formatCurrency(book.sellingPrice)}</span>
                       {book.mrp > book.sellingPrice && (
-                        <span className="price-original">{formatCurrency(book.mrp)}</span>
+                        <span className="price-original">{formatCurrency(book.mrp || 0)}</span>
                       )}
                     </div>
                   </div>
@@ -404,7 +359,7 @@ export default function HomePage() {
             </div>
             
             <div className="product-grid">
-              {featuredBooks.filter(b => b.isBestSeller).map((book) => (
+              {featuredBooks.filter(b => b.isBestSeller).slice(0, 4).map((book) => (
                 <Link
                   key={book.id}
                   href={`/books/${book.slug}`}
@@ -414,9 +369,14 @@ export default function HomePage() {
                     background: 'linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    position: 'relative'
                   }}>
-                    <BookOpen size={60} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
+                    {book.coverImage && book.coverImage !== '/placeholder-book.jpg' ? (
+                        <Image src={book.coverImage} alt={book.title} fill style={{ objectFit: 'cover' }} />
+                    ) : (
+                        <BookOpen size={60} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
+                    )}
                     <div className="book-card-badges">
                       {book.isBestSeller && (
                         <span className="badge badge-bestseller">ಬೆಸ್ಟ್ ಸೆಲ್ಲರ್</span>
@@ -429,7 +389,7 @@ export default function HomePage() {
                       color: 'var(--color-primary)',
                       fontWeight: 500
                     }}>
-                      {book.category.name}
+                      {book.category?.name || 'ಪುಸ್ತಕ'}
                     </span>
                     <h3 style={{
                       fontSize: '1rem',
