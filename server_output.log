@@ -9,31 +9,33 @@
   · optimizePackageImports
 
 ✓ Starting...
-Attention: Next.js now collects completely anonymous telemetry regarding usage.
-This information is used to shape Next.js' roadmap and prioritize features.
-You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-https://nextjs.org/telemetry
-
 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-✓ Ready in 1644ms
-○ Compiling /books/[slug] ...
- GET /books/some-book 200 in 15.0s (compile: 13.9s, proxy.ts: 212ms, render: 934ms)
- GET /books 200 in 2.4s (compile: 2.3s, proxy.ts: 16ms, render: 58ms)
- GET /books/book1.jpg 200 in 427ms (compile: 62ms, render: 365ms)
- GET /books/book2.jpg 200 in 438ms (compile: 91ms, render: 348ms)
- GET /books/book3.jpg 200 in 467ms (compile: 118ms, render: 349ms)
-⨯ The requested resource isn't a valid image for /books/book2.jpg received null
-⨯ The requested resource isn't a valid image for /books/book3.jpg received null
-⨯ The requested resource isn't a valid image for /books/book1.jpg received null
- GET /books/book4.jpg 200 in 324ms (compile: 24ms, render: 300ms)
-⨯ The requested resource isn't a valid image for /books/book4.jpg received null
- GET /books 200 in 400ms (compile: 10ms, proxy.ts: 12ms, render: 379ms)
- GET /books/book1.jpg 200 in 498ms (compile: 39ms, render: 459ms)
- GET /books/book2.jpg 200 in 513ms (compile: 99ms, render: 414ms)
- GET /books/book3.jpg 200 in 520ms (compile: 135ms, render: 385ms)
-⨯ The requested resource isn't a valid image for /books/book1.jpg received null
-⨯ The requested resource isn't a valid image for /books/book2.jpg received null
- GET /books/book4.jpg 200 in 534ms (compile: 207ms, render: 327ms)
-⨯ The requested resource isn't a valid image for /books/book3.jpg received null
-⨯ The requested resource isn't a valid image for /books/book4.jpg received null
- GET /books/malegalli-madhumagalu 200 in 262ms (compile: 39ms, proxy.ts: 6ms, render: 217ms)
+✓ Ready in 1476ms
+○ Compiling /test-book-card ...
+ GET /test-book-card 200 in 6.2s (compile: 5.4s, proxy.ts: 98ms, render: 661ms)
+⨯ Error: DATABASE_URL environment variable is not set
+    at createPrismaClient (src/lib/prisma.ts:16:11)
+    at <unknown> (src/lib/prisma.ts:39:49)
+  14 |
+  15 |   if (!connectionString) {
+> 16 |     throw new Error("DATABASE_URL environment variable is not set");
+     |           ^
+  17 |   }
+  18 |
+  19 |   // Create a PostgreSQL connection pool optimized for Serverless (Vercel) {
+  page: '/api/auth/me'
+}
+ GET /test-book-card 200 in 116ms (compile: 7ms, proxy.ts: 6ms, render: 103ms)
+⨯ Error: DATABASE_URL environment variable is not set
+    at createPrismaClient (src/lib/prisma.ts:16:11)
+    at <unknown> (src/lib/prisma.ts:39:49)
+  14 |
+  15 |   if (!connectionString) {
+> 16 |     throw new Error("DATABASE_URL environment variable is not set");
+     |           ^
+  17 |   }
+  18 |
+  19 |   // Create a PostgreSQL connection pool optimized for Serverless (Vercel) {
+  page: '/api/auth/me'
+}
+ GET /api/auth/me 500 in 30ms (compile: 11ms, proxy.ts: 6ms, render: 14ms)

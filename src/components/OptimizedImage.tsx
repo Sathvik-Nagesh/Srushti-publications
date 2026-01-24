@@ -18,7 +18,7 @@ interface OptimizedImageProps extends Omit<ImageProps, 'onLoad' | 'onError'> {
 export default function OptimizedImage({
   src,
   alt,
-  fallbackSrc = '/placeholder-book.svg',
+  fallbackSrc = '/placeholder-book.jpg',
   showSkeleton = true,
   className = '',
   style,
@@ -140,7 +140,7 @@ export function BookCoverImage({
       )}
       
       <Image
-        src={hasError ? '/placeholder-book.svg' : src}
+        src={hasError ? '/placeholder-book.jpg' : src}
         alt={`${title} - ಪುಸ್ತಕದ ಮುಖಪುಟ`}
         fill
         sizes={sizes}

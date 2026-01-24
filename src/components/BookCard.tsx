@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart, Eye } from 'lucide-react'
@@ -8,13 +7,15 @@ import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { useCartStore } from '@/lib/store'
 import type { Book } from '@/lib/types'
 import toast from 'react-hot-toast'
+import { memo } from 'react'
+import { BookCoverImage } from '@/components/OptimizedImage'
 
 interface BookCardProps {
   book: Book
   showQuickAdd?: boolean
 }
 
-export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
+function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   const router = useRouter()
   const addItem = useCartStore(state => state.addItem)
   
@@ -50,24 +51,10 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
           href={`/books/${book.slug}`}
           className="block w-full h-full absolute inset-0 z-0"
         >
-          <img
+          <BookCoverImage
             src={book.coverImage || '/placeholder-book.jpg'}
-            alt={book.title}
-            width={300}
-            height={400}
-            loading="lazy"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              if (target.src !== '/placeholder-book.jpg') {
-                target.src = '/placeholder-book.jpg';
-              }
-            }}
-            style={{ 
-              objectFit: 'cover',
-              width: '100%',
-              height: '100%',
-              display: 'block'
-            }}
+            title={book.title}
+            className="w-full h-full"
           />
         </Link>
         
@@ -222,3 +209,5 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
     </div>
   )
 }
+
+export default memo(BookCard)
