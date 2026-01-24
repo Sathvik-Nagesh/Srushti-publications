@@ -16,15 +16,17 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
-  // Create a PostgreSQL connection pool with SSL for Supabase
+  // Create a PostgreSQL connection pool optimized for Serverless (Vercel)
+  // We limit max connections to 1 or 2 per lambda instance to avoid hitting 
+  // the Supabase/Postgres limit during scaling.
   const pool = new Pool({
     connectionString,
     ssl: {
-      rejectUnauthorized: false, // Required for Supabase
+      rejectUnauthorized: false,
     },
-    max: 10, // Maximum number of clients in the pool
+    max: 2, // Low limits are better for serverless to prevent connection exhaustion
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
+    connectionTimeoutMillis: 2000, // Faster timeout for serverless
   });
 
   // Create the adapter using the pool
