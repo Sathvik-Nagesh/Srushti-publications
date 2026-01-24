@@ -59,22 +59,46 @@ export default function Footer() {
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
               {settings.facebook && (
-                  <a href={settings.facebook} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={settings.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="Facebook"
+                  >
                     <Facebook size={18} />
                   </a>
               )}
               {settings.instagram && (
-                  <a href={settings.instagram} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={settings.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="Instagram"
+                  >
                     <Instagram size={18} />
                   </a>
               )}
               {settings.twitter && (
-                  <a href={settings.twitter} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={settings.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="Twitter"
+                  >
                     <Twitter size={18} />
                   </a>
               )}
               {settings.youtube && (
-                  <a href={settings.youtube} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={settings.youtube}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="YouTube"
+                  >
                     <Youtube size={18} />
                   </a>
               )}

@@ -207,6 +207,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
               cursor: 'pointer',
               color: 'var(--color-text-muted)'
             }}
+            aria-label="Clear search"
           >
             <X size={18} />
           </button>
