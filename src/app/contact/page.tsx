@@ -56,7 +56,18 @@ export default function ContactPage() {
                       <Icon size={24} style={{ color: 'var(--color-primary)' }} />
                     </div>
                     <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-light)', marginBottom: '0.25rem' }}>{item.title}</h3>
-                    <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.value}</p>
+                    {item.title === 'ವಿಳಾಸ' ? (
+                        <a 
+                            href="https://maps.app.goo.gl/RNdifVqyLB6HvLrq7"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-primary)', textDecoration: 'none', display: 'block' }}
+                        >
+                            {item.value}
+                        </a>
+                    ) : (
+                        <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.value}</p>
+                    )}
                     <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>{item.subtext}</p>
                   </div>
                 )

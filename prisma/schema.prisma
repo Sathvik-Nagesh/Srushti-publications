@@ -203,6 +203,7 @@ model Order {
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])
+  @@index([customerId])
 }
 
 model OrderItem {
@@ -496,7 +497,7 @@ model SiteSettingsV2 {
   socialProofInterval   Int      @default(15000)
   
   // Contact
-  whatsappNumber        String   @default("919876543210")
+  whatsappNumber        String   @default("919845096668")
   whatsappMessage       String   @default("ನಮಸ್ಕಾರ, ನನಗೆ ಪುಸ್ತಕಗಳ ಬಗ್ಗೆ ಮಾಹಿತಿ ಬೇಕು.")
   
   // Footer

@@ -8,128 +8,39 @@ import Footer from '@/components/Footer'
 import { BookOpen, Search, Filter, ChevronDown, X } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
-// Mock data for search
-const allBooks = [
-  {
-    id: '1',
-    title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು',
-    titleEn: 'Malegalalli Madumagalu',
-    slug: 'malegalli-madhumagalu',
-    author: 'ಕುವೆಂಪು',
-    authorEn: 'Kuvempu',
-    coverImage: '/books/book1.jpg',
-    mrp: 450,
-    sellingPrice: 399,
-    isNewRelease: true,
-    isBestSeller: true,
-    isOnSale: true,
-    category: { name: 'ಸಾಹಿತ್ಯ', nameEn: 'Literature', slug: 'literature' }
-  },
-  {
-    id: '2',
-    title: 'ಕರ್ನಾಟಕ ಇತಿಹಾಸ',
-    titleEn: 'Karnataka History',
-    slug: 'karnataka-itihasa',
-    author: 'ಡಾ. ಸೂರ್ಯನಾಥ ಕಾಮತ್',
-    authorEn: 'Dr. Suryanath Kamat',
-    coverImage: '/books/book2.jpg',
-    mrp: 550,
-    sellingPrice: 495,
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: false,
-    category: { name: 'ಶೈಕ್ಷಣಿಕ', nameEn: 'Academic', slug: 'academic' }
-  },
-  {
-    id: '3',
-    title: 'ಪಂಚತಂತ್ರ ಕಥೆಗಳು',
-    titleEn: 'Panchatantra Stories',
-    slug: 'panchatantra-kathegalu',
-    author: 'ವಿಷ್ಣುಶರ್ಮ',
-    authorEn: 'Vishnusharma',
-    coverImage: '/books/book3.jpg',
-    mrp: 199,
-    sellingPrice: 149,
-    isNewRelease: true,
-    isBestSeller: false,
-    isOnSale: true,
-    category: { name: 'ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು', nameEn: 'Children', slug: 'children' }
-  },
-  {
-    id: '4',
-    title: 'ಕೆಎಎಸ್ ಮಾರ್ಗದರ್ಶಿ',
-    titleEn: 'KAS Guide',
-    slug: 'kas-margadarshi',
-    author: 'ಶ್ರೀಕಾಂತ್ ಎನ್',
-    authorEn: 'Srikanth N',
-    coverImage: '/books/book4.jpg',
-    mrp: 799,
-    sellingPrice: 699,
-    isNewRelease: false,
-    isBestSeller: true,
-    isOnSale: true,
-    category: { name: 'ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ', nameEn: 'Exam Guides', slug: 'exam-guides' }
-  },
-  {
-    id: '5',
-    title: 'ಕನ್ನಡ ವ್ಯಾಕರಣ',
-    titleEn: 'Kannada Grammar',
-    slug: 'kannada-vyakarana',
-    author: 'ಪ್ರೊ. ಜಿ. ವೆಂಕಟಸುಬ್ಬಯ್ಯ',
-    authorEn: 'Prof. G. Venkatasubbaiah',
-    coverImage: '/books/book5.jpg',
-    mrp: 350,
-    sellingPrice: 320,
-    isNewRelease: false,
-    isBestSeller: false,
-    isOnSale: false,
-    category: { name: 'ಶೈಕ್ಷಣಿಕ', nameEn: 'Academic', slug: 'academic' }
-  },
-  {
-    id: '6',
-    title: 'ಬೇಂದ್ರೆ ಕವನಗಳು',
-    titleEn: 'Bendre Poems',
-    slug: 'bendre-kavanagalu',
-    author: 'ದ. ರಾ. ಬೇಂದ್ರೆ',
-    authorEn: 'Da. Ra. Bendre',
-    coverImage: '/books/book6.jpg',
-    mrp: 280,
-    sellingPrice: 250,
-    isNewRelease: true,
-    isBestSeller: true,
-    isOnSale: true,
-    category: { name: 'ಸಾಹಿತ್ಯ', nameEn: 'Literature', slug: 'literature' }
-  }
-]
-
 function SearchResultsContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
   const [searchQuery, setSearchQuery] = useState(query)
-  const [results, setResults] = useState(allBooks)
+  const [results, setResults] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setIsLoading(true)
-    // Simulate search delay
-    const timer = setTimeout(() => {
-      if (query) {
-        const filtered = allBooks.filter(book => 
-          book.title.toLowerCase().includes(query.toLowerCase()) ||
-          book.titleEn?.toLowerCase().includes(query.toLowerCase()) ||
-          book.author.toLowerCase().includes(query.toLowerCase()) ||
-          book.authorEn?.toLowerCase().includes(query.toLowerCase()) ||
-          book.category.name.toLowerCase().includes(query.toLowerCase()) ||
-          book.category.nameEn?.toLowerCase().includes(query.toLowerCase())
-        )
-        setResults(filtered)
-      } else {
-        setResults(allBooks)
+    const fetchResults = async () => {
+      if (!query || query.length < 2) {
+        setResults([])
+        setIsLoading(false)
+        return
       }
-      setIsLoading(false)
-    }, 300)
 
-    return () => clearTimeout(timer)
+      setIsLoading(true)
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        if (data.success) {
+          setResults(data.data)
+        } else {
+          setResults([])
+        }
+      } catch (error) {
+        console.error('Search error:', error)
+        setResults([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchResults()
   }, [query])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -294,36 +205,28 @@ function SearchResultsContent() {
                       }}
                     >
                       <div style={{
-                        height: '200px',
+                        height: '240px',
                         background: 'linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        position: 'relative'
+                        position: 'relative',
+                        overflow: 'hidden'
                       }}>
-                        <BookOpen size={60} style={{ color: 'var(--color-primary)', opacity: 0.5 }} />
-                        
-                        {/* Badges */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '0.75rem',
-                          left: '0.75rem',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '0.25rem'
-                        }}>
-                          {book.isNewRelease && (
-                            <span className="badge badge-new">ಹೊಸ</span>
-                          )}
-                          {book.isBestSeller && (
-                            <span className="badge badge-bestseller">ಬೆಸ್ಟ್ ಸೆಲ್ಲರ್</span>
-                          )}
-                          {book.isOnSale && book.mrp > book.sellingPrice && (
-                            <span className="badge badge-sale">
-                              {Math.round(((book.mrp - book.sellingPrice) / book.mrp) * 100)}% ರಿಯಾಯಿತಿ
-                            </span>
-                          )}
-                        </div>
+                        <img 
+                          src={book.image || '/placeholder-book.jpg'} 
+                          alt={book.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/placeholder-book.jpg';
+                            // Hide the primary icon when fallback is used or just show the icon?
+                          }}
+                        />
                       </div>
                       
                       <div style={{ padding: '1.25rem' }}>
@@ -332,7 +235,7 @@ function SearchResultsContent() {
                           color: 'var(--color-primary)',
                           fontWeight: 500
                         }}>
-                          {book.category.name}
+                          {book.category || 'ಸಾಹಿತ್ಯ'}
                         </span>
                         <h3 style={{
                           fontSize: '1rem',
@@ -343,14 +246,18 @@ function SearchResultsContent() {
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
+                          overflow: 'hidden',
+                          minHeight: '2.8rem'
                         }}>
                           {book.title}
                         </h3>
                         <p style={{
                           fontSize: '0.875rem',
                           color: 'var(--color-text-light)',
-                          marginBottom: '0.75rem'
+                          marginBottom: '0.75rem',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
                         }}>
                           {book.author}
                         </p>
@@ -364,15 +271,15 @@ function SearchResultsContent() {
                             fontWeight: 700,
                             color: 'var(--color-primary)'
                           }}>
-                            {formatCurrency(book.sellingPrice)}
+                            {formatCurrency(book.price)}
                           </span>
-                          {book.mrp > book.sellingPrice && (
+                          {book.originalPrice && book.originalPrice > book.price && (
                             <span style={{
                               fontSize: '0.875rem',
                               color: 'var(--color-text-muted)',
                               textDecoration: 'line-through'
                             }}>
-                              {formatCurrency(book.mrp)}
+                              {formatCurrency(book.originalPrice)}
                             </span>
                           )}
                         </div>

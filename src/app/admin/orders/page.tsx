@@ -53,6 +53,10 @@ export default function AdminOrdersPage() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterPayment, setFilterPayment] = useState('')
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, delivered: 0, revenue: 0 })
+  
+  // Bulk Selection State
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false)
 
   const fetchOrders = async () => {
     setIsLoading(true)
@@ -119,6 +123,59 @@ export default function AdminOrdersPage() {
            o.customerPhone.includes(q)
   })
 
+  // Toggle all
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedOrders(filtered.map(o => o.id))
+    } else {
+      setSelectedOrders([])
+    }
+  }
+
+  // Toggle single
+  const handleSelectOrder = (id: string) => {
+    setSelectedOrders(prev => 
+      prev.includes(id) ? prev.filter(oid => oid !== id) : [...prev, id]
+    )
+  }
+
+  // Bulk Update Handler
+  const handleBulkStatusUpdate = async (status: string) => {
+    if (!confirm(`Are you sure you want to mark ${selectedOrders.length} orders as ${statusLabels[status]}?`)) return
+
+    setIsBulkUpdating(true)
+    let successCount = 0
+    let failCount = 0
+
+    try {
+      // Process sequentially to avoid rate limits or db locks
+      for (const id of selectedOrders) {
+        try {
+          const res = await fetch(`/api/admin/orders/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+          })
+          if (res.ok) successCount++
+          else failCount++
+        } catch (e) {
+          failCount++
+        }
+      }
+
+      toast.success(`${successCount} orders updated successfully`)
+      if (failCount > 0) toast.error(`${failCount} failed to update`)
+      
+      setSelectedOrders([])
+      fetchOrders()
+    } catch (error) {
+      console.error('Bulk update error:', error)
+      toast.error('Failed to process bulk update')
+    } finally {
+      setIsBulkUpdating(false)
+    }
+  }
+
   return (
     <div>
       {/* Stats */}
@@ -144,6 +201,54 @@ export default function AdminOrdersPage() {
           <p style={{ fontSize: '1.5rem', fontWeight: 700 }}>{formatCurrency(stats.revenue)}</p>
         </div>
       </div>
+
+      {/* Bulk Actions Menu */}
+      {selectedOrders.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'white',
+          padding: '0.75rem 1.5rem',
+          borderRadius: '999px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          zIndex: 100,
+          border: '1px solid var(--color-border)'
+        }}>
+          <span style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{selectedOrders.length} ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</span>
+          <div style={{ height: '20px', width: '1px', background: 'var(--color-border)' }} />
+          
+          <button 
+            onClick={() => handleBulkStatusUpdate('DISPATCHED')}
+            disabled={isBulkUpdating}
+            className="btn btn-sm"
+            style={{ background: '#8b5cf6', color: 'white', border: 'none', gap: '0.5rem', whiteSpace: 'nowrap' }}
+          >
+            {isBulkUpdating ? 'ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ...' : <><Truck size={16} /> ಶಿಪ್ ಮಾಡಿ</>}
+          </button>
+          
+          <button 
+            onClick={() => handleBulkStatusUpdate('DELIVERED')}
+            disabled={isBulkUpdating}
+            className="btn btn-sm"
+            style={{ background: '#059669', color: 'white', border: 'none', gap: '0.5rem', whiteSpace: 'nowrap' }}
+          >
+            {isBulkUpdating ? 'ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ...' : <><CheckCircle size={16} /> ವಿತರಿಸಲಾಗಿದೆ</>}
+          </button>
+
+          <button 
+            onClick={() => setSelectedOrders([])}
+            className="btn btn-ghost btn-sm"
+            style={{ marginLeft: '0.5rem', color: 'var(--color-error)' }}
+          >
+            <XCircle size={18} />
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -202,6 +307,14 @@ export default function AdminOrdersPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead>
                 <tr style={{ background: 'var(--color-bg-alt)' }}>
+                  <th style={{ padding: '1rem', width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      onChange={handleSelectAll} 
+                      checked={filtered.length > 0 && selectedOrders.length === filtered.length}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+                    />
+                  </th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-light)' }}>ಆರ್ಡರ್</th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-light)' }}>ಗ್ರಾಹಕ</th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-light)' }}>ಐಟಂಗಳು</th>
@@ -214,7 +327,18 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody>
                 {filtered.map((order) => (
-                  <tr key={order.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <tr key={order.id} style={{ 
+                    borderBottom: '1px solid var(--color-border)',
+                    background: selectedOrders.includes(order.id) ? 'var(--color-primary-50)' : 'white'
+                  }}>
+                    <td style={{ padding: '1rem' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedOrders.includes(order.id)}
+                        onChange={() => handleSelectOrder(order.id)}
+                        style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+                      />
+                    </td>
                     <td style={{ padding: '1rem' }}>
                       <p style={{ fontWeight: 600, color: 'var(--color-primary)', marginBottom: '0.125rem' }}>{order.orderNumber}</p>
                     </td>

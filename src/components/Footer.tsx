@@ -1,99 +1,86 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react'
 
+const socialIconStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '36px',
+  height: '36px',
+  borderRadius: '50%',
+  background: 'var(--color-primary)',
+  color: 'white',
+  transition: 'transform 0.2s ease'
+}
+
 export default function Footer() {
+  const [settings, setSettings] = useState<any>({})
+  const year = new Date().getFullYear()
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/site-settings')
+        const data = await res.json()
+        if (data.success) {
+            setSettings(data.data)
+        }
+      } catch (e) {
+        console.error('Failed to load footer settings')
+      }
+    }
+    fetchSettings()
+  }, [])
+
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-grid">
           {/* Brand Section */}
           <div className="footer-brand">
-            <Image
-              src="/logo.jpg"
-              alt="ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್"
-              width={60}
-              height={60}
-              className="footer-brand-logo"
-              style={{ borderRadius: '8px' }}
-            />
+            <div style={{ position: 'relative', height: '60px', marginBottom: '1rem' }}>
+              <img
+                src="/logo.jpg"
+                alt={settings.businessName || 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್'}
+                style={{ 
+                  height: '100%', 
+                  width: 'auto',
+                  borderRadius: '8px',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
             <p className="footer-brand-text">
-              ಕನ್ನಡ ಸಾಹಿತ್ಯ ಮತ್ತು ಶೈಕ್ಷಣಿಕ ಪುಸ್ತಕಗಳ ಪ್ರಕಾಶಕರು. 
-              ನನ್ನ ಗುರಿಯು ಕನ್ನಡ ಭಾಷೆಯ ಪ್ರಚಾರ ಮತ್ತು ಜ್ಞಾನ ಹಂಚಿಕೆ.
+              {settings.tagline || 'ಕನ್ನಡ ಸಾಹಿತ್ಯ ಮತ್ತು ಶೈಕ್ಷಣಿಕ ಪುಸ್ತಕಗಳ ಪ್ರಕಾಶಕರು.'}
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'var(--color-primary)',
-                  color: 'white',
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                <Facebook size={18} />
-              </a>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'var(--color-primary)',
-                  color: 'white',
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                <Instagram size={18} />
-              </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'var(--color-primary)',
-                  color: 'white',
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                <Twitter size={18} />
-              </a>
-              <a 
-                href="https://youtube.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'var(--color-primary)',
-                  color: 'white',
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                <Youtube size={18} />
-              </a>
+              {settings.facebook && (
+                  <a href={settings.facebook} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                    <Facebook size={18} />
+                  </a>
+              )}
+              {settings.instagram && (
+                  <a href={settings.instagram} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                    <Instagram size={18} />
+                  </a>
+              )}
+              {settings.twitter && (
+                  <a href={settings.twitter} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                    <Twitter size={18} />
+                  </a>
+              )}
+              {settings.youtube && (
+                  <a href={settings.youtube} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                    <Youtube size={18} />
+                  </a>
+              )}
+              {!settings.facebook && !settings.instagram && !settings.twitter && !settings.youtube && (
+                 <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>ಸಾಮಾಜಿಕ ಜಾಲತಾಣಗಳು ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿವೆ</span>
+              )}
             </div>
           </div>
           
@@ -115,11 +102,24 @@ export default function Footer() {
           <div>
             <h3 className="footer-title">ವಿಭಾಗಗಳು</h3>
             <ul className="footer-links">
-              <li><Link href="/categories/academic" className="footer-link">ಶೈಕ್ಷಣಿಕ</Link></li>
-              <li><Link href="/categories/literature" className="footer-link">ಸಾಹಿತ್ಯ</Link></li>
-              <li><Link href="/categories/children" className="footer-link">ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು</Link></li>
-              <li><Link href="/categories/exam" className="footer-link">ಪರೀಕ್ಷಾ ಮಾರ್ಗದರ್ಶಿ</Link></li>
-              <li><Link href="/categories/others" className="footer-link">ಇತರೆ</Link></li>
+              {settings.categories && settings.categories.length > 0 ? (
+                settings.categories.map((cat: any) => (
+                  <li key={cat.id}>
+                    <Link href={`/books?category=${cat.id}`} className="footer-link">
+                      {cat.name}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                // Fallback / Loading placeholders
+                <>
+                  <li><Link href="/categories" className="footer-link">ಎಲ್ಲಾ ವಿಭಾಗಗಳು</Link></li>
+                  <li><Link href="/books" className="footer-link">ಪುಸ್ತಕಗಳು</Link></li>
+                </>
+              )}
+              <li><Link href="/categories" className="footer-link" style={{ fontWeight: 600, color: 'var(--color-primary-light)' }}>
+                ಎಲ್ಲವನ್ನೂ ನೋಡಿ &rarr;
+              </Link></li>
             </ul>
           </div>
           
@@ -128,22 +128,28 @@ export default function Footer() {
             <h3 className="footer-title">ಸಂಪರ್ಕಿಸಿ</h3>
             <ul className="footer-links">
               <li>
-                <a href="mailto:srushtinagesh@gmail.com" className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <a href={`mailto:${settings.email || 'srushtinagesh@gmail.com'}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Mail size={16} />
-                  srushtinagesh@gmail.com
+                  {settings.email || 'srushtinagesh@gmail.com'}
                 </a>
               </li>
               <li>
-                <a href="tel:+919876543210" className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <a href={`tel:${(settings.phone || '+91 98450 96668').replace(/\s/g,'')}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Phone size={16} />
-                  +91 98450 96668
+                  {settings.phone || '+91 98450 96668'}
                 </a>
               </li>
               <li>
-                <span className="footer-link" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                <a 
+                  href="https://maps.app.goo.gl/RNdifVqyLB6HvLrq7" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="footer-link" 
+                  style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}
+                >
                   <MapPin size={16} style={{ flexShrink: 0, marginTop: '4px' }} />
-                  ಬೆಂಗಳೂರು, ಕರ್ನಾಟಕ, ಭಾರತ - 560001
-                </span>
+                  {settings.address || 'ಬೆಂಗಳೂರು, ಕರ್ನಾಟಕ, ಭಾರತ'}
+                </a>
               </li>
             </ul>
           </div>

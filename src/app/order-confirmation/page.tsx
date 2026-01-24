@@ -343,6 +343,22 @@ function OrderConfirmationContent() {
                     </p>
                   </div>
                 </div>
+                
+                {/* Tracking Link (if available) */}
+                {order.trackingNumber && (
+                    <div style={{ marginTop: '1rem' }}>
+                        <a 
+                           href={`https://t.17track.net/en#nums=${order.trackingNumber}`}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="btn btn-outline"
+                           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'white' }}
+                        >
+                           <Package size={18} />
+                           ಪ್ಯಾಕೇಜ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ ({order.trackingNumber})
+                        </a>
+                    </div>
+                )}
               </div>
               
               {/* Invoice */}

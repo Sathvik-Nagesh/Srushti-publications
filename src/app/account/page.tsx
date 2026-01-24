@@ -304,49 +304,83 @@ export default function AccountPage() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {orders.map(order => (
-                        <Link
-                          key={order.id}
-                          href={`/order-confirmation?order=${order.orderNumber}`}
-                          style={{
-                            display: 'block',
-                            background: 'white',
-                            borderRadius: 'var(--radius-xl)',
-                            padding: '1.25rem',
-                            textDecoration: 'none',
-                            color: 'inherit',
-                            border: '1px solid var(--color-border)',
-                            transition: 'border-color 0.2s ease'
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                            <div>
-                              <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-                                #{order.orderNumber}
-                              </p>
-                              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                                {new Date(order.createdAt).toLocaleDateString('kn-IN')}
-                              </p>
+                        <div key={order.id} style={{ background: 'white', borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+                            <Link
+                            href={`/order-confirmation?order=${order.orderNumber}`}
+                            style={{
+                                display: 'block',
+                                padding: '1.25rem',
+                                textDecoration: 'none',
+                                color: 'inherit',
+                            }}
+                            >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                                <div>
+                                <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                                    #{order.orderNumber}
+                                </p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                    {new Date(order.createdAt).toLocaleDateString('kn-IN')}
+                                </p>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                {getStatusBadge(order.status)}
+                                <p style={{ fontWeight: 600, marginTop: '0.5rem' }}>
+                                    {formatCurrency(order.totalAmount)}
+                                </p>
+                                </div>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                              {getStatusBadge(order.status)}
-                              <p style={{ fontWeight: 600, marginTop: '0.5rem' }}>
-                                {formatCurrency(order.totalAmount)}
-                              </p>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                paddingTop: '0.75rem',
+                                borderTop: '1px solid var(--color-border)'
+                            }}>
+                                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-light)' }}>
+                                {order.items.map(i => `${i.bookTitle} (×${i.quantity})`).join(', ').substring(0, 50)}...
+                                </p>
+                                {order.status === 'DISPATCHED' ? (
+                                    <span style={{
+                                        fontSize: '0.875rem',
+                                        fontWeight: 600,
+                                        color: 'var(--color-primary)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem'
+                                    }}>
+                                        ತಾಜಾ ಸ್ಥಿತಿ ನೋಡಿ <ChevronRight size={16} />
+                                    </span>
+                                ) : (
+                                    <ChevronRight size={20} style={{ color: 'var(--color-text-muted)' }} />
+                                )}
                             </div>
-                          </div>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            paddingTop: '0.75rem',
-                            borderTop: '1px solid var(--color-border)'
-                          }}>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-light)' }}>
-                              {order.items.map(i => `${i.bookTitle} (×${i.quantity})`).join(', ').substring(0, 50)}...
-                            </p>
-                            <ChevronRight size={20} style={{ color: 'var(--color-text-muted)' }} />
-                          </div>
-                        </Link>
+                            </Link>
+                            
+                            {/* Tracking Link Footer */}
+                            {(order.status === 'DISPATCHED') && (
+                                <div style={{ 
+                                    padding: '0 1.25rem 1.25rem 1.25rem', 
+                                    display: 'flex', 
+                                    justifyContent: 'flex-end',
+                                    borderTop: '1px solid var(--color-border)',
+                                    background: 'var(--color-bg-alt)'
+                                }}>
+                                     <div style={{ paddingTop: '1rem', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                         <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                                            ನಿಮ್ಮ ಆರ್ಡರ್ ದಾರಿಯಲ್ಲಿದೆ
+                                         </span>
+                                         <Link 
+                                            href={`/order-confirmation?order=${order.orderNumber}`}
+                                            className="btn btn-sm btn-outline"
+                                            style={{ fontSize: '0.8rem', background: 'white' }}
+                                         >
+                                            ಪ್ರಗತಿ ಪರಿಶೀಲಿಸಿ
+                                         </Link>
+                                     </div>
+                                </div>
+                            )}
+                        </div>
                       ))}
                     </div>
                   )}

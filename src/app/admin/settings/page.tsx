@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Save, Building, Mail, Phone, MapPin, FileText, Truck, CreditCard, Settings, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -8,16 +8,58 @@ import toast from 'react-hot-toast'
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('general')
   const [settings, setSettings] = useState({
-    businessName: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್', businessNameEn: 'Srushti Publications',
-    tagline: 'ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು', email: 'srushtinagesh@gmail.com',
-    phone: '+91 98450 96668', whatsapp: '+91 98450 96668',
-    address: '123, 4ನೇ ಮುಖ್ಯ ರಸ್ತೆ, ಜಯನಗರ, ಬೆಂಗಳೂರು - 560041', city: 'ಬೆಂಗಳೂರು', state: 'ಕರ್ನಾಟಕ', pincode: '560041',
-    gstNumber: '29XXXXX1234X1Z5', panNumber: 'AAAAA1234A',
+    businessName: '', businessNameEn: '',
+    tagline: '', email: '',
+    phone: '', whatsapp: '',
+    address: '', city: 'ಬೆಂಗಳೂರು', state: 'ಕರ್ನಾಟಕ', pincode: '560041',
+    gstNumber: '', panNumber: '',
     defaultShipping: '50', freeShippingMin: '500', estimatedDays: '5-7 ದಿನಗಳು',
-    razorpayKeyId: 'rzp_test_xxx', razorpayKeySecret: '***hidden***',
-    socialFacebook: 'https://facebook.com/srushti', socialInstagram: 'https://instagram.com/srushti', socialTwitter: '', socialYoutube: ''
+    razorpayKeyId: '', razorpayKeySecret: '',
+    socialFacebook: '', socialInstagram: '', socialTwitter: '', socialYoutube: ''
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const s = data.data
+        setSettings(prev => ({
+          ...prev,
+          businessName: s.businessName || '',
+          businessNameEn: s.businessNameEn || '',
+          tagline: s.tagline || '',
+          email: s.email || '',
+          phone: s.phone || '',
+          whatsapp: s.whatsapp || '',
+          address: s.address || '', 
+          // Note: DB only stores full address string currently, so city/state might need manual setting if not parsed
+          
+          gstNumber: s.gstNumber || '',
+          panNumber: s.panNumber || '',
+          defaultShipping: s.defaultShipping?.toString() || '50',
+          freeShippingMin: s.freeShippingMin?.toString() || '500',
+          estimatedDays: s.estimatedDays || '',
+          razorpayKeyId: s.razorpayKeyId || '',
+          razorpayKeySecret: s.razorpaySecret || '', // Mapped from DB razorpaySecret
+          socialFacebook: s.facebook || '',
+          socialInstagram: s.instagram || '',
+          socialTwitter: s.twitter || '',
+          socialYoutube: s.youtube || ''
+        }))
+      }
+    } catch (e) {
+      toast.error('Failed to load settings')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setSettings(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -25,9 +67,23 @@ export default function AdminSettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    await new Promise(r => setTimeout(r, 1000))
-    toast.success('ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!')
-    setIsSaving(false)
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success('ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!')
+      } else {
+        toast.error('ಉಳಿಸಲು ವಿಫಲವಾಗಿದೆ')
+      }
+    } catch (error) {
+       toast.error('Error saving settings')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const tabs = [
@@ -36,6 +92,8 @@ export default function AdminSettingsPage() {
     { id: 'shipping', label: 'ಶಿಪ್ಪಿಂಗ್', icon: Truck },
     { id: 'payment', label: 'ಪಾವತಿ', icon: CreditCard }
   ]
+
+  if (isLoading) return <div className="p-8 text-center">Loading...</div>
 
   return (
     <div>

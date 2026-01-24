@@ -71,7 +71,9 @@ export function usePreload(importFn: () => Promise<any>, moduleId?: string) {
 export function preloadPage(href: string) {
   if (typeof window === 'undefined') return
   
-  const prefetchUrl = `/_next/data/${window.__NEXT_DATA__?.buildId ?? 'development'}${href}.json`
+  // Use type assertion to avoid global interface conflict
+  const buildId = (window as any).__NEXT_DATA__?.buildId ?? 'development'
+  const prefetchUrl = `/_next/data/${buildId}${href}.json`
   
   // Create a prefetch link
   const link = document.createElement('link')
@@ -95,13 +97,4 @@ export function preloadImage(src: string) {
   link.href = src
   
   document.head.appendChild(link)
-}
-
-// Type declaration for Next.js
-declare global {
-  interface Window {
-    __NEXT_DATA__?: {
-      buildId?: string
-    }
-  }
 }

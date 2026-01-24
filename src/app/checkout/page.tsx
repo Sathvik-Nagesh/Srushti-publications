@@ -275,18 +275,20 @@ export default function CheckoutPage() {
                             placeholder="example@mail.com" 
                         />
                     </div>
-                     <div style={{ marginTop: '0.5rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--color-text-light)' }}>
-                            <input 
-                                type="checkbox"
-                                name="createAccount"
-                                checked={formData.createAccount as boolean}
-                                onChange={handleInputChange}
-                                style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px' }}
-                            />
-                            నನಗಾಗಿ ಖಾತೆಯನ್ನು ರಚಿಸಿ (Create an account for me)
-                        </label>
-                    </div>
+                     {!customer && (
+                       <div style={{ marginTop: '0.5rem' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--color-text-light)' }}>
+                              <input 
+                                  type="checkbox"
+                                  name="createAccount"
+                                  checked={formData.createAccount as boolean}
+                                  onChange={handleInputChange}
+                                  style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px' }}
+                              />
+                              ನನಗಾಗಿ ಖಾತೆಯನ್ನು ರಚಿಸಿ (Create an account for me)
+                          </label>
+                      </div>
+                     )}
                 </div>
 
                 {formData.createAccount && (

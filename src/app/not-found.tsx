@@ -128,12 +128,12 @@ export default function NotFound() {
       </div>
       
       {/* Floating animation */}
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(-5deg); }
           50% { transform: translateY(-15px) rotate(5deg); }
         }
-      `}</style>
+      `}} />
     </div>
   )
 }
