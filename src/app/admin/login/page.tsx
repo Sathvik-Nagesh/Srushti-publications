@@ -258,24 +258,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div style={{
-            marginTop: '2rem',
-            padding: '1rem',
-            background: 'var(--color-bg-alt)',
-            borderRadius: 'var(--radius-lg)',
-            fontSize: '0.8125rem'
-          }}>
-            <p style={{ fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-text)' }}>
-              🔐 Demo Credentials:
-            </p>
-            <p style={{ margin: '0.25rem 0', color: 'var(--color-text-light)' }}>
-              Email: <code style={{ background: 'white', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>admin@srushtipublication.com</code>
-            </p>
-            <p style={{ margin: '0.25rem 0', color: 'var(--color-text-light)' }}>
-              Password: <code style={{ background: 'white', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>SrushtiAdmin@2024</code>
-            </p>
-          </div>
+
         </div>
 
         {/* Footer */}

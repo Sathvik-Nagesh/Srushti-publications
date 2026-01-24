@@ -3,7 +3,7 @@
    Kannada Books E-Commerce Design System
    ============================================ */
 
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap");
+/* Font loaded via next/font in layout.tsx */
 
 @tailwind base;
 @tailwind components;
@@ -63,7 +63,7 @@
   --radius-2xl: 1.5rem;
 
   /* Font Families */
-  --font-kannada: "Noto Sans Kannada", sans-serif;
+  --font-kannada: var(--font-kannada), sans-serif;
   --font-sans: system-ui, -apple-system, sans-serif;
 }
 

@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { hashPassword, verifyPassword, generateToken, generateSessionToken } from '@/lib/password'
+import { hashPassword, generateToken, generateSessionToken } from '@/lib/password'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { schemas } from '@/lib/sanitization'
+import { z } from 'zod'
+
+const registerSchema = z.object({
+  email: schemas.email,
+  password: schemas.password,
+  name: schemas.name,
+  phone: schemas.phone.optional()
+})
 
 // POST /api/auth/register - Register new customer
 export async function POST(request: NextRequest) {
@@ -17,26 +26,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, password, name, phone } = body
-
-    // Validation
-    if (!email || !password || !name) {
+    
+    // Validate & Sanitize Input
+    const result = registerSchema.safeParse(body)
+    
+    if (!result.success) {
+      // Format Zod errors
+      const errorMessage = result.error.issues[0]?.message || 'Invalid input'
       return NextResponse.json(
-        { success: false, error: 'ಹೆಸರು, ಇ-ಮೇಲ್ ಮತ್ತು ಪಾಸ್ವರ್ಡ್ ಅಗತ್ಯ' },
+        { success: false, error: errorMessage },
         { status: 400 }
       )
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { success: false, error: 'ಪಾಸ್ವರ್ಡ್ ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳಿರಬೇಕು' },
-        { status: 400 }
-      )
-    }
+    const { email, password, name, phone } = result.data
 
     // Check if email already exists
     const existingCustomer = await prisma.customer.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { email }
     })
 
     if (existingCustomer) {
@@ -53,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Create customer
     const customer = await prisma.customer.create({
       data: {
-        email: email.toLowerCase(),
+        email,
         passwordHash,
         name,
         phone: phone || null,

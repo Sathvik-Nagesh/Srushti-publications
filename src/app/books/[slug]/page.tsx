@@ -1,172 +1,104 @@
-'use client'
-
-import { useState, use, useEffect } from 'react'
+import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+import prisma from '@/lib/prisma'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
-import QuantitySelector from '@/components/QuantitySelector'
-import RecentlyViewed, { addToRecentlyViewed } from '@/components/RecentlyViewed'
-import { useCartStore } from '@/lib/store'
+import BookActions from '@/components/BookActions'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { 
-  ShoppingCart, 
-  Heart, 
-  Share2, 
   BookOpen, 
   Truck, 
   Shield, 
   RefreshCw,
   ChevronRight,
-  Check,
-  AlertCircle
 } from 'lucide-react'
-import toast from 'react-hot-toast'
-import type { Book } from '@/lib/types'
 
-// Dynamic import for heavy component - loads on demand after hydration
+// Dynamic import for heavy client components
 const BookReviews = dynamic(() => import('@/components/BookReviews'), {
-  ssr: false,
   loading: () => <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-xl)' }} />
 })
 
-export default function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = use(params)
-  const router = useRouter()
-  const addItem = useCartStore(state => state.addItem)
+// Generate dynamic metadata for SEO
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params
   
-  const [book, setBook] = useState<Book | null>(null)
-  const [relatedBooks, setRelatedBooks] = useState<Book[]>([])
-  const [loading, setLoading] = useState(true)
-  const [quantity, setQuantity] = useState(1)
-  const [isAddingToCart, setIsAddingToCart] = useState(false)
-  
-  // Fetch book data
-  useEffect(() => {
-    const fetchBook = async () => {
-        try {
-            setLoading(true)
-            const res = await fetch(`/api/books/${resolvedParams.slug}`)
-            const data = await res.json()
-            
-            if (data.success && data.data.book) {
-                setBook(data.data.book)
-                setRelatedBooks(data.data.relatedBooks || [])
-            } else {
-                toast.error('ಪುಸ್ತಕ ಕಂಡುಬಂದಿಲ್ಲ')
-                router.push('/books')
-            }
-        } catch (error) {
-            console.error('Error fetching book:', error)
-            toast.error('ದೋಷ ಉಂಟಾಗಿದೆ')
-            router.push('/books')
-        } finally {
-            setLoading(false)
-        }
-    }
-    
-    if (resolvedParams.slug) {
-        fetchBook()
-    }
-  }, [resolvedParams.slug, router])
-  
-  // Track recently viewed books
-  useEffect(() => {
-    if (book) {
-      addToRecentlyViewed({
-        id: book.id,
-        slug: book.slug,
-        title: book.title,
-        author: book.author,
-        price: book.sellingPrice,
-        mrp: book.mrp
-      })
-    }
-  }, [book])
-  
-  const handleAddToCart = () => {
-    if (!book) return;
-    
-    if (book.stockQuantity <= 0) {
-      toast.error('ಈ ಪುಸ್ತಕ ಸ್ಟಾಕ್‌ನಲ್ಲಿಲ್ಲ')
-      return
-    }
-    
-    setIsAddingToCart(true)
-    
-    // Add to cart
-    for (let i = 0; i < quantity; i++) {
-      addItem(book as any)
-    }
-    
-    toast.success(`${quantity} ಪುಸ್ತಕಗಳನ್ನು ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಲಾಗಿದೆ!`)
-    
-    setTimeout(() => setIsAddingToCart(false), 500)
-  }
-  
-  const handleBuyNow = () => {
-    handleAddToCart()
-    router.push('/cart')
-  }
-  
-  const handleShare = async () => {
-    if (!book) return;
+  const book = await prisma.book.findUnique({
+    where: { slug },
+    select: { title: true, description: true, coverImage: true, author: true }
+  })
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: book.title,
-          text: `${book.title} - ${book.author}`,
-          url: window.location.href,
-        })
-      } catch (error) {
-        // User cancelled sharing
+  if (!book) {
+    return {
+      title: 'ಪುಸ್ತಕ ಕಂಡುಬಂದಿಲ್ಲ | Srushti Publications',
+    }
+  }
+
+  return {
+    title: `${book.title} by ${book.author} | Srushti Publications`,
+    description: book.description.substring(0, 160),
+    openGraph: {
+      title: book.title,
+      description: book.description.substring(0, 160),
+      images: [book.coverImage],
+      type: 'book',
+    },
+  }
+}
+
+async function getBook(slug: string) {
+  const book = await prisma.book.findUnique({
+    where: { slug, isActive: true },
+    include: {
+      category: {
+        select: { name: true, slug: true }
       }
-    } else {
-      // Fallback to copy link
-      navigator.clipboard.writeText(window.location.href)
-      toast.success('ಲಿಂಕ್ ನಕಲಿಸಲಾಗಿದೆ!')
     }
-  }
-  
-  // Loading state
-  if (loading) {
-    return (
-      <>
-        <Header />
-         <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div className="spinner" style={{ 
-                width: '40px', 
-                height: '40px', 
-                border: '4px solid var(--color-primary-100)', 
-                borderTopColor: 'var(--color-primary)', 
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto 1rem'
-            }}></div>
-            <h2>ಪುಸ್ತಕ ಲೋಡ್ ಆಗುತ್ತಿದೆ...</h2>
-          </div>
-          <style jsx>{`
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </main>
-        <Footer />
-      </>
-    )
-  }
-  
-  if (!book) return null;
+  })
 
+  if (!book) return null
+
+  // Increment view count (fire and forget)
+  // Note: doing this in a server component might run on every render/revalidate.
+  // Ideally use a separate API beacon or keep this lightweight.
+  // We'll skip it here to keep the server component pure or move it to a client effect if tracking is strictly needed.
+  // OR, we accept it runs on page load.
+  await prisma.book.update({
+    where: { id: book.id },
+    data: { viewCount: { increment: 1 } }
+  })
+
+  return book
+}
+
+async function getRelatedBooks(categoryId: string, currentBookId: string) {
+  return await prisma.book.findMany({
+    where: {
+      categoryId: categoryId,
+      id: { not: currentBookId },
+      isActive: true
+    },
+    take: 4,
+    orderBy: { salesCount: 'desc' }
+  })
+}
+
+export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const book = await getBook(slug)
+
+  if (!book) {
+    notFound()
+  }
+
+  const relatedBooks = await getRelatedBooks(book.categoryId, book.id)
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
-  const isOutOfStock = book.stockQuantity <= 0
-  const isLowStock = book.stockQuantity > 0 && book.stockQuantity <= (book.lowStockAlert || 10)
 
   return (
     <>
@@ -244,30 +176,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
                       <span className="badge badge-sale">{discountPercentage}% ರಿಯಾಯಿತಿ</span>
                     )}
                   </div>
-                </div>
-                
-                {/* Action Buttons */}
-                <div style={{
-                  display: 'flex',
-                  gap: '0.75rem',
-                  marginTop: '1rem'
-                }}>
-                  <button
-                    className="btn btn-outline"
-                    style={{ flex: 1 }}
-                    onClick={() => toast.success('ಇಚ್ಛೆಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗಿದೆ!')}
-                  >
-                    <Heart size={18} />
-                    ಇಚ್ಛೆಪಟ್ಟಿ
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    style={{ flex: 1 }}
-                    onClick={handleShare}
-                  >
-                    <Share2 size={18} />
-                    ಹಂಚಿಕೊಳ್ಳಿ
-                  </button>
                 </div>
               </div>
               
@@ -347,81 +255,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
                   </p>
                 </div>
                 
-                {/* Stock Status */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                  {isOutOfStock ? (
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem',
-                      color: 'var(--color-error)'
-                    }}>
-                      <AlertCircle size={20} />
-                      <span style={{ fontWeight: 500 }}>ಸ್ಟಾಕ್‌ನಲ್ಲಿಲ್ಲ</span>
-                    </div>
-                  ) : isLowStock ? (
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem',
-                      color: 'var(--color-warning)'
-                    }}>
-                      <AlertCircle size={20} />
-                      <span style={{ fontWeight: 500 }}>ಕೇವಲ {book.stockQuantity} ಬಾಕಿ!</span>
-                    </div>
-                  ) : (
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem',
-                      color: 'var(--color-success)'
-                    }}>
-                      <Check size={20} />
-                      <span style={{ fontWeight: 500 }}>ಸ್ಟಾಕ್‌ನಲ್ಲಿದೆ</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Quantity & Add to Cart */}
-                {!isOutOfStock && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ 
-                      display: 'block', 
-                      marginBottom: '0.5rem',
-                      fontWeight: 500
-                    }}>
-                      ಪ್ರಮಾಣ
-                    </label>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                      <QuantitySelector
-                        quantity={quantity}
-                        maxQuantity={book.stockQuantity}
-                        onQuantityChange={setQuantity}
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={isOutOfStock || isAddingToCart}
-                    className="btn btn-outline btn-lg"
-                    style={{ flex: 1 }}
-                  >
-                    <ShoppingCart size={20} />
-                    ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿ
-                  </button>
-                  <button
-                    onClick={handleBuyNow}
-                    disabled={isOutOfStock}
-                    className="btn btn-primary btn-lg"
-                    style={{ flex: 1 }}
-                  >
-                    ಈಗಲೇ ಖರೀದಿಸಿ
-                  </button>
-                </div>
+                {/* Interactive Actions (Client Component) */}
+                <BookActions book={book as any} /> 
                 
                 {/* Delivery Info */}
                 <div style={{
@@ -430,7 +265,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
                   gap: '1rem',
                   padding: '1rem',
                   background: 'var(--color-bg-alt)',
-                  borderRadius: 'var(--radius-lg)'
+                  borderRadius: 'var(--radius-lg)',
+                  marginTop: '1.5rem'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Truck size={24} style={{ color: 'var(--color-primary)' }} />
@@ -531,7 +367,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ slug: str
         {/* Reviews Section */}
         <section className="section">
           <div className="container">
-            <BookReviews bookId={book.id} bookTitle={book.title} />
+            <Suspense fallback={<div className="spinner" />}>
+                <BookReviews bookId={book.id} bookTitle={book.title} />
+            </Suspense>
           </div>
         </section>
         

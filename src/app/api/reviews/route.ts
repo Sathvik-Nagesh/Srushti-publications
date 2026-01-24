@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getCached, setCache, API_RATE_LIMITS } from '@/lib/rateLimit'
+import { schemas, sanitize } from '@/lib/sanitization'
+import { z } from 'zod'
+
+const reviewSchema = z.object({
+  bookId: z.string(),
+  rating: z.number().min(1).max(5),
+  title: z.string().max(100).transform(sanitize).optional().nullable(),
+  comment: z.string().min(10, 'Comment too short').max(1000).transform(sanitize),
+  authorName: schemas.name,
+  authorEmail: schemas.email,
+  orderId: z.string().optional().nullable()
+})
 
 // GET /api/reviews - Get reviews for a book
 export async function GET(request: NextRequest) {
@@ -88,22 +100,19 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json()
-    const { bookId, rating, title, comment, authorName, authorEmail, orderId } = body
     
-    // Validation
-    if (!bookId || !rating || !comment || !authorName || !authorEmail) {
+    // Validate & Sanitize
+    const result = reviewSchema.safeParse(body)
+    
+    if (!result.success) {
+      const errorMessage = result.error.issues[0]?.message || 'Invalid input'
       return NextResponse.json(
-        { success: false, error: 'ಎಲ್ಲಾ ಅಗತ್ಯ ಕ್ಷೇತ್ರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ' },
+        { success: false, error: errorMessage },
         { status: 400 }
       )
     }
-    
-    if (rating < 1 || rating > 5) {
-      return NextResponse.json(
-        { success: false, error: 'ರೇಟಿಂಗ್ 1-5 ನಡುವೆ ಇರಬೇಕು' },
-        { status: 400 }
-      )
-    }
+
+    const { bookId, rating, title, comment, authorName, authorEmail, orderId } = result.data
     
     // Check if book exists
     const book = await prisma.book.findUnique({ where: { id: bookId } })
@@ -147,14 +156,14 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Create review
+    // Create review with sanitized data
     const review = await prisma.review.create({
       data: {
         bookId,
         rating,
         title: title || null,
-        comment,
-        authorName,
+        comment, // sanitized
+        authorName, // sanitized
         authorEmail,
         orderId: orderId || null,
         isVerified,

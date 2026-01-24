@@ -53,6 +53,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [formData, setFormData] = useState<BookFormData>(defaultBook)
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
 
   // Fetch book data and categories
   useEffect(() => {
@@ -120,13 +121,38 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value }))
   }
 
-  const handleImageUpload = (url: string, publicId?: string) => {
+  // Renamed to match NewBookPage logic
+  const handleImageChange = (url: string, publicId?: string) => {
     setFormData(prev => ({
       ...prev,
       coverImage: url,
       coverImagePublicId: publicId || ''
     }))
-    toast.success('ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಆಗಿದೆ')
+    if (!url) setCoverImageFile(null)
+  }
+
+  const handleFileChange = (file: File) => {
+    setCoverImageFile(file)
+  }
+
+  const uploadCoverImage = async (): Promise<{ url: string, publicId: string } | null> => {
+    if (!coverImageFile) return null
+    
+    const formData = new FormData()
+    formData.append('file', coverImageFile)
+    formData.append('folder', 'books')
+    
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.success) {
+        return { url: data.data.url, publicId: data.data.publicId }
+      }
+      throw new Error(data.error || 'Upload failed')
+    } catch (e) {
+      console.error(e)
+      return null
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,7 +164,24 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
     }
     
     setIsSubmitting(true)
+
+    let finalCoverImage = formData.coverImage
+    let finalCoverImagePublicId = formData.coverImagePublicId
+
     try {
+      // 1. Upload Image if pending
+      if (coverImageFile) {
+        const uploadResult = await uploadCoverImage()
+        if (!uploadResult) {
+            toast.error('ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.')
+            setIsSubmitting(false)
+            return
+        }
+        finalCoverImage = uploadResult.url
+        finalCoverImagePublicId = uploadResult.publicId
+      }
+
+      // 2. Update Book
       const response = await fetch(`/api/admin/books/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -161,7 +204,8 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
           language: formData.language,
           weight: formData.weight ? parseFloat(formData.weight) : null,
           dimensions: formData.dimensions || null,
-          coverImage: formData.coverImage,
+          coverImage: finalCoverImage,
+          coverImagePublicId: finalCoverImagePublicId,
           isNewRelease: formData.isNewRelease,
           isBestSeller: formData.isBestSeller,
           isOnSale: formData.isOnSale,
@@ -239,8 +283,9 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
             </h2>
             <ImageUpload
               value={formData.coverImage}
-              onChange={handleImageUpload}
-              onRemove={() => handleImageUpload('')}
+              onChange={handleImageChange}
+              onFileChange={handleFileChange}
+              onRemove={() => handleImageChange('')}
               folder="books"
               aspectRatio="book"
               label="ಮುಖಪುಟ ಚಿತ್ರ"

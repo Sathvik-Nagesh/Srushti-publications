@@ -235,8 +235,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             {(status === 'DISPATCHED' || status === 'DELIVERED') && (
               <>
                 <div style={{ marginBottom: '1rem' }}>
-                  <label className="label">ಕೊರಿಯರ್ ಹೆಸರು</label>
-                  <input value={courierName} onChange={e => setCourierName(e.target.value)} className="input" placeholder="DTDC, BlueDart, Delhivery..." />
+                  <label className="label">ಕೊರಿಯರ್ ಸೇವೆ</label>
+                  <input 
+                    value={courierName} 
+                    onChange={e => setCourierName(e.target.value)} 
+                    className="input" 
+                    placeholder="India Post, DTDC, Professional..." 
+                    list="courier-list"
+                  />
+                  <datalist id="courier-list">
+                    <option value="India Post" />
+                    <option value="DTDC" />
+                    <option value="Professional" />
+                    <option value="Trackon" />
+                  </datalist>
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
                   <label className="label">ಟ್ರ್ಯಾಕಿಂಗ್ ಸಂಖ್ಯೆ</label>

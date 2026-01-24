@@ -2,12 +2,14 @@
 
 import { useState, useRef } from 'react'
 import Image from 'next/image'
-import { Upload, X, Loader, ImageIcon, Check } from 'lucide-react'
+import { Upload, X, Loader, ImageIcon, Check, Crop as CropIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
+import ImageCropper from './ImageCropper'
 
 interface ImageUploadProps {
   value?: string
   onChange: (url: string, publicId?: string) => void
+  onFileChange?: (file: File) => void // New prop for deferred upload
   onRemove?: () => void
   folder?: string
   aspectRatio?: 'book' | 'square' | 'banner'
@@ -18,6 +20,7 @@ interface ImageUploadProps {
 export default function ImageUpload({
   value,
   onChange,
+  onFileChange,
   onRemove,
   folder = 'books',
   aspectRatio = 'book',
@@ -28,11 +31,15 @@ export default function ImageUpload({
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Cropping State
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const [currentFile, setCurrentFile] = useState<File | null>(null)
 
   const aspectRatios = {
-    book: '3 / 4',
-    square: '1 / 1',
-    banner: '16 / 9'
+    book: 3 / 4,
+    square: 1 / 1,
+    banner: 16 / 9
   }
 
   const handleFileSelect = async (file: File) => {
@@ -48,7 +55,46 @@ export default function ImageUpload({
       toast.error('ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ. ಗರಿಷ್ಠ 5MB ಅನುಮತಿಸಲಾಗಿದೆ.')
       return
     }
+    
+    // Store file temporarily
+    setCurrentFile(file)
+    
+    // Create Object URL for cropping
+    const objectUrl = URL.createObjectURL(file)
+    setCropImageSrc(objectUrl)
+    
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!currentFile) return
+    
+    // Convert Blob to File
+    const croppedFile = new File([croppedBlob], currentFile.name, { type: 'image/jpeg' })
+    
+    // Clean up
+    if (cropImageSrc) URL.revokeObjectURL(cropImageSrc)
+    setCropImageSrc(null)
+    
+    if (onFileChange) {
+      // DEFERRED MODE: Pass file to parent
+      const previewUrl = URL.createObjectURL(croppedFile)
+      onFileChange(croppedFile)
+      onChange(previewUrl) // Show local preview immediately
+    } else {
+      // LEGACY MODE: Upload Immediately
+      uploadFile(croppedFile)
+    }
+  }
+
+  const handleCropCancel = () => {
+    if (cropImageSrc) URL.revokeObjectURL(cropImageSrc)
+    setCropImageSrc(null)
+    setCurrentFile(null)
+  }
+
+  const uploadFile = async (file: File) => {
     setIsUploading(true)
     setUploadProgress(0)
 
@@ -119,6 +165,13 @@ export default function ImageUpload({
       onRemove()
     }
     onChange('')
+    if (onFileChange) {
+        // We might want to clear the file in parent too, pass null if specific type allows, 
+        // or assumption is parent clears file when url is empty. 
+        // But onFileChange signature expects File. 
+        // We really should allow passing null or handle logic in parent.
+        // For now, parent `onChange('')` is enough to clear the URL state, parent should handle file state cleanup if needed or just ignore old file if url is empty.
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -147,6 +200,7 @@ export default function ImageUpload({
             alt="Uploaded image"
             fill
             style={{ objectFit: 'cover' }}
+            unoptimized={value.startsWith('blob:')} // Important for local preview
           />
           <button
             type="button"
@@ -172,24 +226,52 @@ export default function ImageUpload({
           >
             <X size={18} />
           </button>
-          <div
+          
+          {/* Deferred Upload Badge */}
+          {onFileChange && value.startsWith('blob:') && (
+             <div
+             style={{
+               position: 'absolute',
+               bottom: '8px',
+               left: '8px',
+               background: 'var(--color-warning)', // Yellow/Orange
+               color: 'white',
+               padding: '4px 8px',
+               borderRadius: 'var(--radius-sm)',
+               fontSize: '0.75rem',
+               display: 'flex',
+               alignItems: 'center',
+               gap: '4px',
+               fontWeight: 600
+             }}
+           >
+             <CropIcon size={14} />
+             Save to Upload
+           </div>
+          )}
+          
+          {/* Default Uploaded Badge */}
+          {(!onFileChange || !value.startsWith('blob:')) && (
+            <div
             style={{
-              position: 'absolute',
-              bottom: '8px',
-              left: '8px',
-              background: 'rgba(16,185,129,0.9)',
-              color: 'white',
-              padding: '4px 8px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
+                position: 'absolute',
+                bottom: '8px',
+                left: '8px',
+                background: 'rgba(16,185,129,0.9)',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
             }}
-          >
+            >
             <Check size={14} />
             ಅಪ್‌ಲೋಡ್ ಆಗಿದೆ
-          </div>
+            </div>
+          )}
+
         </div>
       ) : (
         // Upload Zone
@@ -277,6 +359,15 @@ export default function ImageUpload({
         onChange={handleInputChange}
         style={{ display: 'none' }}
       />
+      
+      {cropImageSrc && (
+        <ImageCropper
+            imageSrc={cropImageSrc}
+            aspectRatio={aspectRatios[aspectRatio]}
+            onCancel={handleCropCancel}
+            onCropComplete={handleCropComplete}
+        />
+      )}
 
       <style jsx>{`
         .spin {

@@ -261,25 +261,21 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                     flexShrink: 0,
                     background: 'var(--color-bg-alt)'
                   }}>
-                    {result.image ? (
-                      <Image
-                        src={result.image}
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      position: 'relative'
+                    }}>
+                      <img
+                        src={result.image || '/placeholder-book.jpg'}
                         alt={result.title}
-                        width={48}
-                        height={64}
                         style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-book.jpg';
+                        }}
                       />
-                    ) : (
-                      <div style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <BookOpen size={20} style={{ color: 'var(--color-text-muted)' }} />
-                      </div>
-                    )}
+                    </div>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{

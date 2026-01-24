@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback to environment variable authentication (for initial setup)
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@srushtipublication.com'
-    const adminPassword = process.env.ADMIN_PASSWORD || 'SrushtiAdmin@2024'
+    const adminEmail = process.env.ADMIN_EMAIL
+    const adminPassword = process.env.ADMIN_PASSWORD
 
-    if (email === adminEmail && password === adminPassword) {
+    if (adminEmail && adminPassword && email === adminEmail && password === adminPassword) {
       // Create admin user in database with hashed password for future logins
       const passwordHash = await hashPassword(adminPassword)
       

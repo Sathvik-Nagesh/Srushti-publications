@@ -8,6 +8,15 @@ import SocialProofPopup from '@/components/SocialProofPopup'
 import SkipToContent from '@/components/SkipToContent'
 import { ScreenReaderAnnouncer } from '@/components/AccessibilityUtils'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { Noto_Sans_Kannada } from 'next/font/google'
+
+const notoSansKannada = Noto_Sans_Kannada({
+  subsets: ['latin', 'kannada'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-kannada',
+  display: 'swap',
+})
+
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -42,26 +51,10 @@ export default async function RootLayout({
   const messages = await getMessages()
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning className={notoSansKannada.variable}>
       <head>
         <link rel="icon" href="/logo.jpg" />
         <meta name="theme-color" content="#d97706" />
-        {/* Preload critical fonts for performance */}
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap"
-        />
         {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="dns-prefetch" href="https://api.razorpay.com" />
