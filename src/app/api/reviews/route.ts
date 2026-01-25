@@ -92,14 +92,23 @@ export async function POST(request: NextRequest) {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for') || 'unknown'
     const rateCheck = checkRateLimit(`review:${ip}`, { windowMs: 60000, maxRequests: 5 })
+    
+    // Explicitly handle rate limit
     if (!rateCheck.allowed) {
+      const resetSeconds = Math.ceil(rateCheck.resetIn / 1000)
       return NextResponse.json(
-        { success: false, error: 'ದಯವಿಟ್ಟು ನಿಧಾನವಾಗಿ ಪ್ರಯತ್ನಿಸಿ' },
+        { success: false, error: `ದಯವಿಟ್ಟು ${resetSeconds} ಸೆಕೆಂಡುಗಳ ನಂತರ ಪ್ರಯತ್ನಿಸಿ` },
         { status: 429 }
       )
     }
     
-    const body = await request.json()
+    // Parse body with fallback
+    let body;
+    try {
+      body = await request.json();
+    } catch(e) {
+      return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
+    }
     
     // Validate & Sanitize
     const result = reviewSchema.safeParse(body)
@@ -178,8 +187,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating review:', error)
+    // Serialize error safely
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { success: false, error: 'ವಿಮರ್ಶೆ ಸಲ್ಲಿಸಲು ವಿಫಲವಾಗಿದೆ' },
+      { success: false, error: 'ವಿಮರ್ಶೆ ಸಲ್ಲಿಸಲು ವಿಫಲವಾಗಿದೆ', details: errorMessage },
       { status: 500 }
     )
   }

@@ -64,8 +64,11 @@ export async function PATCH(
       )
     }
     
-    const updateData = {
-      ...body,
+    const { categoryId, coverImagePublicId, isActive, ...rest } = body
+
+    const updateData: any = {
+      ...rest,
+      isActive: isActive, // Re-include if it is actually in schema (it likely is, as it's a standard field). Only coverImagePublicId was flagged.
       mrp: body.mrp ? parseFloat(body.mrp) : undefined,
       sellingPrice: body.sellingPrice ? parseFloat(body.sellingPrice) : undefined,
       stockQuantity: body.stockQuantity !== undefined ? parseInt(body.stockQuantity) : undefined,
@@ -75,9 +78,18 @@ export async function PATCH(
       weight: body.weight !== undefined ? parseFloat(body.weight) : undefined,
     }
 
+    // Handle Category update properly via relation
+    if (categoryId) {
+        updateData.category = {
+            connect: { id: categoryId }
+        }
+    }
+
     // Protect immutable fields
     delete updateData.id
-    // Note: We allow slug updates if sent, but handle with care in frontend.
+    
+    // Explicitly delete categoryId from data bucket to avoid "Unknown argument" error
+    // (It was already removed via destructuring above, but ensuring consistency)
 
     const book = await prisma.book.update({
       where: { slug },

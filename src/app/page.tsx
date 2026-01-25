@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { TrendingUp, ArrowRight } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -12,6 +13,9 @@ import ScrollToTop from '@/components/ScrollToTop'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import SaleTimer from '@/components/SaleTimer'
 import HomepageFAQ from '@/components/HomepageFAQ'
+
+// Enable ISR: Revalidate home page every hour (3600 seconds)
+export const revalidate = 3600
 
 async function getHomePageData() {
   const [categories, featuredBooks] = await Promise.all([
@@ -97,7 +101,6 @@ export default async function HomePage() {
                   {/* We can use a simple img tag or Next Image here directly */}
                   {/* Using an inline style block for the card effect */}
                   <div 
-                    suppressHydrationWarning
                     style={{
                       position: 'relative',
                       background: 'white',
@@ -109,18 +112,18 @@ export default async function HomePage() {
                       overflow: 'hidden'
                     }}
                   >
-                    <img
-                      src="/logo.jpg"
-                      alt="Srushti Publications Logo"
-                      width={300}
-                      height={350}
-                      style={{
-                        width: '100%',
-                        height: 'auto',
-                        borderRadius: '16px',
-                        display: 'block'
-                      }}
-                    />
+                    <div style={{ position: 'relative', width: '300px', height: '350px' }}>
+                      <Image
+                        src="/logo.jpg"
+                        alt="Srushti Publications Logo"
+                        fill
+                        style={{
+                          objectFit: 'contain',
+                          borderRadius: '16px',
+                        }}
+                        priority
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

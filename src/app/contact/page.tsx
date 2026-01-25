@@ -1,5 +1,7 @@
 'use client'
 
+import { siteConfig } from '@/config/site'
+
 import { useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -24,9 +26,9 @@ export default function ContactPage() {
   }
 
   const contactInfo = [
-    { icon: Phone, title: 'ಕರೆ ಮಾಡಿ', value: '+91 98450 96668', subtext: 'ಸೋಮ-ಶನಿ: 10AM - 6PM' },
-    { icon: Mail, title: 'ಇ-ಮೇಲ್ ಕಳುಹಿಸಿ', value: 'srushtinagesh@gmail.com', subtext: '24 ಗಂಟೆಗಳಲ್ಲಿ ಪ್ರತಿಕ್ರಿಯೆ' },
-    { icon: MessageCircle, title: 'WhatsApp', value: '+91 98450 96668', subtext: 'ತ್ವರಿತ ಪ್ರತಿಕ್ರಿಯೆ' },
+    { icon: Phone, title: 'ಕರೆ ಮಾಡಿ', value: siteConfig.contact.phoneDisplay, subtext: 'ಸೋಮ-ಶನಿ: 10AM - 6PM' },
+    { icon: Mail, title: 'ಇ-ಮೇಲ್ ಕಳುಹಿಸಿ', value: siteConfig.contact.email, subtext: '24 ಗಂಟೆಗಳಲ್ಲಿ ಪ್ರತಿಕ್ರಿಯೆ' },
+    { icon: MessageCircle, title: 'WhatsApp', value: siteConfig.contact.phoneDisplay, subtext: 'ತ್ವರಿತ ಪ್ರತಿಕ್ರಿಯೆ' },
     { icon: MapPin, title: 'ವಿಳಾಸ', value: 'ಬೆಂಗಳೂರು, ಕರ್ನಾಟಕ', subtext: '560041' }
   ]
 
@@ -58,12 +60,12 @@ export default function ContactPage() {
                     <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-light)', marginBottom: '0.25rem' }}>{item.title}</h3>
                     {item.title === 'ವಿಳಾಸ' ? (
                         <a 
-                            href="https://maps.app.goo.gl/RNdifVqyLB6HvLrq7"
+                            href={siteConfig.contact.mapLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ fontWeight: 600, marginBottom: '0.25rem', color: 'var(--color-primary)', textDecoration: 'none', display: 'block' }}
                         >
-                            {item.value}
+                            {siteConfig.contact.address}
                         </a>
                     ) : (
                         <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.value}</p>

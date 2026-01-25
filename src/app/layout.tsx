@@ -4,7 +4,6 @@ import { getLocale, getMessages } from 'next-intl/server'
 import { Toaster } from 'react-hot-toast'
 import CookieConsent from '@/components/CookieConsent'
 import WhatsAppButton from '@/components/WhatsAppButton'
-import SocialProofPopup from '@/components/SocialProofPopup'
 import SkipToContent from '@/components/SkipToContent'
 import { ScreenReaderAnnouncer } from '@/components/AccessibilityUtils'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -103,7 +102,6 @@ export default async function RootLayout({
             {/* Global Components */}
             <WhatsAppButton />
             <CookieConsent />
-            <SocialProofPopup />
           </ScreenReaderAnnouncer>
         </NextIntlClientProvider>
       </body>

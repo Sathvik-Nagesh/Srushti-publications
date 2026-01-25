@@ -9,28 +9,32 @@ const languages = [
   { code: 'en', name: 'English', flag: '🇬🇧' }
 ]
 
-export default function LanguageSwitcher() {
+import { setUserLocale } from '@/app/actions/locale'
+
+interface LanguageSwitcherProps {
+  currentLocale: string
+}
+
+export default function LanguageSwitcher({ currentLocale: initialLocale }: LanguageSwitcherProps) {
   const router = useRouter()
-  const [currentLocale, setCurrentLocale] = useState('kn')
+  const [currentLocale, setCurrentLocale] = useState(initialLocale)
   const [isOpen, setIsOpen] = useState(false)
 
+  // Sync state if prop changes (e.g. after router refresh)
   useEffect(() => {
-    // Get current locale from cookie
-    const locale = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('locale='))
-      ?.split('=')[1] || 'kn'
-    setCurrentLocale(locale)
-  }, [])
+    setCurrentLocale(initialLocale)
+  }, [initialLocale])
 
-  const handleLanguageChange = (locale: string) => {
-    // Set cookie
-    document.cookie = `locale=${locale}; path=/; max-age=${60 * 60 * 24 * 365}`
+  const handleLanguageChange = async (locale: string) => {
+    // Optimistic UI update
     setCurrentLocale(locale)
     setIsOpen(false)
-    // Reload page to apply new locale
+    
+    // Server action to set cookie
+    await setUserLocale(locale)
+    
+    // Refresh RSC payload
     router.refresh()
-    window.location.reload()
   }
 
   const currentLang = languages.find(l => l.code === currentLocale) || languages[0]

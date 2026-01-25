@@ -9,12 +9,13 @@ import ScrollToTop from '@/components/ScrollToTop'
 import BookCardSkeleton from '@/components/BookCardSkeleton'
 import BookCard from '@/components/BookCard'
 import { BookOpen, Filter, ChevronDown, X, Grid, List, SlidersHorizontal, ArrowLeft, ArrowRight } from 'lucide-react'
-import type { Book, Category } from '@/lib/types'
+import { useCategories } from '@/lib/hooks/useCategories'
+import type { Book } from '@/lib/types'
 
 function BooksContent() {
   const searchParams = useSearchParams()
   const [books, setBooks] = useState<Book[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const categories = useCategories()
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -34,12 +35,6 @@ function BooksContent() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  useEffect(() => {
-     // Fetch available categories
-     fetch('/api/categories').then(r => r.json()).then(d => {
-        if(d.success) setCategories(d.data)
-     })
-  }, [])
 
   // Get init filter from URL
   useEffect(() => {

@@ -50,23 +50,13 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
           href={`/books/${book.slug}`}
           className="block w-full h-full absolute inset-0 z-0"
         >
-          <img
+          <Image
             src={book.coverImage || '/placeholder-book.jpg'}
             alt={book.title}
-            width={300}
-            height={400}
-            loading="lazy"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              if (target.src !== '/placeholder-book.jpg') {
-                target.src = '/placeholder-book.jpg';
-              }
-            }}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
             style={{ 
               objectFit: 'cover',
-              width: '100%',
-              height: '100%',
-              display: 'block'
             }}
           />
         </Link>

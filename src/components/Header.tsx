@@ -4,11 +4,18 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { ShoppingCart, MagnifyingGlass, List, X, User } from '@phosphor-icons/react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useCartStore } from '@/lib/store'
 import { useAuth } from '@/contexts/AuthContext'
 import LanguageSwitcher from './LanguageSwitcher'
-import SearchAutocomplete from './SearchAutocomplete'
+import { siteConfig } from '@/config/site'
+import dynamic from 'next/dynamic'
+
+// Lazy load search to reduce initial bundle size
+const SearchAutocomplete = dynamic(() => import('./SearchAutocomplete'), {
+  loading: () => <div style={{ padding: '1rem', textAlign: 'center' }}>Loading...</div>,
+  ssr: false // No need for SEO here as it's an interactive search dropdown
+})
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -16,6 +23,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false)
   
   const t = useTranslations('common')
+  const locale = useLocale()
   const itemCount = useCartStore(state => state.getItemCount())
   const { customer, isAuthenticated, isLoading: authLoading } = useAuth()
   
@@ -51,45 +59,37 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="logo">
             <Image
-              src="/logo.jpg"
-              alt="ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್"
+              src={siteConfig.logo}
+              alt={siteConfig.name}
               width={50}
               height={50}
               className="logo-image"
               style={{ borderRadius: '8px', width: 'auto' }}
+              priority
             />
-            <span className="logo-text hide-mobile">ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</span>
+            <span className="logo-text hide-mobile">{siteConfig.name}</span>
           </Link>
           
           {/* Desktop Navigation */}
           <nav className={`nav ${isMenuOpen ? 'open' : ''}`}>
-            <Link href="/" className="nav-link">
-              {t('home')}
-            </Link>
-            <Link href="/books" className="nav-link">
-              {t('books')}
-            </Link>
-            <Link href="/categories" className="nav-link">
-              {t('categories')}
-            </Link>
-            <Link href="/about" className="nav-link">
-              {t('about')}
-            </Link>
-            <Link href="/contact" className="nav-link">
-              {t('contact')}
-            </Link>
+            {siteConfig.nav.main.map((link) => (
+               <Link key={link.href} href={link.href} className="nav-link" onClick={() => setIsMenuOpen(false)}>
+                 {/* Fallback to translation key if needed, but config uses direct text now */}
+                 {link.name}
+               </Link>
+            ))}
           </nav>
           
           {/* Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             {/* Language Switcher */}
-            <LanguageSwitcher />
+            <LanguageSwitcher currentLocale={locale} />
             
             {/* Search Toggle */}
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="cart-button"
-              aria-label={t('search')}
+              aria-label="Search"
               style={{
                 background: isSearchOpen ? 'var(--color-primary)' : undefined,
                 color: isSearchOpen ? 'white' : undefined
