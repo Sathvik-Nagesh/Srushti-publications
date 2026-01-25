@@ -166,7 +166,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
         transition: 'border-color 0.2s, box-shadow 0.2s',
         ...(isOpen ? { borderColor: 'var(--color-primary)', boxShadow: '0 0 0 3px rgba(234, 96, 42, 0.15)' } : {})
       }}>
-        <Search size={20} style={{ color: 'var(--color-text-muted)', marginRight: '0.75rem', flexShrink: 0 }} />
+        <Search size={20} style={{ color: 'var(--color-text-muted)', marginRight: '0.75rem', flexShrink: 0 }} aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
@@ -191,7 +191,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
           }}
         />
         {isLoading && (
-          <Loader2 size={18} style={{ color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }} />
+          <Loader2 size={18} style={{ color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }} aria-hidden="true" />
         )}
         {query && !isLoading && (
           <button
@@ -207,8 +207,9 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
               cursor: 'pointer',
               color: 'var(--color-text-muted)'
             }}
+            aria-label="ಹುಡುಕಾಟವನ್ನು ಅಳಿಸಿ"
           >
-            <X size={18} />
+            <X size={18} aria-hidden="true" />
           </button>
         )}
       </div>

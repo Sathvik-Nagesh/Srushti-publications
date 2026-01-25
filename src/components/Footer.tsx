@@ -42,22 +42,46 @@ export default function Footer() {
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
               {siteConfig.social.facebook && (
-                  <a href={siteConfig.social.facebook} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={siteConfig.social.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="Facebook"
+                  >
                     <Facebook size={18} />
                   </a>
               )}
               {siteConfig.social.instagram && (
-                  <a href={siteConfig.social.instagram} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={siteConfig.social.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="Instagram"
+                  >
                     <Instagram size={18} />
                   </a>
               )}
               {siteConfig.social.twitter && (
-                  <a href={siteConfig.social.twitter} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={siteConfig.social.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="Twitter"
+                  >
                     <Twitter size={18} />
                   </a>
               )}
               {siteConfig.social.youtube && (
-                  <a href={siteConfig.social.youtube} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+                  <a
+                    href={siteConfig.social.youtube}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={socialIconStyle}
+                    aria-label="YouTube"
+                  >
                     <Youtube size={18} />
                   </a>
               )}

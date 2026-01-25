@@ -5,3 +5,7 @@
 ## 2025-01-28 - Icon-Only Links Accessibility
 **Learning:** Discovered social media links in the Footer and the Cart link in the Header were lacking accessible names. Screen readers would only announce "link" or the URL.
 **Action:** Always add `aria-label` to icon-only links or buttons. For multilingual sites, prefer `useTranslations` (as in Header) but hardcoded universal names (like "Facebook") are acceptable in non-internationalized components (like Footer).
+
+## 2025-01-28 - Localized ARIA Labels
+**Learning:** When adding accessibility attributes to a localized interface (e.g. Kannada), ensure `aria-label` content is also localized or matches the visual language, rather than defaulting to English, to provide a consistent experience for screen reader users.
+**Action:** Check the component's primary language or use `useTranslations` (if available) for `aria-label` values.
