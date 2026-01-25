@@ -144,13 +144,21 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                   justifyContent: 'center'
                 }}>
                    {book.coverImage ? (
-                    <Image
+                    <img
                       src={book.coverImage}
                       alt={book.title}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      sizes="(max-width: 600px) 100vw, 50vw"
-                      priority
+                      style={{ 
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: 'var(--radius-xl)'
+                      }}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                         if (target.src.indexOf('placeholder-book.jpg') === -1) {
+                            target.src = '/placeholder-book.jpg';
+                        }
+                      }}
                     />
                   ) : (
                     <BookOpen size={100} style={{ color: 'var(--color-primary)', opacity: 0.4 }} />
