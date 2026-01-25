@@ -6,7 +6,7 @@ import { Save, Building, Mail, Phone, MapPin, FileText, Truck, CreditCard, Setti
 import toast from 'react-hot-toast'
 
 export default function AdminSettingsPage() {
-  const [activeTab, setActiveTab] = useState('general')
+  const [activeTab, setActiveTab] = useState('gst')
   const [settings, setSettings] = useState({
     businessName: '', businessNameEn: '',
     tagline: '', email: '',
@@ -87,7 +87,6 @@ export default function AdminSettingsPage() {
   }
 
   const tabs = [
-    { id: 'general', label: 'ಸಾಮಾನ್ಯ', icon: Building },
     { id: 'gst', label: 'GST & ತೆರಿಗೆ', icon: FileText },
     { id: 'shipping', label: 'ಶಿಪ್ಪಿಂಗ್', icon: Truck },
     { id: 'payment', label: 'ಪಾವತಿ', icon: CreditCard }
@@ -111,6 +110,10 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
+      <div style={{ padding: '1rem', background: 'var(--color-primary-50)', borderRadius: 'var(--radius-lg)', marginBottom: '1.5rem', color: 'var(--color-primary-dark)' }}>
+        ℹ️ <strong>ಗಮನಿಸಿ:</strong> ವಿಳಾಸ, ಫೋನ್ ಸಂಖ್ಯೆ ಮತ್ತು ಇತರ ಸ್ಥಿರ ಮಾಹಿತಿಯನ್ನು ಈಗ <code>src/config/site.ts</code> ಫೈಲ್‌ನಲ್ಲಿ ಬದಲಾಯಿಸಬೇಕು.
+      </div>
+
       <div style={{ display: 'flex', gap: '1.5rem' }}>
         {/* Tabs */}
         <div style={{ width: '200px', flexShrink: 0 }}>
@@ -126,28 +129,7 @@ export default function AdminSettingsPage() {
 
         {/* Content */}
         <div style={{ flex: 1, background: 'white', borderRadius: 'var(--radius-xl)', padding: '2rem', boxShadow: 'var(--shadow-sm)' }}>
-          {activeTab === 'general' && (
-            <div style={{ display: 'grid', gap: '1.25rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>ವ್ಯಾಪಾರ ಮಾಹಿತಿ</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div><label className="label">ವ್ಯಾಪಾರ ಹೆಸರು (ಕನ್ನಡ)</label><input name="businessName" value={settings.businessName} onChange={handleChange} className="input" /></div>
-                <div><label className="label">Business Name (English)</label><input name="businessNameEn" value={settings.businessNameEn} onChange={handleChange} className="input" /></div>
-              </div>
-              <div><label className="label">ಟ್ಯಾಗ್‌ಲೈನ್</label><input name="tagline" value={settings.tagline} onChange={handleChange} className="input" /></div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginTop: '1rem' }}>ಸಂಪರ್ಕ ವಿವರಗಳು</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div><label className="label"><Mail size={14} style={{ display: 'inline' }} /> ಇ-ಮೇಲ್</label><input name="email" value={settings.email} onChange={handleChange} className="input" /></div>
-                <div><label className="label"><Phone size={14} style={{ display: 'inline' }} /> ಫೋನ್</label><input name="phone" value={settings.phone} onChange={handleChange} className="input" /></div>
-              </div>
-              <div><label className="label"><MapPin size={14} style={{ display: 'inline' }} /> ವಿಳಾಸ</label><textarea name="address" value={settings.address} onChange={handleChange} className="input" rows={2} /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                <div><label className="label">ನಗರ</label><input name="city" value={settings.city} onChange={handleChange} className="input" /></div>
-                <div><label className="label">ರಾಜ್ಯ</label><input name="state" value={settings.state} onChange={handleChange} className="input" /></div>
-                <div><label className="label">ಪಿನ್‌ಕೋಡ್</label><input name="pincode" value={settings.pincode} onChange={handleChange} className="input" /></div>
-              </div>
-            </div>
-          )}
-
+          
           {activeTab === 'gst' && (
             <div style={{ display: 'grid', gap: '1.25rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>GST & ತೆರಿಗೆ ಮಾಹಿತಿ</h3>

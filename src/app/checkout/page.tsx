@@ -28,7 +28,8 @@ export default function CheckoutPage() {
     pincode: '',
     notes: '',
     createAccount: false,
-    password: ''
+    password: '',
+    saveAddress: false
   })
   
   const { customer } = useAuth()
@@ -160,7 +161,8 @@ export default function CheckoutPage() {
         couponCode: appliedCoupon,
         notes: formData.notes,
         createAccount: formData.createAccount,
-        password: formData.password
+        password: formData.password,
+        saveAddress: formData.saveAddress
       }
 
       const response = await fetch('/api/orders', {
@@ -340,6 +342,18 @@ export default function CheckoutPage() {
                         rows={3} 
                         placeholder="ಮನೆ ನಂ, ರಸ್ತೆ, ಪ್ರದೇಶ"
                     ></textarea>
+                     {customer && (
+                       <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--color-text-light)' }}>
+                         <input
+                           type="checkbox"
+                           name="saveAddress"
+                           checked={formData.saveAddress}
+                           onChange={handleInputChange}
+                           style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px' }}
+                         />
+                         ಈ ವಿಳಾಸವನ್ನು ನನ್ನ ಪ್ರೊಫೈಲ್‌ಗೆ ಉಳಿಸಿ (Save to profile)
+                       </label>
+                     )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

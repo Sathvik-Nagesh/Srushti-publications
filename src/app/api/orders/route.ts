@@ -50,6 +50,19 @@ export async function POST(request: NextRequest) {
 
         if (existingCustomer) {
             customerId = existingCustomer.id
+            
+            // Update address if requested OR if request explicitly says saveAddress
+            if (body.saveAddress) {
+                await tx.customer.update({
+                    where: { id: existingCustomer.id },
+                    data: {
+                        address: shipping.address,
+                        city: shipping.city,
+                        state: shipping.state,
+                        pincode: shipping.pincode
+                    }
+                })
+            }
         } else if (createAccount) {
             // Create new customer
             const newCustomer = await tx.customer.create({

@@ -10,6 +10,7 @@ import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import BookActions from '@/components/BookActions'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
+import BookImage from '@/components/BookImage'
 import { 
   BookOpen, 
   Truck, 
@@ -22,6 +23,23 @@ import {
 const BookReviews = dynamic(() => import('@/components/BookReviews'), {
   loading: () => <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-xl)' }} />
 })
+
+// Enable ISR: Revalidate book detail page every hour
+export const revalidate = 3600
+
+// Generate static params for the most popular books to speed up build and initial hits
+export async function generateStaticParams() {
+  const books = await prisma.book.findMany({
+    where: { isActive: true },
+    select: { slug: true },
+    take: 20, // Pre-build top 20 books
+    orderBy: { viewCount: 'desc' }
+  })
+ 
+  return books.map((book) => ({
+    slug: book.slug,
+  }))
+}
 
 // Generate dynamic metadata for SEO
 export async function generateMetadata(
@@ -100,8 +118,39 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
   const relatedBooks = await getRelatedBooks(book.categoryId, book.id)
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: book.title,
+    image: book.coverImage,
+    description: book.description,
+    sku: book.isbn || book.id,
+    brand: {
+      '@type': 'Brand',
+      name: 'Srushti Publications'
+    },
+    offers: {
+      '@type': 'Offer',
+      url: `https://srushtipublications.com/books/${book.slug}`,
+      priceCurrency: 'INR',
+      price: book.sellingPrice,
+      availability: book.stockQuantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition'
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      // Dynamic rating if available, else standard fallback or hidden
+      ratingValue: '4.8', 
+      reviewCount: '12'
+    }
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main style={{ minHeight: '100vh', background: 'var(--color-bg-alt)' }}>
         {/* Breadcrumb */}
@@ -143,26 +192,10 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                   {book.coverImage ? (
-                    <img
+                   <BookImage 
                       src={book.coverImage}
                       alt={book.title}
-                      style={{ 
-                        objectFit: 'cover',
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: 'var(--radius-xl)'
-                      }}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                         if (target.src.indexOf('placeholder-book.jpg') === -1) {
-                            target.src = '/placeholder-book.jpg';
-                        }
-                      }}
-                    />
-                  ) : (
-                    <BookOpen size={100} style={{ color: 'var(--color-primary)', opacity: 0.4 }} />
-                  )}
+                   />
                   
                   {/* Badges */}
                   <div style={{

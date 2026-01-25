@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react'
+import { siteConfig } from '@/config/site'
 
 const socialIconStyle: React.CSSProperties = {
   display: 'flex',
@@ -18,23 +17,7 @@ const socialIconStyle: React.CSSProperties = {
 }
 
 export default function Footer() {
-  const [settings, setSettings] = useState<any>({})
-  const year = new Date().getFullYear()
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/site-settings')
-        const data = await res.json()
-        if (data.success) {
-            setSettings(data.data)
-        }
-      } catch (e) {
-        console.error('Failed to load footer settings')
-      }
-    }
-    fetchSettings()
-  }, [])
+  const currentYear = new Date().getFullYear()
 
   return (
     <footer className="footer">
@@ -44,8 +27,8 @@ export default function Footer() {
           <div className="footer-brand">
             <div style={{ position: 'relative', height: '60px', marginBottom: '1rem' }}>
               <img
-                src="/logo.jpg"
-                alt={settings.businessName || 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್'}
+                src={siteConfig.logo}
+                alt={siteConfig.name}
                 style={{ 
                   height: '100%', 
                   width: 'auto',
@@ -55,31 +38,28 @@ export default function Footer() {
               />
             </div>
             <p className="footer-brand-text">
-              {settings.tagline || 'ಕನ್ನಡ ಸಾಹಿತ್ಯ ಮತ್ತು ಶೈಕ್ಷಣಿಕ ಪುಸ್ತಕಗಳ ಪ್ರಕಾಶಕರು.'}
+              {siteConfig.tagline}
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-              {settings.facebook && (
-                  <a href={settings.facebook} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+              {siteConfig.social.facebook && (
+                  <a href={siteConfig.social.facebook} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
                     <Facebook size={18} />
                   </a>
               )}
-              {settings.instagram && (
-                  <a href={settings.instagram} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+              {siteConfig.social.instagram && (
+                  <a href={siteConfig.social.instagram} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
                     <Instagram size={18} />
                   </a>
               )}
-              {settings.twitter && (
-                  <a href={settings.twitter} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+              {siteConfig.social.twitter && (
+                  <a href={siteConfig.social.twitter} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
                     <Twitter size={18} />
                   </a>
               )}
-              {settings.youtube && (
-                  <a href={settings.youtube} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
+              {siteConfig.social.youtube && (
+                  <a href={siteConfig.social.youtube} target="_blank" rel="noopener noreferrer" style={socialIconStyle}>
                     <Youtube size={18} />
                   </a>
-              )}
-              {!settings.facebook && !settings.instagram && !settings.twitter && !settings.youtube && (
-                 <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>ಸಾಮಾಜಿಕ ಜಾಲತಾಣಗಳು ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿವೆ</span>
               )}
             </div>
           </div>
@@ -88,38 +68,27 @@ export default function Footer() {
           <div>
             <h3 className="footer-title">ತ್ವರಿತ ಲಿಂಕ್‌ಗಳು</h3>
             <ul className="footer-links">
-              <li><Link href="/books" className="footer-link">ಎಲ್ಲಾ ಪುಸ್ತಕಗಳು</Link></li>
-              <li><Link href="/books?filter=new" className="footer-link">ಹೊಸ ಬಿಡುಗಡೆಗಳು</Link></li>
-              <li><Link href="/books?filter=bestseller" className="footer-link">ಅತ್ಯುತ್ತಮ ಮಾರಾಟಗಾರರು</Link></li>
-              <li><Link href="/track-order" className="footer-link">ಆರ್ಡರ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ</Link></li>
-              <li><Link href="/wishlist" className="footer-link">ನನ್ನ ವಿಶ್‌ಲಿಸ್ಟ್</Link></li>
-              <li><Link href="/faq" className="footer-link">FAQ / ಸಹಾಯ</Link></li>
-              <li><Link href="/shipping" className="footer-link">ಶಿಪ್ಪಿಂಗ್ ಮಾಹಿತಿ</Link></li>
+              {siteConfig.nav.footer.quickLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="footer-link">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
           
-          {/* Categories */}
+          {/* Categories - Simplified for hardcoding, or can fetch dynamic if needed, but lets stick to config approach for now */}
           <div>
             <h3 className="footer-title">ವಿಭಾಗಗಳು</h3>
             <ul className="footer-links">
-              {settings.categories && settings.categories.length > 0 ? (
-                settings.categories.map((cat: any) => (
-                  <li key={cat.id}>
-                    <Link href={`/books?category=${cat.id}`} className="footer-link">
-                      {cat.name}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                // Fallback / Loading placeholders
-                <>
-                  <li><Link href="/categories" className="footer-link">ಎಲ್ಲಾ ವಿಭಾಗಗಳು</Link></li>
-                  <li><Link href="/books" className="footer-link">ಪುಸ್ತಕಗಳು</Link></li>
-                </>
-              )}
-              <li><Link href="/categories" className="footer-link" style={{ fontWeight: 600, color: 'var(--color-primary-light)' }}>
-                ಎಲ್ಲವನ್ನೂ ನೋಡಿ &rarr;
-              </Link></li>
+                <li><Link href="/categories/literature" className="footer-link">ಸಾಹಿತ್ಯ</Link></li>
+                <li><Link href="/categories/kannada-books" className="footer-link">ಕನ್ನಡ ಪುಸ್ತಕಗಳು</Link></li>
+                <li><Link href="/categories/children" className="footer-link">ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು</Link></li>
+                <li><Link href="/categories/history" className="footer-link">ಇತಿಹಾಸ</Link></li>
+                <li><Link href="/categories" className="footer-link" style={{ fontWeight: 600, color: 'var(--color-primary-light)' }}>
+                  ಎಲ್ಲವನ್ನೂ ನೋಡಿ &rarr;
+                </Link></li>
             </ul>
           </div>
           
@@ -128,27 +97,27 @@ export default function Footer() {
             <h3 className="footer-title">ಸಂಪರ್ಕಿಸಿ</h3>
             <ul className="footer-links">
               <li>
-                <a href={`mailto:${settings.email || 'srushtinagesh@gmail.com'}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <a href={`mailto:${siteConfig.contact.email}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Mail size={16} />
-                  {settings.email || 'srushtinagesh@gmail.com'}
+                  {siteConfig.contact.email}
                 </a>
               </li>
               <li>
-                <a href={`tel:${(settings.phone || '+91 98450 96668').replace(/\s/g,'')}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <a href={`tel:${siteConfig.contact.phone.replace(/\s/g,'')}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Phone size={16} />
-                  {settings.phone || '+91 98450 96668'}
+                  {siteConfig.contact.phoneDisplay}
                 </a>
               </li>
               <li>
                 <a 
-                  href="https://maps.app.goo.gl/RNdifVqyLB6HvLrq7" 
+                  href={siteConfig.contact.mapLink}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="footer-link" 
                   style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}
                 >
                   <MapPin size={16} style={{ flexShrink: 0, marginTop: '4px' }} />
-                  {settings.address || 'ಬೆಂಗಳೂರು, ಕರ್ನಾಟಕ, ಭಾರತ'}
+                  {siteConfig.contact.address}
                 </a>
               </li>
             </ul>
@@ -211,12 +180,14 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="footer-bottom">
           <p className="footer-copyright">
-            © {new Date().getFullYear()} ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್. ಎಲ್ಲಾ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.
+            © {currentYear} {siteConfig.name}. ಎಲ್ಲಾ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.
           </p>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
-            <Link href="/privacy" className="footer-link">ಗೌಪ್ಯತಾ ನೀತಿ</Link>
-            <Link href="/terms" className="footer-link">ನಿಯಮಗಳು</Link>
-            <Link href="/refund" className="footer-link">ಮರುಪಾವತಿ ನೀತಿ</Link>
+            {siteConfig.nav.footer.legal.map((link) => (
+                <Link key={link.href} href={link.href} className="footer-link">
+                    {link.name}
+                </Link>
+            ))}
           </div>
         </div>
       </div>

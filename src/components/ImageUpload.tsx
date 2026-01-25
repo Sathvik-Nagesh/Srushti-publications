@@ -2,9 +2,14 @@
 
 import { useState, useRef } from 'react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { Upload, X, Loader, ImageIcon, Check, Crop as CropIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
-import ImageCropper from './ImageCropper'
+
+// Dynamic import to save ~50kb in main bundle
+const ImageCropper = dynamic(() => import('./ImageCropper'), {
+  loading: () => <div className="spinner" />
+})
 
 interface ImageUploadProps {
   value?: string

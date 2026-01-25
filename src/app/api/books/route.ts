@@ -91,14 +91,24 @@ export async function GET(request: NextRequest) {
       orderBy: orderBy as any,
       skip: (page - 1) * limit,
       take: limit,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        author: true,
+        coverImage: true,
+        mrp: true,
+        sellingPrice: true,
+        stockQuantity: true,
+        isNewRelease: true,
+        isBestSeller: true,
+        isOnSale: true,
         category: {
-          select: {
-            id: true,
-            name: true,
-            nameEn: true,
-            slug: true
-          }
+            select: {
+                id: true,
+                name: true,
+                slug: true
+            }
         }
       }
     })
@@ -111,6 +121,10 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         totalPages: Math.ceil(total / limit)
+      }
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
       }
     })
   } catch (error) {

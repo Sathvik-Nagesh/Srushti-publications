@@ -123,7 +123,7 @@ export default function ImageCropper({ imageSrc, aspectRatio, onCancel, onCropCo
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>ಚಿತ್ರವನ್ನು ಹೊಂದಿಸಿ (Crop/Resize)</h3>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+          <button type="button" onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             <X size={24} />
           </button>
         </div>
@@ -158,8 +158,9 @@ export default function ImageCropper({ imageSrc, aspectRatio, onCancel, onCropCo
         {/* Not strictly implemented yet to keep simple, just basic crop */}
         
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-          <button onClick={onCancel} className="btn btn-ghost">ರದ್ದುಮಾಡಿ</button>
+          <button type="button" onClick={onCancel} className="btn btn-ghost">ರದ್ದುಮಾಡಿ</button>
           <button 
+            type="button"
             onClick={getCroppedImg} 
             className="btn btn-primary"
             disabled={!completedCrop?.width || !completedCrop?.height}
