@@ -9,3 +9,8 @@
 **Vulnerability:** The middleware only checked `pathname.startsWith('/admin')` to protect admin routes, causing `/api/admin/*` endpoints to be completely unprotected.
 **Learning:** `pathname` for API routes includes `/api` prefix, so checks must explicitly account for it. Frontend-focused middleware logic often misses API protection.
 **Prevention:** Always explicitly define protected route patterns, covering both page routes and API routes. Use strict matching or a centralized route configuration.
+
+## 2025-02-13 - Critical: Price Manipulation in Order Creation
+**Vulnerability:** The `/api/orders` endpoint accepted `items` with client-provided `price` and `totals`. A malicious user could send a request with `price: 1` to purchase expensive items for cheap.
+**Learning:** Never trust client-side calculations for sensitive data like prices or totals. "Mass Assignment" vulnerabilities can occur when API endpoints blindly accept objects from the client.
+**Prevention:** Always recalculate prices and totals on the server using trusted data sources (database) before processing payments or orders. Validate existence of referenced IDs.
