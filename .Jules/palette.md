@@ -9,3 +9,7 @@
 ## 2025-01-28 - Localized ARIA Labels
 **Learning:** When adding accessibility attributes to a localized interface (e.g. Kannada), ensure `aria-label` content is also localized or matches the visual language, rather than defaulting to English, to provide a consistent experience for screen reader users.
 **Action:** Check the component's primary language or use `useTranslations` (if available) for `aria-label` values.
+
+## 2025-01-29 - Search Autocomplete Accessibility
+**Learning:** Custom search autocompletes often miss the WAI-ARIA Combobox pattern, making them unusable for screen readers. Specifically, using `aria-activedescendant` is crucial to allow keyboard navigation through results (including suggestions like "Recent" and "Popular") while keeping focus on the input for typing.
+**Action:** Implement `role="combobox"`, `role="listbox"`, `role="option"` and `aria-activedescendant` on custom search components. Ensure all suggestion types (Recent, Popular, Results) share a unified keyboard navigation index.
