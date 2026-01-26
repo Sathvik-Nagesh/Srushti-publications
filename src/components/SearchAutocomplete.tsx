@@ -5,7 +5,6 @@ import { Search, X, BookOpen, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import OptimizedImage from '@/components/OptimizedImage'
 import { useRouter } from 'next/navigation'
-import { useDeferredValue } from 'react'
 
 interface SearchResult {
   id: string
@@ -40,7 +39,6 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   
-  const deferredQuery = useDeferredValue(query)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -66,7 +64,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
 
   // Search API call
   useEffect(() => {
-    if (deferredQuery.length < 2) {
+    if (query.length < 2) {
       setResults([])
       return
     }
@@ -74,7 +72,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
     const searchBooks = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(deferredQuery)}&limit=6`)
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=6`)
         const data = await response.json()
         if (data.success) {
           setResults(data.data)
@@ -86,9 +84,10 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
       }
     }
 
+    // Debounce the search to reduce API calls and re-renders
     const debounceTimer = setTimeout(searchBooks, 300)
     return () => clearTimeout(debounceTimer)
-  }, [deferredQuery])
+  }, [query])
 
   // Handle click outside
   useEffect(() => {
