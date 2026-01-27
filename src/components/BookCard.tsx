@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart, Eye } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { useCartStore } from '@/lib/store'
 import type { Book } from '@/lib/types'
@@ -16,6 +17,7 @@ interface BookCardProps {
 
 export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   const router = useRouter()
+  const t = useTranslations('common')
   const addItem = useCartStore(state => state.addItem)
   
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
@@ -119,7 +121,7 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
               onClick={handleAddToCart}
               className="btn btn-primary btn-sm"
               style={{ flex: 1, pointerEvents: 'auto' }}
-              aria-label={`Add ${book.title} to cart`}
+              aria-label={t('addToCartAria', { title: book.title })}
             >
               <ShoppingCart size={16} aria-hidden="true" />
               ಕಾರ್ಟ್‌ಗೆ
@@ -131,7 +133,7 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
                 color: 'var(--color-text)',
                 pointerEvents: 'auto'
               }}
-              aria-label={`Quick view ${book.title}`}
+              aria-label={t('quickViewAria', { title: book.title })}
             >
               <Eye size={16} aria-hidden="true" />
             </button>

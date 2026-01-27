@@ -21,7 +21,12 @@
     "login": "ಲಾಗಿನ್",
     "logout": "ಲಾಗ್ಔಟ್",
     "email": "ಇ-ಮೇಲ್",
-    "password": "ಪಾಸ್ವರ್ಡ್"
+    "password": "ಪಾಸ್ವರ್ಡ್",
+    "decreaseQuantity": "ಪ್ರಮಾಣವನ್ನು ಕಡಿಮೆ ಮಾಡಿ",
+    "increaseQuantity": "ಪ್ರಮಾಣವನ್ನು ಹೆಚ್ಚಿಸಿ",
+    "quantity": "ಪ್ರಮಾಣ",
+    "addToCartAria": "{title} ಅನ್ನು ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿ",
+    "quickViewAria": "{title} ತ್ವರಿತ ನೋಟ"
   },
   "hero": {
     "tagline": "ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ",
