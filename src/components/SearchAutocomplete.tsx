@@ -112,8 +112,17 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
       setSelectedIndex(prev => Math.max(prev - 1, -1))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (selectedIndex >= 0 && results[selectedIndex]) {
-        handleSelectResult(results[selectedIndex])
+      if (selectedIndex >= 0) {
+        if (results.length > 0) {
+          handleSelectResult(results[selectedIndex])
+        } else if (query.length < 2) {
+          // Handle recent/popular selection
+          if (selectedIndex < recentSearches.length) {
+            handleSuggestionClick(recentSearches[selectedIndex])
+          } else {
+            handleSuggestionClick(popularSearches[selectedIndex - recentSearches.length])
+          }
+        }
       } else if (query.length >= 2) {
         handleSearch()
       }
@@ -152,6 +161,23 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
     localStorage.removeItem('recentSearches')
   }
 
+  const getActiveDescendantId = () => {
+    if (selectedIndex === -1) return undefined
+
+    if (results.length > 0) {
+      return `search-result-${selectedIndex}`
+    }
+
+    if (query.length < 2) {
+      if (selectedIndex < recentSearches.length) {
+        return `recent-search-${selectedIndex}`
+      }
+      return `popular-search-${selectedIndex - recentSearches.length}`
+    }
+
+    return undefined
+  }
+
   return (
     <div ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
       {/* Search Input */}
@@ -180,6 +206,12 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
           placeholder={placeholder}
           id="site-search"
           name="q"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen}
+          aria-controls="site-search-results"
+          aria-activedescendant={getActiveDescendantId()}
+          aria-label="ಪುಸ್ತಕಗಳನ್ನು ಹುಡುಕಿ"
           style={{
             flex: 1,
             border: 'none',
@@ -215,19 +247,24 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
 
       {/* Dropdown */}
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 0.5rem)',
-          left: 0,
-          right: 0,
-          background: 'white',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--color-border)',
-          maxHeight: '400px',
-          overflowY: 'auto',
-          zIndex: 1000
-        }}>
+        <div
+          id="site-search-results"
+          role="listbox"
+          aria-label="ಹುಡುಕಾಟ ಸಲಹೆಗಳು ಮತ್ತು ಫಲಿತಾಂಶಗಳು"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 0.5rem)',
+            left: 0,
+            right: 0,
+            background: 'white',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-lg)',
+            border: '1px solid var(--color-border)',
+            maxHeight: '400px',
+            overflowY: 'auto',
+            zIndex: 1000
+          }}
+        >
           {/* Search Results */}
           {query.length >= 2 && results.length > 0 && (
             <div style={{ padding: '0.5rem' }}>
@@ -237,6 +274,10 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
               {results.map((result, index) => (
                 <button
                   key={result.id}
+                  id={`search-result-${index}`}
+                  role="option"
+                  aria-selected={selectedIndex === index}
+                  tabIndex={-1}
                   onClick={() => handleSelectResult(result)}
                   style={{
                     width: '100%',
@@ -366,6 +407,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                         color: 'var(--color-primary)',
                         cursor: 'pointer'
                       }}
+                      aria-label="ಇತ್ತೀಚಿನ ಹುಡುಕಾಟಗಳನ್ನು ಅಳಿಸಿ"
                     >
                       ಅಳಿಸಿ
                     </button>
@@ -373,6 +415,10 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                   {recentSearches.map((term, index) => (
                     <button
                       key={term}
+                      id={`recent-search-${index}`}
+                      role="option"
+                      aria-selected={selectedIndex === index}
+                      tabIndex={-1}
                       onClick={() => handleSuggestionClick(term)}
                       style={{
                         width: '100%',
@@ -401,23 +447,33 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                   <TrendingUp size={14} /> ಜನಪ್ರಿಯ ಹುಡುಕಾಟಗಳು
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '0.5rem 0.75rem' }}>
-                  {popularSearches.map((term) => (
-                    <button
-                      key={term}
-                      onClick={() => handleSuggestionClick(term)}
-                      style={{
-                        padding: '0.375rem 0.75rem',
-                        background: 'var(--color-bg-alt)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-full)',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        transition: 'background 0.15s, border-color 0.15s'
-                      }}
-                    >
-                      {term}
-                    </button>
-                  ))}
+                  {popularSearches.map((term, index) => {
+                    const globalIndex = recentSearches.length + index
+                    const isSelected = selectedIndex === globalIndex
+                    return (
+                      <button
+                        key={term}
+                        id={`popular-search-${index}`}
+                        role="option"
+                        aria-selected={isSelected}
+                        tabIndex={-1}
+                        onClick={() => handleSuggestionClick(term)}
+                        style={{
+                          padding: '0.375rem 0.75rem',
+                          background: 'var(--color-bg-alt)',
+                          border: '1px solid',
+                          borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
+                          borderRadius: 'var(--radius-full)',
+                          fontSize: '0.875rem',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s, border-color 0.15s'
+                        }}
+                        onMouseEnter={() => setSelectedIndex(globalIndex)}
+                      >
+                        {term}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>
