@@ -33,6 +33,20 @@ function generateSalt(length: number = 32): string {
   return bufferToHex(array.buffer)
 }
 
+function getSecretKey(): string {
+  const secret = process.env.ADMIN_SECRET;
+
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL SECURITY ERROR: ADMIN_SECRET environment variable is required in production.');
+    }
+    console.warn('SECURITY WARNING: ADMIN_SECRET is not set. Using insecure fallback for development only.');
+    return 'default-secret-change-me';
+  }
+
+  return secret;
+}
+
 /**
  * Hash a password using PBKDF2
  * Returns a string in format: salt:hash
@@ -130,7 +144,7 @@ export async function generateSessionToken(userId: string, email: string): Promi
   const encodedPayload = btoa(payloadStr)
   
   // Sign the payload
-  const secret = process.env.ADMIN_SECRET || 'default-secret-change-me'
+  const secret = getSecretKey()
   const secretBuffer = stringToBuffer(secret)
   
   const key = await crypto.subtle.importKey(
@@ -163,7 +177,7 @@ export async function verifySessionToken(token: string): Promise<{
     if (!encodedPayload || !signature) return { valid: false }
     
     // Verify signature
-    const secret = process.env.ADMIN_SECRET || 'default-secret-change-me'
+    const secret = getSecretKey()
     const secretBuffer = stringToBuffer(secret)
     
     const key = await crypto.subtle.importKey(

@@ -1,6 +1,20 @@
 // Edge-compatible authentication utilities using Web Crypto API
 
-const SECRET_KEY = process.env.ADMIN_SECRET || 'fallback-secret-key-change-this-in-production';
+const getSecretKey = () => {
+  const secret = process.env.ADMIN_SECRET;
+
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL SECURITY ERROR: ADMIN_SECRET environment variable is required in production.');
+    }
+    console.warn('SECURITY WARNING: ADMIN_SECRET is not set. Using insecure fallback for development only.');
+    return 'fallback-secret-key-change-this-in-production';
+  }
+
+  return secret;
+};
+
+const SECRET_KEY = getSecretKey();
 
 async function getKey() {
   const encoder = new TextEncoder();

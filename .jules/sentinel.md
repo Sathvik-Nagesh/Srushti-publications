@@ -14,3 +14,8 @@
 **Vulnerability:** The `/api/orders` endpoint accepted `items` with client-provided `price` and `totals`. A malicious user could send a request with `price: 1` to purchase expensive items for cheap.
 **Learning:** Never trust client-side calculations for sensitive data like prices or totals. "Mass Assignment" vulnerabilities can occur when API endpoints blindly accept objects from the client.
 **Prevention:** Always recalculate prices and totals on the server using trusted data sources (database) before processing payments or orders. Validate existence of referenced IDs.
+
+## 2025-02-14 - Critical: Insecure Default Secrets
+**Vulnerability:** Found hardcoded fallback secrets for `ADMIN_SECRET` in `src/lib/auth-edge.ts` and `src/lib/password.ts`. This allowed potential session forging if the environment variable was missing.
+**Learning:** Using `process.env.SECRET || 'default'` is dangerous because the application silently becomes insecure if the environment variable is accidentally omitted.
+**Prevention:** Enforce strict checking of secrets in production. Throw an error if critical secrets are missing, rather than falling back to defaults.
