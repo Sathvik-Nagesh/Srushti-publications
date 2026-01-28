@@ -13,3 +13,7 @@
 ## 2025-01-29 - Search Autocomplete Accessibility
 **Learning:** Custom search autocompletes often miss the WAI-ARIA Combobox pattern, making them unusable for screen readers. Specifically, using `aria-activedescendant` is crucial to allow keyboard navigation through results (including suggestions like "Recent" and "Popular") while keeping focus on the input for typing.
 **Action:** Implement `role="combobox"`, `role="listbox"`, `role="option"` and `aria-activedescendant` on custom search components. Ensure all suggestion types (Recent, Popular, Results) share a unified keyboard navigation index.
+
+## 2025-01-30 - Localized ARIA Labels Consistency
+**Learning:** Found components (WishlistButton, QuantitySelector) with hardcoded English `aria-label` attributes while the visible UI was in Kannada (the default locale). This creates a jarring and confusing experience for screen reader users who expect the interface language to be consistent.
+**Action:** When using `next-intl` or similar libraries, always wrap `aria-label` strings in translation hooks (e.g., `t('addToCart')`), even for icon-only buttons. Ensure dynamic content in labels (like book titles) is properly interpolated in the translation strings.
