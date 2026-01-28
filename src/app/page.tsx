@@ -5,14 +5,16 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import DynamicHero from '@/components/DynamicHero'
 import HomeCategories from '@/components/HomeCategories'
-import HomeFeatures from '@/components/HomeFeatures'
-import HomeOffers from '@/components/HomeOffers'
 import BookCard from '@/components/BookCard'
 import prisma from '@/lib/prisma'
 import ScrollToTop from '@/components/ScrollToTop'
-import RecentlyViewed from '@/components/RecentlyViewed'
-import SaleTimer from '@/components/SaleTimer'
-import HomepageFAQ from '@/components/HomepageFAQ'
+import { 
+  LazyHomeFeatures,
+  LazyHomeOffers,
+  LazyRecentlyViewed,
+  LazySaleTimer,
+  LazyHomepageFAQ 
+} from '@/components/LazyComponents'
 
 // Enable ISR: Revalidate home page every hour (3600 seconds)
 export const revalidate = 3600
@@ -71,7 +73,7 @@ export default async function HomePage() {
                 <div style={{
                   position: 'relative',
                   width: '100%',
-                  maxWidth: '400px',
+                  maxWidth: '500px',
                   margin: '0 auto',
                   perspective: '1000px'
                 }}>
@@ -112,7 +114,7 @@ export default async function HomePage() {
                       overflow: 'hidden'
                     }}
                   >
-                    <div style={{ position: 'relative', width: '300px', height: '350px' }}>
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '0.85', minHeight: '450px' }}>
                       <Image
                         src="/logo.jpg"
                         alt="Srushti Publications Logo"
@@ -122,6 +124,7 @@ export default async function HomePage() {
                           borderRadius: '16px',
                         }}
                         priority
+                        sizes="(max-width: 768px) 100vw, 400px"
                       />
                     </div>
                   </div>
@@ -130,23 +133,24 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* Sale Timer Banner */}
         <section className="section" style={{ background: 'var(--color-bg)', paddingTop: '1rem', paddingBottom: '1rem' }}>
           <div className="container">
-            <SaleTimer title="🎉 ಮಹಾ ಮಾರಾಟ! ಎಲ್ಲಾ ಪುಸ್ತಕಗಳ ಮೇಲೆ 20% ರಿಯಾಯಿತಿ" variant="banner" />
+            {/* Sale Timer (Client Component) */}
+            <LazySaleTimer />
           </div>
         </section>
-        
+
         {/* Categories Section */}
         <HomeCategories categories={categories} />
-        
+
         {/* New Releases Section */}
         <section className="section" style={{ background: 'var(--color-cream-light)' }}>
           <div className="container">
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: '2rem',
               flexWrap: 'wrap',
@@ -159,7 +163,7 @@ export default async function HomePage() {
                 ಎಲ್ಲಾ ನೋಡಿ <ArrowRight size={18} />
               </Link>
             </div>
-            
+
             <div className="product-grid">
               {featuredBooks.filter(b => b.isNewRelease).slice(0, 8).map((book) => (
                 <BookCard key={book.id} book={book} />
@@ -167,13 +171,13 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* Best Sellers Section */}
         <section className="section" style={{ background: 'var(--color-bg)' }}>
           <div className="container">
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: '2rem',
               flexWrap: 'wrap',
@@ -187,7 +191,7 @@ export default async function HomePage() {
                 ಎಲ್ಲಾ ನೋಡಿ <ArrowRight size={18} />
               </Link>
             </div>
-            
+
             <div className="product-grid">
               {featuredBooks.filter(b => b.isBestSeller).slice(0, 4).map((book) => (
                 <BookCard key={book.id} book={book} />
@@ -195,21 +199,21 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* Offers Banner */}
-        <HomeOffers />
-        
+        <LazyHomeOffers />
+
         {/* Recently Viewed Books */}
-        <RecentlyViewed maxItems={4} />
-        
+        <LazyRecentlyViewed maxItems={4} />
+
         {/* Why Choose Us */}
-        <HomeFeatures />
+        <LazyHomeFeatures />
 
         {/* FAQ Section */}
-        <HomepageFAQ />
-        
+        <LazyHomepageFAQ />
+
         {/* Newsletter / CTA Section */}
-        <section className="section" style={{ 
+        <section className="section" style={{
           background: 'var(--color-cream-light)',
           borderTop: '1px solid var(--color-border)'
         }}>

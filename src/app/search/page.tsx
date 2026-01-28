@@ -1,51 +1,34 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { BookOpen, Search, Filter, ChevronDown, X } from 'lucide-react'
+import BookCard from '@/components/BookCard'
+import { BookOpen, Search, Filter, ChevronDown, X, Loader2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { useSearch } from '@/lib/hooks/useDataFetching'
 
 function SearchResultsContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const query = searchParams.get('q') || ''
   const [searchQuery, setSearchQuery] = useState(query)
-  const [results, setResults] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  
+  // Use SWR-based search hook with caching
+  const { results, isLoading, error } = useSearch(query, 50)
 
+  // Update local search query when URL changes
   useEffect(() => {
-    const fetchResults = async () => {
-      if (!query || query.length < 2) {
-        setResults([])
-        setIsLoading(false)
-        return
-      }
-
-      setIsLoading(true)
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
-        const data = await res.json()
-        if (data.success) {
-          setResults(data.data)
-        } else {
-          setResults([])
-        }
-      } catch (error) {
-        console.error('Search error:', error)
-        setResults([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchResults()
+    setSearchQuery(query)
   }, [query])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+    }
   }
 
   return (
@@ -185,106 +168,9 @@ function SearchResultsContent() {
             ) : (
               <>
                 {/* Results Grid */}
-                <div className="product-grid" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-                  gap: '1.5rem'
-                }}>
+                <div className="product-grid">
                   {results.map((book) => (
-                    <Link
-                      key={book.id}
-                      href={`/books/${book.slug}`}
-                      className="book-card"
-                      style={{
-                        background: 'white',
-                        borderRadius: 'var(--radius-xl)',
-                        overflow: 'hidden',
-                        boxShadow: 'var(--shadow-sm)',
-                        textDecoration: 'none',
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      <div style={{
-                        height: '240px',
-                        background: 'linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}>
-                        <img 
-                          src={book.image || '/placeholder-book.jpg'} 
-                          alt={book.title}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/placeholder-book.jpg';
-                            // Hide the primary icon when fallback is used or just show the icon?
-                          }}
-                        />
-                      </div>
-                      
-                      <div style={{ padding: '1.25rem' }}>
-                        <span style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--color-primary)',
-                          fontWeight: 500
-                        }}>
-                          {book.category || 'ಸಾಹಿತ್ಯ'}
-                        </span>
-                        <h3 style={{
-                          fontSize: '1rem',
-                          fontWeight: 600,
-                          color: 'var(--color-text)',
-                          marginTop: '0.25rem',
-                          marginBottom: '0.25rem',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          minHeight: '2.8rem'
-                        }}>
-                          {book.title}
-                        </h3>
-                        <p style={{
-                          fontSize: '0.875rem',
-                          color: 'var(--color-text-light)',
-                          marginBottom: '0.75rem',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}>
-                          {book.author}
-                        </p>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}>
-                          <span style={{
-                            fontSize: '1.125rem',
-                            fontWeight: 700,
-                            color: 'var(--color-primary)'
-                          }}>
-                            {formatCurrency(book.price)}
-                          </span>
-                          {book.originalPrice && book.originalPrice > book.price && (
-                            <span style={{
-                              fontSize: '0.875rem',
-                              color: 'var(--color-text-muted)',
-                              textDecoration: 'line-through'
-                            }}>
-                              {formatCurrency(book.originalPrice)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
+                    <BookCard key={book.id} book={book} />
                   ))}
                 </div>
 

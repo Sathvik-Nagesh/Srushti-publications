@@ -7,7 +7,11 @@ import Footer from '@/components/Footer'
 import { useEffect } from 'react'
 import confetti from 'canvas-confetti'
 
+import { useSearchParams } from 'next/navigation'
+
 export default function OrderSuccessPage() {
+  const searchParams = useSearchParams()
+  const orderNumber = searchParams.get('orderNumber')
   
   useEffect(() => {
     // Fire confetti on mount
@@ -61,6 +65,17 @@ export default function OrderSuccessPage() {
           
           <p style={{ fontSize: '1.125rem', color: 'var(--color-text-muted)', marginBottom: '3rem', lineHeight: 1.6 }}>
             ನಿಮ್ಮ ಆರ್ಡರ್ ವಿವರಗಳನ್ನು ನಾವು ಸ್ವೀಕರಿಸಿದ್ದೇವೆ. ಶೀಘ್ರದಲ್ಲೇ ನಿಮಗೆ ದೃಢೀಕರಣ ಇಮೇಲ್ ಮತ್ತು SMS ಕಳುಹಿಸಲಾಗುವುದು.
+          </p>
+
+          <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--color-text-light)', marginBottom: '0.5rem' }}>ಆರ್ಡರ್ ಸಂಖ್ಯೆ (Order Number)</p>
+            <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary)', letterSpacing: '1px' }}>
+              #{orderNumber || 'PENDING'}
+            </p>
+          </div>
+          
+          <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '3rem' }}>
+            ನಿಮ್ಮ ಆರ್ಡರ್ ಹಿಸ್ಟರಿಯಲ್ಲಿ ಇದನ್ನು ಪರಿಶೀಲಿಸಬಹುದು.
           </p>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

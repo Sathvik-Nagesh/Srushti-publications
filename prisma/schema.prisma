@@ -84,12 +84,25 @@ model Book {
   orderItems      OrderItem[]
   cartItems       CartItem[]
   
+  // Single column indexes
   @@index([categoryId])
   @@index([slug])
   @@index([isActive])
   @@index([isNewRelease])
   @@index([isBestSeller])
   @@index([isOnSale])
+  
+  // Composite indexes for common query patterns
+  @@index([isActive, categoryId]) // Filter by category (most common)
+  @@index([isActive, createdAt(sort: Desc)]) // Latest books
+  @@index([isActive, sellingPrice]) // Price filtering
+  @@index([isActive, salesCount(sort: Desc)]) // Popular/best selling
+  @@index([isActive, isFeatured]) // Featured books on homepage
+  @@index([isActive, stockQuantity]) // In-stock filtering
+  
+  // Search optimization (for text search if using pg_trgm extension)
+  @@index([title])
+  @@index([author])
 }
 
 // ============================================
