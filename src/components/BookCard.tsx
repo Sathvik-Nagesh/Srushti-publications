@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -15,7 +16,7 @@ interface BookCardProps {
   showQuickAdd?: boolean
 }
 
-export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
+function BookCard({ book, showQuickAdd = true }: BookCardProps) {
   const router = useRouter()
   const t = useTranslations('common')
   const addItem = useCartStore(state => state.addItem)
@@ -214,3 +215,6 @@ export default function BookCard({ book, showQuickAdd = true }: BookCardProps) {
     </div>
   )
 }
+
+// Memoized to optimize list rendering performance when parent filters change
+export default memo(BookCard)
