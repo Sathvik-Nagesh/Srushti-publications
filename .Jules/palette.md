@@ -17,3 +17,7 @@
 ## 2025-01-30 - Localized ARIA Labels Consistency
 **Learning:** Found components (WishlistButton, QuantitySelector) with hardcoded English `aria-label` attributes while the visible UI was in Kannada (the default locale). This creates a jarring and confusing experience for screen reader users who expect the interface language to be consistent.
 **Action:** When using `next-intl` or similar libraries, always wrap `aria-label` strings in translation hooks (e.g., `t('addToCart')`), even for icon-only buttons. Ensure dynamic content in labels (like book titles) is properly interpolated in the translation strings.
+
+## 2025-01-31 - Semantic Retrofitting with ARIA Roles
+**Learning:** When refactoring complex layouts (like progress steppers) where changing the DOM structure (e.g., to `<ol>`) would break CSS positioning or flex behavior, using `role="list"` and `role="listitem"` is a safe and effective way to provide correct semantics without visual regressions.
+**Action:** Use `role="list"` on the container and `role="listitem"` on children for non-list elements that function as lists. Combine with `aria-current="step"` for process indicators.
