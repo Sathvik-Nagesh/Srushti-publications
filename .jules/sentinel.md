@@ -19,3 +19,13 @@
 **Vulnerability:** The `/api/upload` endpoint was completely unprotected, allowing any user to upload files to Cloudinary or delete existing images using `publicId`.
 **Learning:** `middleware.ts` protections often miss standalone API routes (like `/api/upload`) if they don't fall under the standard `/admin` or `/api/admin` prefix. Security must be applied explicitly to all sensitive endpoints, not just assumed by path conventions.
 **Prevention:** Audit all API routes for authentication checks, especially those handling external services (like Cloudinary) or state modification. Use shared authentication helpers inside route handlers as a second layer of defense.
+
+## 2025-02-15 - High: Timing Attack in Password Verification
+**Vulnerability:** The `verifyPassword` function used direct string comparison (`hash === newHash`) for verifying PBKDF2 hashes, allowing potential timing attacks.
+**Learning:** Even with secure hashing (PBKDF2), the comparison step must be constant-time to prevent attackers from guessing the hash byte-by-byte based on response time.
+**Prevention:** Always use a constant-time comparison function (like `crypto.timingSafeEqual` or a manual XOR loop) for checking sensitive hashes or signatures.
+
+## 2025-02-15 - Critical: Scattered Hardcoded Secret Fallbacks
+**Vulnerability:** Multiple files (`auth-edge.ts`, `password.ts`) contained hardcoded fallback strings for `ADMIN_SECRET` directly in the code logic.
+**Learning:** Decentralized configuration leads to inconsistency (different fallbacks) and risk of shipping insecure defaults if environment variables fail.
+**Prevention:** Centralize all sensitive configuration in a single module (e.g., `src/lib/config.ts`) that strictly validates environment variables in production.

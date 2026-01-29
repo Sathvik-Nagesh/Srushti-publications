@@ -1,10 +1,9 @@
 // Edge-compatible authentication utilities using Web Crypto API
-
-const SECRET_KEY = process.env.ADMIN_SECRET || 'fallback-secret-key-change-this-in-production';
+import { getAdminSecret } from './config'
 
 async function getKey() {
   const encoder = new TextEncoder();
-  const keyData = encoder.encode(SECRET_KEY);
+  const keyData = encoder.encode(getAdminSecret());
   return crypto.subtle.importKey(
     'raw',
     keyData,
