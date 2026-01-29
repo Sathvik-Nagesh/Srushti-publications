@@ -34,6 +34,7 @@ export default function ImageUpload({
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -158,6 +159,13 @@ export default function ImageUpload({
     setIsDragging(false)
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      fileInputRef.current?.click()
+    }
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -210,6 +218,7 @@ export default function ImageUpload({
           <button
             type="button"
             onClick={handleRemove}
+            aria-label="ಚಿತ್ರವನ್ನು ತೆಗೆದುಹಾಕಿ"
             style={{
               position: 'absolute',
               top: '8px',
@@ -281,17 +290,23 @@ export default function ImageUpload({
       ) : (
         // Upload Zone
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={handleKeyDown}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          aria-label={label}
           style={{
             position: 'relative',
             aspectRatio: aspectRatios[aspectRatio],
             maxWidth: aspectRatio === 'banner' ? '100%' : '200px',
-            border: `2px dashed ${isDragging ? 'var(--color-primary)' : 'var(--color-border)'}`,
+            border: `2px dashed ${isDragging || isFocused ? 'var(--color-primary)' : 'var(--color-border)'}`,
             borderRadius: 'var(--radius-lg)',
-            background: isDragging ? 'var(--color-primary)10' : 'var(--color-bg-alt)',
+            background: isDragging || isFocused ? 'var(--color-primary)10' : 'var(--color-bg-alt)',
             cursor: isUploading ? 'wait' : 'pointer',
             display: 'flex',
             flexDirection: 'column',
@@ -300,15 +315,20 @@ export default function ImageUpload({
             gap: '0.5rem',
             padding: '1rem',
             transition: 'all 0.2s ease',
+            outline: 'none',
           }}
         >
           {isUploading ? (
-            <>
-              <Loader size={32} className="spin" style={{ color: 'var(--color-primary)' }} />
+            <div role="status" aria-live="polite" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <Loader size={32} className="spin" style={{ color: 'var(--color-primary)' }} aria-hidden="true" />
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-light)', margin: 0 }}>
                 ಅಪ್‌ಲೋಡ್ ಆಗುತ್ತಿದೆ... {uploadProgress}%
               </p>
               <div
+                role="progressbar"
+                aria-valuenow={uploadProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
                 style={{
                   width: '80%',
                   height: '4px',
@@ -326,7 +346,7 @@ export default function ImageUpload({
                   }}
                 />
               </div>
-            </>
+            </div>
           ) : (
             <>
               <div
