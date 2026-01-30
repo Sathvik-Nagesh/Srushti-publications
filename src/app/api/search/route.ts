@@ -3,36 +3,41 @@ import prisma from '@/lib/prisma'
 import { checkRateLimit, getCached, setCache, API_RATE_LIMITS } from '@/lib/rateLimit'
 
 // Fuzzy search helper - calculates similarity between strings
+// Optimized to O(min(m,n)) space complexity
 function levenshteinDistance(a: string, b: string): number {
-  const matrix: number[][] = []
-  const aLen = a.length
-  const bLen = b.length
+  if (a.length === 0) return b.length
+  if (b.length === 0) return a.length
 
-  if (aLen === 0) return bLen
-  if (bLen === 0) return aLen
-
-  for (let i = 0; i <= bLen; i++) {
-    matrix[i] = [i]
-  }
-  for (let j = 0; j <= aLen; j++) {
-    matrix[0][j] = j
+  // Swap to ensure a is shorter to minimize memory
+  if (a.length > b.length) {
+    const tmp = a
+    a = b
+    b = tmp
   }
 
-  for (let i = 1; i <= bLen; i++) {
-    for (let j = 1; j <= aLen; j++) {
+  const row = new Int32Array(a.length + 1)
+  // Initialize first row
+  for (let i = 0; i <= a.length; i++) {
+    row[i] = i
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    let prev = i
+    for (let j = 1; j <= a.length; j++) {
+      let val: number
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1]
+        val = row[j - 1] // match
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        )
+        val = Math.min(row[j - 1] + 1, // substitution
+          prev + 1,       // insertion
+          row[j] + 1)     // deletion
       }
+      row[j - 1] = prev
+      prev = val
     }
+    row[a.length] = prev
   }
-
-  return matrix[bLen][aLen]
+  return row[a.length]
 }
 
 // Calculate similarity score (0-1, higher is better)
