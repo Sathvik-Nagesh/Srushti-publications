@@ -29,3 +29,8 @@
 **Vulnerability:** Multiple files (`auth-edge.ts`, `password.ts`) contained hardcoded fallback strings for `ADMIN_SECRET` directly in the code logic.
 **Learning:** Decentralized configuration leads to inconsistency (different fallbacks) and risk of shipping insecure defaults if environment variables fail.
 **Prevention:** Centralize all sensitive configuration in a single module (e.g., `src/lib/config.ts`) that strictly validates environment variables in production.
+
+## 2025-02-16 - Critical: Timing Attack in Admin Fallback Login
+**Vulnerability:** The admin fallback login (`src/app/api/admin/login/route.ts`) used direct string comparison (`===`) for environment variable credentials. This allowed timing attacks and leaked the length of the secrets.
+**Learning:** Even fallback/dev-only authentication paths must be secure. Comparing variable-length secrets directly is never safe.
+**Prevention:** Use a hashing-based comparison (`secureCompare`) that hashes both inputs before comparing them constant-time. This masks the length and standardizes the comparison time.
