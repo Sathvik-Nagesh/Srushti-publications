@@ -51,6 +51,18 @@ function constantTimeCompare(a: string, b: string): boolean {
 }
 
 /**
+ * Securely compare two strings by hashing them first to prevent timing attacks
+ * and length leaks.
+ */
+export async function secureCompare(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder()
+  const bufA = await crypto.subtle.digest('SHA-256', encoder.encode(a))
+  const bufB = await crypto.subtle.digest('SHA-256', encoder.encode(b))
+
+  return constantTimeCompare(bufferToHex(bufA), bufferToHex(bufB))
+}
+
+/**
  * Hash a password using PBKDF2
  * Returns a string in format: salt:hash
  */
