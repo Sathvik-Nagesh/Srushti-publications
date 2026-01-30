@@ -76,11 +76,7 @@ export default function RecentlyViewed({
   const [recentBooks, setRecentBooks] = useState<RecentBook[]>([])
   const [mounted, setMounted] = useState(false)
   
-  useEffect(() => {
-    setMounted(true)
-    loadRecentBooks()
-  }, [])
-  
+  // Moved loadRecentBooks up before useEffect to avoid hoisting error
   const loadRecentBooks = () => {
     const books = getRecentlyViewed()
     // Filter out current book if provided
@@ -89,6 +85,12 @@ export default function RecentlyViewed({
       : books
     setRecentBooks(filtered.slice(0, maxItems))
   }
+
+  useEffect(() => {
+    setMounted(true)
+    loadRecentBooks()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   
   const handleClear = () => {
     clearRecentlyViewed()

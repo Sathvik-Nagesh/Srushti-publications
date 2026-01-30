@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
@@ -320,7 +320,7 @@ export default function AccountPage() {
                                     #{order.orderNumber}
                                 </p>
                                 <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                                    {new Date(order.createdAt).toLocaleDateString('kn-IN')}
+                                    {formatDate(order.createdAt)}
                                 </p>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>

@@ -12,6 +12,47 @@ interface SaleTimerProps {
 // Settings storage key (same as in site-config page)
 const SETTINGS_KEY = 'srushti_site_settings'
 
+const TimeBox = ({ value, label, variant }: { value: number; label: string; variant: string }) => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
+  }}>
+    <div style={{
+      background: variant === 'banner' ? 'rgba(255,255,255,0.2)' : 'var(--color-primary)',
+      color: 'white',
+      padding: variant === 'compact' ? '0.25rem 0.5rem' : '0.5rem 0.75rem',
+      borderRadius: 'var(--radius-md)',
+      minWidth: variant === 'compact' ? 36 : 48,
+      textAlign: 'center',
+      fontWeight: 700,
+      fontSize: variant === 'compact' ? '0.875rem' : '1.25rem',
+      fontFamily: 'monospace'
+    }}>
+      {String(value).padStart(2, '0')}
+    </div>
+    <span style={{
+      fontSize: '0.625rem',
+      marginTop: '0.25rem',
+      opacity: 0.8,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em'
+    }}>
+      {label}
+    </span>
+  </div>
+)
+
+const Separator = ({ variant }: { variant: string }) => (
+  <span style={{
+    fontSize: variant === 'compact' ? '1rem' : '1.5rem',
+    fontWeight: 700,
+    animation: 'blink 1s infinite'
+  }}>
+    :
+  </span>
+)
+
 export default function SaleTimer({ 
   endDate: propEndDate,
   title: propTitle,
@@ -26,9 +67,10 @@ export default function SaleTimer({
   const [mounted, setMounted] = useState(false)
   const [isEnabled, setIsEnabled] = useState(true)
   const [timerTitle, setTimerTitle] = useState(propTitle || 'ವಿಶೇಷ ಆಫರ್ ಮುಕ್ತಾಯ!')
-  const [endDate, setEndDate] = useState(propEndDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000))
+  const [endDate, setEndDate] = useState(() => propEndDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000))
   
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
     
     // Load settings from localStorage
@@ -74,47 +116,6 @@ export default function SaleTimer({
   
   // Don't render if not mounted or disabled
   if (!mounted || !isEnabled) return null
-  
-  const TimeBox = ({ value, label }: { value: number; label: string }) => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center'
-    }}>
-      <div style={{
-        background: variant === 'banner' ? 'rgba(255,255,255,0.2)' : 'var(--color-primary)',
-        color: 'white',
-        padding: variant === 'compact' ? '0.25rem 0.5rem' : '0.5rem 0.75rem',
-        borderRadius: 'var(--radius-md)',
-        minWidth: variant === 'compact' ? 36 : 48,
-        textAlign: 'center',
-        fontWeight: 700,
-        fontSize: variant === 'compact' ? '0.875rem' : '1.25rem',
-        fontFamily: 'monospace'
-      }}>
-        {String(value).padStart(2, '0')}
-      </div>
-      <span style={{
-        fontSize: '0.625rem',
-        marginTop: '0.25rem',
-        opacity: 0.8,
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em'
-      }}>
-        {label}
-      </span>
-    </div>
-  )
-  
-  const Separator = () => (
-    <span style={{
-      fontSize: variant === 'compact' ? '1rem' : '1.5rem',
-      fontWeight: 700,
-      animation: 'blink 1s infinite'
-    }}>
-      :
-    </span>
-  )
   
   if (variant === 'compact') {
     return (
@@ -163,13 +164,13 @@ export default function SaleTimer({
           <p style={{ fontWeight: 600, margin: 0 }}>{timerTitle}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <TimeBox value={timeLeft.days} label="ದಿನ" />
-          <Separator />
-          <TimeBox value={timeLeft.hours} label="ಗಂ" />
-          <Separator />
-          <TimeBox value={timeLeft.minutes} label="ನಿ" />
-          <Separator />
-          <TimeBox value={timeLeft.seconds} label="ಸೆ" />
+          <TimeBox value={timeLeft.days} label="ದಿನ" variant={variant} />
+          <Separator variant={variant} />
+          <TimeBox value={timeLeft.hours} label="ಗಂ" variant={variant} />
+          <Separator variant={variant} />
+          <TimeBox value={timeLeft.minutes} label="ನಿ" variant={variant} />
+          <Separator variant={variant} />
+          <TimeBox value={timeLeft.seconds} label="ಸೆ" variant={variant} />
         </div>
         <style jsx>{`
           @keyframes blink {
@@ -211,13 +212,13 @@ export default function SaleTimer({
           alignItems: 'center',
           gap: '0.5rem'
         }}>
-          <TimeBox value={timeLeft.days} label="ದಿನ" />
-          <Separator />
-          <TimeBox value={timeLeft.hours} label="ಗಂಟೆ" />
-          <Separator />
-          <TimeBox value={timeLeft.minutes} label="ನಿಮಿಷ" />
-          <Separator />
-          <TimeBox value={timeLeft.seconds} label="ಸೆಕೆಂ" />
+          <TimeBox value={timeLeft.days} label="ದಿನ" variant={variant} />
+          <Separator variant={variant} />
+          <TimeBox value={timeLeft.hours} label="ಗಂಟೆ" variant={variant} />
+          <Separator variant={variant} />
+          <TimeBox value={timeLeft.minutes} label="ನಿಮಿಷ" variant={variant} />
+          <Separator variant={variant} />
+          <TimeBox value={timeLeft.seconds} label="ಸೆಕೆಂ" variant={variant} />
         </div>
       </div>
       <style jsx>{`

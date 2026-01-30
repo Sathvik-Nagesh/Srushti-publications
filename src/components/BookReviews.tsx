@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Star, ThumbsUp, MessageSquare, User, Check, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
+import { formatDate } from '@/lib/utils'
 
 interface Review {
   id: string
@@ -178,11 +179,7 @@ function ReviewCard({ review }: { review: Review }) {
               )}
             </p>
             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>
-              {new Date(review.createdAt).toLocaleDateString('kn-IN', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              {formatDate(review.createdAt)}
             </p>
           </div>
         </div>
@@ -280,7 +277,7 @@ function WriteReviewForm({
     }}>
       <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <MessageSquare size={20} />
-        "{bookTitle}" ಗೆ ವಿಮರ್ಶೆ ಬರೆಯಿರಿ
+        &quot;{bookTitle}&quot; ಗೆ ವಿಮರ್ಶೆ ಬರೆಯಿರಿ
       </h3>
 
       {/* Rating */}
