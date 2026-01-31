@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { ElementType } from 'react'
 import { 
   BookBookmark, GraduationCap, Baby, BookOpen, Sparkle,
   CaretRight 
@@ -15,7 +16,7 @@ interface Category {
   }
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, ElementType> = {
   'literature': BookBookmark,
   'academic': GraduationCap,
   'children': Baby,

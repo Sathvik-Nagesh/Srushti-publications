@@ -11,8 +11,9 @@ export function useCategories() {
   const [categories, setCategories] = useState<any[]>(cachedCategories || []);
   
   useEffect(() => {
+    // Redundant update removed: initialized in useState
     if (cachedCategories) {
-        setCategories(cachedCategories);
+        // setCategories(cachedCategories); // Removed to fix set-state-in-effect and avoid re-render
         return;
     }
 

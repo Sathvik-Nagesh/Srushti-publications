@@ -21,7 +21,7 @@ const preloadedModules = new Set<string>()
  *   Open Editor
  * </button>
  */
-export function preloadModule(importFn: () => Promise<any>, id?: string) {
+export function preloadModule(importFn: () => Promise<unknown>, id?: string) {
   const moduleId = id || importFn.toString()
   
   if (typeof window === 'undefined' || preloadedModules.has(moduleId)) {
@@ -39,16 +39,25 @@ export function preloadModule(importFn: () => Promise<any>, id?: string) {
  * const { preloadProps } = usePreload(() => import('./monaco-editor'))
  * return <button {...preloadProps}>Open Editor</button>
  */
-export function usePreload(importFn: () => Promise<any>, moduleId?: string) {
+export function usePreload(importFn: () => Promise<unknown>, moduleId?: string) {
   const hasPreloaded = useRef(false)
   
+  const id = moduleId || importFn.toString()
+
   const preload = useCallback(() => {
     if (hasPreloaded.current || typeof window === 'undefined') {
       return
     }
+
+    if (preloadedModules.has(id)) {
+        hasPreloaded.current = true
+        return
+    }
+
     hasPreloaded.current = true
+    preloadedModules.add(id)
     void importFn()
-  }, [importFn])
+  }, [importFn, id])
   
   return {
     preload,
@@ -72,6 +81,7 @@ export function preloadPage(href: string) {
   if (typeof window === 'undefined') return
   
   // Use type assertion to avoid global interface conflict
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const buildId = (window as any).__NEXT_DATA__?.buildId ?? 'development'
   const prefetchUrl = `/_next/data/${buildId}${href}.json`
   

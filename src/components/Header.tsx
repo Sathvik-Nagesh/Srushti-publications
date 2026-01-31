@@ -29,6 +29,7 @@ export default function Header() {
   
   // Fix hydration mismatch - only show cart count after mounting on client
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
     
     // Clean up any zombie service workers that might be blocking requests

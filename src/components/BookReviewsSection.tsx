@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Star, ThumbsUp, User, CheckCircle, Send } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { formatDate } from '@/lib/utils'
 
 interface Review {
   id: string
@@ -125,14 +126,6 @@ export default function BookReviews({ bookId, bookTitle }: BookReviewsProps) {
     )
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('kn-IN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
   return (
     <div style={{ marginTop: '3rem' }}>
       {/* Header */}
@@ -180,7 +173,7 @@ export default function BookReviews({ bookId, bookTitle }: BookReviewsProps) {
           }}
         >
           <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>
-            "{bookTitle}" ಬಗ್ಗೆ ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ
+            &quot;{bookTitle}&quot; ಬಗ್ಗೆ ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ
           </h3>
           
           <div style={{ marginBottom: '1rem' }}>
