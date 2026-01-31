@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSiteSettings } from '@/lib/settings'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 export async function GET() {
   const settings = await getSiteSettings()
@@ -11,6 +12,13 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json()
     

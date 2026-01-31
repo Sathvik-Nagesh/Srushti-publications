@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/books - Get all books with filters
 export async function GET(request: NextRequest) {
@@ -138,6 +139,13 @@ export async function GET(request: NextRequest) {
 
 // POST /api/books - Create a new book (Admin only)
 export async function POST(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json()
     

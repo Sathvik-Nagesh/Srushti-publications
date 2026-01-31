@@ -34,3 +34,8 @@
 **Vulnerability:** The admin fallback login (`src/app/api/admin/login/route.ts`) used direct string comparison (`===`) for environment variable credentials. This allowed timing attacks and leaked the length of the secrets.
 **Learning:** Even fallback/dev-only authentication paths must be secure. Comparing variable-length secrets directly is never safe.
 **Prevention:** Use a hashing-based comparison (`secureCompare`) that hashes both inputs before comparing them constant-time. This masks the length and standardizes the comparison time.
+
+## 2026-01-31 - Critical: Unprotected API Write Endpoints
+**Vulnerability:** Multiple API endpoints (`/api/books`, `/api/categories`, `/api/site-settings`) allowed unauthenticated POST/PUT requests. Middleware protection was insufficient as it didn't cover these specific paths.
+**Learning:** Middleware pattern matching is fragile. If a new API route is added that doesn't match the protected patterns (like `/api/admin/*`), it defaults to being public.
+**Prevention:** Enforce "Defense in Depth" by adding explicit authentication checks inside the route handlers for all state-changing operations (POST, PUT, DELETE), regardless of middleware configuration. Use a shared, reusable verification helper.

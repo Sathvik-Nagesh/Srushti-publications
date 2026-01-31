@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCached, setCache, invalidateCache } from '@/lib/rateLimit'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 interface HeroSettings {
   heroTagline: string
@@ -66,6 +67,13 @@ export async function GET() {
 
 // PUT /api/settings/hero - Update hero section settings (Admin only)
 export async function PUT(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json()
     

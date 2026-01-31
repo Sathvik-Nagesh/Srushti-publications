@@ -1,5 +1,6 @@
 // Edge-compatible authentication utilities using Web Crypto API
 import { getAdminSecret } from './config'
+import type { NextRequest } from 'next/server'
 
 async function getKey() {
   const encoder = new TextEncoder();
@@ -49,4 +50,24 @@ export async function verify(data: string, signature: string): Promise<boolean> 
     signatureBuffer,
     encoder.encode(data)
   );
+}
+
+/**
+ * Verify admin session from request cookies
+ */
+export async function verifyAdminSession(request: NextRequest): Promise<boolean> {
+  const adminSession = request.cookies.get('admin_session')
+  if (!adminSession?.value) return false
+
+  const parts = adminSession.value.split('.')
+  if (parts.length !== 2) return false
+
+  const [encodedPayload, signature] = parts
+
+  try {
+    const payload = atob(encodedPayload)
+    return await verify(payload, signature)
+  } catch {
+    return false
+  }
 }
