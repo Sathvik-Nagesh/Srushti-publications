@@ -1,14 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, User, Phone, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react'
+import { Mail, Lock, User, Phone, ArrowRight, AlertCircle, CheckCircle, Eye, EyeOff, Check, X } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import toast from 'react-hot-toast'
+
+// Password requirement rules
+const passwordRules = [
+  { id: 'length', label: 'ಕನಿಷ್ಠ 8 ಅಕ್ಷರಗಳು (At least 8 characters)', check: (p: string) => p.length >= 8 },
+  { id: 'uppercase', label: 'ಒಂದು ದೊಡ್ಡ ಅಕ್ಷರ (One uppercase letter)', check: (p: string) => /[A-Z]/.test(p) },
+  { id: 'lowercase', label: 'ಒಂದು ಸಣ್ಣ ಅಕ್ಷರ (One lowercase letter)', check: (p: string) => /[a-z]/.test(p) },
+  { id: 'number', label: 'ಒಂದು ಸಂಖ್ಯೆ (One number)', check: (p: string) => /[0-9]/.test(p) },
+  { id: 'special', label: 'ಒಂದು ವಿಶೇಷ ಚಿಹ್ನೆ (One special character: @$!%*?&)', check: (p: string) => /[@$!%*?&]/.test(p) },
+]
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -24,6 +33,23 @@ export default function RegisterPage() {
   
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Calculate password strength and which rules pass
+  const passwordValidation = useMemo(() => {
+    const results = passwordRules.map(rule => ({
+      ...rule,
+      passed: rule.check(formData.password)
+    }))
+    const passedCount = results.filter(r => r.passed).length
+    const strength = passedCount === 0 ? 0 : Math.round((passedCount / passwordRules.length) * 100)
+    const isStrong = passedCount >= 4 // At least 4 rules must pass
+    return { results, strength, isStrong, passedCount }
+  }, [formData.password])
+
+  // Password match check
+  const passwordsMatch = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -41,8 +67,8 @@ export default function RegisterPage() {
       return
     }
 
-    if (formData.password.length < 6) {
-      setError('ಪಾಸ್‌ವರ್ಡ್ ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳನ್ನು ಹೊಂದಿರಬೇಕು (Password must be at least 6 characters)')
+    if (!passwordValidation.isStrong) {
+      setError('ಪಾಸ್‌ವರ್ಡ್ ಅವಶ್ಯಕತೆಗಳನ್ನು ಪೂರೈಸಿ (Please meet password requirements)')
       setIsLoading(false)
       return
     }
@@ -68,6 +94,13 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Calculate strength bar color
+  const getStrengthColor = () => {
+    if (passwordValidation.strength < 40) return '#ef4444' // Red
+    if (passwordValidation.strength < 80) return '#f59e0b' // Orange
+    return '#22c55e' // Green
   }
 
   return (
@@ -160,41 +193,146 @@ export default function RegisterPage() {
               <div style={{ position: 'relative' }}>
                 <Lock size={18} style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                 <input 
-                  type="password" 
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   className="input" 
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ paddingLeft: '2.5rem', paddingRight: '3rem' }}
                   placeholder="********" 
                   required
-                  minLength={6}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    right: '1rem',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+
+              {/* Password Strength Bar */}
+              {formData.password && (
+                <div style={{ marginTop: '0.75rem' }}>
+                  <div style={{ 
+                    height: '4px', 
+                    background: '#e5e7eb', 
+                    borderRadius: '2px',
+                    overflow: 'hidden'
+                  }}>
+                    <div 
+                      style={{
+                        height: '100%',
+                        width: `${passwordValidation.strength}%`,
+                        background: getStrengthColor(),
+                        transition: 'width 0.3s, background 0.3s'
+                      }}
+                    />
+                  </div>
+                  <p style={{ 
+                    fontSize: '0.75rem', 
+                    color: getStrengthColor(),
+                    marginTop: '0.25rem',
+                    fontWeight: 500
+                  }}>
+                    {passwordValidation.strength < 40 && 'ದುರ್ಬಲ (Weak)'}
+                    {passwordValidation.strength >= 40 && passwordValidation.strength < 80 && 'ಮಧ್ಯಮ (Medium)'}
+                    {passwordValidation.strength >= 80 && 'ಬಲವಾದ (Strong)'}
+                  </p>
+
+                  {/* Password Requirements List */}
+                  <div style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}>
+                    {passwordValidation.results.map(rule => (
+                      <div 
+                        key={rule.id}
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.5rem',
+                          color: rule.passed ? '#22c55e' : '#9ca3af',
+                          marginBottom: '0.25rem'
+                        }}
+                      >
+                        {rule.passed ? <Check size={14} /> : <X size={14} />}
+                        <span>{rule.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="form-group">
               <label className="label">ಪಾಸ್‌ವರ್ಡ್ ದೃಢೀಕರಿಸಿ (Confirm Password)</label>
               <div style={{ position: 'relative' }}>
-                <CheckCircle size={18} style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                <CheckCircle size={18} style={{ 
+                  position: 'absolute', 
+                  top: '50%', 
+                  left: '1rem', 
+                  transform: 'translateY(-50%)', 
+                  color: passwordsMatch ? '#22c55e' : 'var(--color-text-muted)' 
+                }} />
                 <input 
-                  type="password" 
+                  type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className="input" 
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ 
+                    paddingLeft: '2.5rem', 
+                    paddingRight: '3rem',
+                    borderColor: formData.confirmPassword ? (passwordsMatch ? '#22c55e' : '#ef4444') : undefined
+                  }}
                   placeholder="********" 
                   required
-                  minLength={6}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    right: '1rem',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+              {formData.confirmPassword && !passwordsMatch && (
+                <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                  ಪಾಸ್‌ವರ್ಡ್‌ಗಳು ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ (Passwords do not match)
+                </p>
+              )}
             </div>
 
             <button 
               type="submit" 
               className="btn btn-primary" 
-              disabled={isLoading}
+              disabled={isLoading || !passwordValidation.isStrong || !passwordsMatch}
               style={{ width: '100%', marginTop: '1rem' }}
             >
               {isLoading ? 'ಖಾತೆ ರಚಿಸಲಾಗುತ್ತಿದೆ...' : 'ನೋಂದಣಿ ಮಾಡಿ (Register)'}
@@ -216,3 +354,4 @@ export default function RegisterPage() {
     </>
   )
 }
+

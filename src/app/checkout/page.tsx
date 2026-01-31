@@ -176,7 +176,7 @@ export default function CheckoutPage() {
       if (result.success) {
         toast.success('ನಿಮ್ಮ ಆರ್ಡರ್ ಯಶಸ್ವಿಯಾಗಿದೆ!')
         clearCart()
-        router.replace(result.orderId ? `/order-success?orderId=${result.orderId}` : '/order-success')
+        router.replace(result.orderNumber ? `/order-success?orderNumber=${result.orderNumber}` : '/order-success')
       } else {
         throw new Error(result.error || 'Order failed')
       }

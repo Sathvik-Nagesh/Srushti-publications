@@ -4,25 +4,30 @@ import { memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ShoppingCart, Eye } from 'lucide-react'
+import { ShoppingCart, Eye, AlertTriangle, GitCompare, Check } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { useCartStore } from '@/lib/store'
+import { useCompareStore } from '@/lib/compareStore'
 import type { Book } from '@/lib/types'
 import toast from 'react-hot-toast'
 
 interface BookCardProps {
   book: Book
   showQuickAdd?: boolean
+  onQuickView?: () => void
 }
 
-function BookCard({ book, showQuickAdd = true }: BookCardProps) {
+function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
   const router = useRouter()
   const t = useTranslations('common')
   const addItem = useCartStore(state => state.addItem)
+  const { addBook, removeBook, isInCompare, canAdd } = useCompareStore()
   
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
   const isOutOfStock = book.stockQuantity <= 0
+  const isLowStock = book.stockQuantity > 0 && book.stockQuantity <= 5
+  const inCompare = isInCompare(book.id)
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -35,6 +40,31 @@ function BookCard({ book, showQuickAdd = true }: BookCardProps) {
     
     addItem(book)
     toast.success('ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಲಾಗಿದೆ!')
+  }
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (onQuickView) {
+      onQuickView()
+    }
+  }
+
+  const handleCompareToggle = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (inCompare) {
+      removeBook(book.id)
+      toast.success('ಹೋಲಿಕೆಯಿಂದ ತೆಗೆಯಲಾಗಿದೆ')
+    } else {
+      if (canAdd()) {
+        addBook(book)
+        toast.success('ಹೋಲಿಕೆಗೆ ಸೇರಿಸಲಾಗಿದೆ')
+      } else {
+        toast.error('ಗರಿಷ್ಠ 3 ಪುಸ್ತಕಗಳನ್ನು ಮಾತ್ರ ಹೋಲಿಸಬಹುದು')
+      }
+    }
   }
   
   return (
@@ -76,6 +106,28 @@ function BookCard({ book, showQuickAdd = true }: BookCardProps) {
             <span className="badge badge-sale">{discountPercentage}% ರಿಯಾಯಿತಿ</span>
           )}
         </div>
+
+        {/* Low Stock Warning Badge */}
+        {isLowStock && !isOutOfStock && (
+          <div style={{
+            position: 'absolute',
+            bottom: '0.5rem',
+            right: '0.5rem',
+            background: '#fef3c7',
+            color: '#d97706',
+            padding: '0.25rem 0.5rem',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.25rem',
+            zIndex: 25
+          }}>
+            <AlertTriangle size={12} />
+            ಕೇವಲ {book.stockQuantity} ಉಳಿದಿವೆ!
+          </div>
+        )}
         
         {/* Out of Stock Overlay */}
         {isOutOfStock && (
@@ -128,6 +180,7 @@ function BookCard({ book, showQuickAdd = true }: BookCardProps) {
               ಕಾರ್ಟ್‌ಗೆ
             </button>
             <button
+              onClick={handleQuickView}
               className="btn btn-outline btn-sm"
               style={{ 
                 background: 'white',
@@ -137,6 +190,18 @@ function BookCard({ book, showQuickAdd = true }: BookCardProps) {
               aria-label={t('quickViewAria', { title: book.title })}
             >
               <Eye size={16} aria-hidden="true" />
+            </button>
+            <button
+              onClick={handleCompareToggle}
+              className="btn btn-outline btn-sm"
+              style={{ 
+                background: inCompare ? 'var(--color-primary)' : 'white',
+                color: inCompare ? 'white' : 'var(--color-text)',
+                pointerEvents: 'auto'
+              }}
+              aria-label={`${inCompare ? 'Remove from' : 'Add to'} compare`}
+            >
+              {inCompare ? <Check size={16} aria-hidden="true" /> : <GitCompare size={16} aria-hidden="true" />}
             </button>
           </div>
         )}

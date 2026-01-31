@@ -7,38 +7,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import { Package, Truck, CheckCircle, Clock, MapPin, MagnifyingGlass, Phone } from '@phosphor-icons/react'
 
 // Mock order data - in production, this would come from API
-const mockOrders: Record<string, OrderData> = {
-  'ORD-2024-001': {
-    orderNumber: 'ORD-2024-001',
-    status: 'delivered',
-    items: [{ title: 'ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು', qty: 1, price: 399 }],
-    total: 449,
-    orderDate: '2024-01-15',
-    deliveryDate: '2024-01-20',
-    address: 'ಬೆಂಗಳೂರು, ಕರ್ನಾಟಕ',
-    trackingSteps: [
-      { status: 'ordered', label: 'ಆರ್ಡರ್ ಮಾಡಲಾಗಿದೆ', date: '15 Jan', completed: true },
-      { status: 'confirmed', label: 'ದೃಢೀಕರಿಸಲಾಗಿದೆ', date: '15 Jan', completed: true },
-      { status: 'shipped', label: 'ಶಿಪ್ ಮಾಡಲಾಗಿದೆ', date: '17 Jan', completed: true },
-      { status: 'delivered', label: 'ವಿತರಿಸಲಾಗಿದೆ', date: '20 Jan', completed: true }
-    ]
-  },
-  'ORD-2024-002': {
-    orderNumber: 'ORD-2024-002',
-    status: 'shipped',
-    items: [{ title: 'ಕರ್ನಾಟಕ ಇತಿಹಾಸ', qty: 2, price: 495 }],
-    total: 990,
-    orderDate: '2024-01-18',
-    deliveryDate: 'Expected: 25 Jan',
-    address: 'ಮೈಸೂರು, ಕರ್ನಾಟಕ',
-    trackingSteps: [
-      { status: 'ordered', label: 'ಆರ್ಡರ್ ಮಾಡಲಾಗಿದೆ', date: '18 Jan', completed: true },
-      { status: 'confirmed', label: 'ದೃಢೀಕರಿಸಲಾಗಿದೆ', date: '18 Jan', completed: true },
-      { status: 'shipped', label: 'ಶಿಪ್ ಮಾಡಲಾಗಿದೆ', date: '20 Jan', completed: true },
-      { status: 'delivered', label: 'ವಿತರಣೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ', date: '-', completed: false }
-    ]
-  }
-}
+// Mock order data removed - using API
 
 interface OrderItem {
   title: string
@@ -101,17 +70,25 @@ export default function TrackOrderPage() {
 
     setIsLoading(true)
     
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1000))
-    
-    const foundOrder = mockOrders[orderNumber.toUpperCase()]
-    if (foundOrder) {
-      setOrder(foundOrder)
-    } else {
-      setError('ಆರ್ಡರ್ ಕಂಡುಬಂದಿಲ್ಲ. ಆರ್ಡರ್ ಸಂಖ್ಯೆ ಸರಿಯಾಗಿದೆಯೇ ಪರಿಶೀಲಿಸಿ.')
+    try {
+      const response = await fetch('/api/orders/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber: orderNumber.trim() })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setOrder(data.data)
+      } else {
+         setError(data.error || 'ಆರ್ಡರ್ ಕಂಡುಬಂದಿಲ್ಲ.')
+      }
+    } catch (err) {
+      setError('ಸಂಪರ್ಕ ದೋಷ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.')
+    } finally {
+      setIsLoading(false)
     }
-    
-    setIsLoading(false)
   }
 
   return (
@@ -181,9 +158,7 @@ export default function TrackOrderPage() {
                 )}
               </form>
               
-              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '1rem' }}>
-                💡 Demo: ORD-2024-001 ಅಥವಾ ORD-2024-002 ಬಳಸಿ
-              </p>
+                💡 ನಿಮ್ಮ ಆರ್ಡರ್ ಸಂಖ್ಯೆಯನ್ನು ಇಮೇಲ್‌ನಲ್ಲಿ ಪರಿಶೀಲಿಸಿ (ಉದಾ: ORD-25...)
             </div>
 
             {/* Order Details */}

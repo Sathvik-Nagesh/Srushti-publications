@@ -4,9 +4,11 @@ import { getLocale, getMessages } from 'next-intl/server'
 import { Toaster } from 'react-hot-toast'
 import CookieConsent from '@/components/CookieConsent'
 import WhatsAppButton from '@/components/WhatsAppButton'
+import CompareWidget from '@/components/CompareWidget'
 import SkipToContent from '@/components/SkipToContent'
 import { ScreenReaderAnnouncer } from '@/components/AccessibilityUtils'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { ServiceWorkerProvider } from '@/lib/hooks/useServiceWorker'
 import { Noto_Sans_Kannada } from 'next/font/google'
 
 const notoSansKannada = Noto_Sans_Kannada({
@@ -17,6 +19,25 @@ const notoSansKannada = Noto_Sans_Kannada({
 })
 
 import './globals.css'
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Srushti Publications',
+  url: 'https://srushtipublications.com',
+  logo: 'https://srushtipublications.com/logo.jpg',
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone: '+91-9876543210',
+    contactType: 'customer service',
+    areaServed: 'IN',
+    availableLanguage: ['en', 'kn']
+  },
+  sameAs: [
+    'https://facebook.com/srushtipublications',
+    'https://instagram.com/srushtipublications'
+  ]
+}
 
 export const metadata: Metadata = {
   title: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ | ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ',
@@ -59,6 +80,10 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://api.razorpay.com" />
       </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {/* Accessibility: Skip to main content link */}
         <SkipToContent />
         
@@ -95,11 +120,14 @@ export default async function RootLayout({
                 },
               }}
             />
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <ServiceWorkerProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </ServiceWorkerProvider>
             
             {/* Global Components */}
+            <CompareWidget />
             <WhatsAppButton />
             <CookieConsent />
           </ScreenReaderAnnouncer>

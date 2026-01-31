@@ -35,18 +35,24 @@ export async function sign(data: string): Promise<string> {
  * Verify data against signature
  */
 export async function verify(data: string, signature: string): Promise<boolean> {
-  const key = await getKey();
-  const encoder = new TextEncoder();
+  try {
+    const key = await getKey();
+    const encoder = new TextEncoder();
 
-  // Convert hex string to buffer
-  const signatureBuffer = new Uint8Array(
-    signature.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
-  );
+    // Convert hex string to buffer
+    const signatureBuffer = new Uint8Array(
+      signature.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+    );
 
-  return crypto.subtle.verify(
-    'HMAC',
-    key,
-    signatureBuffer,
-    encoder.encode(data)
-  );
+    return crypto.subtle.verify(
+      'HMAC',
+      key,
+      signatureBuffer,
+      encoder.encode(data)
+    );
+  } catch (error) {
+    console.error('Signature verification failed:', error)
+    return false
+  }
 }
+
