@@ -15,7 +15,7 @@ const defaultOptions: CacheOptions = {
 }
 
 // Create a generic cache factory
-export function createCache<T extends {}>(options: CacheOptions = {}) {
+export function createCache<T extends object>(options: CacheOptions = {}) {
   const opts = { ...defaultOptions, ...options }
   return new LRUCache<string, T>({
     max: opts.max!,
@@ -24,25 +24,25 @@ export function createCache<T extends {}>(options: CacheOptions = {}) {
 }
 
 // Book cache - for frequently accessed books
-export const bookCache = createCache<any>({
+export const bookCache = createCache<Record<string, unknown>>({
   max: 500,
   ttl: 10 * 60 * 1000 // 10 minutes
 })
 
 // Category cache - categories don't change often
-export const categoryCache = createCache<any>({
+export const categoryCache = createCache<Record<string, unknown>>({
   max: 100,
   ttl: 30 * 60 * 1000 // 30 minutes
 })
 
 // Settings cache - site settings rarely change
-export const settingsCache = createCache<any>({
+export const settingsCache = createCache<Record<string, unknown>>({
   max: 10,
   ttl: 60 * 60 * 1000 // 1 hour
 })
 
 // Helper function with auto-cache pattern
-export async function withCache<T extends {}>(
+export async function withCache<T extends object>(
   cache: LRUCache<string, T>,
   key: string,
   fetcher: () => Promise<T>

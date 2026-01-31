@@ -26,36 +26,46 @@ export default function CheckoutProgress({
       marginBottom: '2rem',
       boxShadow: 'var(--shadow-sm)'
     }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'relative'
-      }}>
+      <div
+        role="list"
+        aria-label="Checkout Steps"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative'
+        }}
+      >
         {/* Progress Line Background */}
-        <div style={{
-          position: 'absolute',
-          top: '18px',
-          left: '36px',
-          right: '36px',
-          height: 3,
-          background: 'var(--color-border)',
-          borderRadius: 2,
-          zIndex: 0
-        }} />
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '18px',
+            left: '36px',
+            right: '36px',
+            height: 3,
+            background: 'var(--color-border)',
+            borderRadius: 2,
+            zIndex: 0
+          }}
+        />
         
         {/* Progress Line Filled */}
-        <div style={{
-          position: 'absolute',
-          top: '18px',
-          left: '36px',
-          width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - ${currentStep === steps.length ? '0px' : '36px'})`,
-          height: 3,
-          background: 'linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%)',
-          borderRadius: 2,
-          zIndex: 1,
-          transition: 'width 0.5s ease'
-        }} />
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '18px',
+            left: '36px',
+            width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - ${currentStep === steps.length ? '0px' : '36px'})`,
+            height: 3,
+            background: 'linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%)',
+            borderRadius: 2,
+            zIndex: 1,
+            transition: 'width 0.5s ease'
+          }}
+        />
         
         {/* Steps */}
         {steps.map((step, index) => {
@@ -66,6 +76,8 @@ export default function CheckoutProgress({
           return (
             <div 
               key={index}
+              role="listitem"
+              aria-current={isActive ? 'step' : undefined}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -76,31 +88,34 @@ export default function CheckoutProgress({
               }}
             >
               {/* Circle */}
-              <div style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                transition: 'all 0.3s ease',
-                ...(isCompleted ? {
-                  background: 'var(--color-success)',
-                  color: 'white',
-                  boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)'
-                } : isActive ? {
-                  background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)',
-                  color: 'white',
-                  boxShadow: '0 2px 10px rgba(217, 119, 6, 0.4)',
-                  animation: 'pulse 2s infinite'
-                } : {
-                  background: 'white',
-                  border: '2px solid var(--color-border)',
-                  color: 'var(--color-text-muted)'
-                })
-              }}>
+              <div
+                aria-hidden="true"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  transition: 'all 0.3s ease',
+                  ...(isCompleted ? {
+                    background: 'var(--color-success)',
+                    color: 'white',
+                    boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)'
+                  } : isActive ? {
+                    background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 10px rgba(217, 119, 6, 0.4)',
+                    animation: 'pulse 2s infinite'
+                  } : {
+                    background: 'white',
+                    border: '2px solid var(--color-border)',
+                    color: 'var(--color-text-muted)'
+                  })
+                }}
+              >
                 {isCompleted ? <Check size={18} /> : stepNumber}
               </div>
               

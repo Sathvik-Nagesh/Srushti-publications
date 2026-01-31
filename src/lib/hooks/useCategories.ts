@@ -95,6 +95,10 @@ export function useCategories() {
   }, [])
 
   useEffect(() => {
+    // If cache exists and is valid, no need to fetch
+    if (cachedCategories && (Date.now() - lastFetchTime < CACHE_TTL)) {
+      return
+    }
     fetchCategories()
   }, [fetchCategories])
 

@@ -8,36 +8,43 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Cached Intl formatters
+const currencyFormatter = new Intl.NumberFormat('kn-IN', {
+  style: 'currency',
+  currency: 'INR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+})
+
+const dateFormatter = new Intl.DateTimeFormat('kn-IN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+})
+
+const dateTimeFormatter = new Intl.DateTimeFormat('kn-IN', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
 // Format currency in Indian Rupees
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('kn-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+  return currencyFormatter.format(amount)
 }
 
 // Format date in Kannada
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('kn-IN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(d)
+  return dateFormatter.format(d)
 }
 
 // Format date and time
 export function formatDateTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('kn-IN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d)
+  return dateTimeFormatter.format(d)
 }
 
 // Generate unique order number

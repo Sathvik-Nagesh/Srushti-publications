@@ -2,6 +2,7 @@
  * Password Hashing Utility using Web Crypto API
  * Works in both Edge and Node.js environments
  */
+import { getAdminSecret } from './config'
 
 // PBKDF2 configuration
 const ITERATIONS = 100000
@@ -31,6 +32,34 @@ function generateSalt(length: number = 32): string {
   const array = new Uint8Array(length)
   crypto.getRandomValues(array)
   return bufferToHex(array.buffer)
+}
+
+/**
+ * Constant-time string comparison to prevent timing attacks
+ */
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  let result = 0
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+
+  return result === 0
+}
+
+/**
+ * Securely compare two strings by hashing them first to prevent timing attacks
+ * and length leaks.
+ */
+export async function secureCompare(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder()
+  const bufA = await crypto.subtle.digest('SHA-256', encoder.encode(a))
+  const bufB = await crypto.subtle.digest('SHA-256', encoder.encode(b))
+
+  return constantTimeCompare(bufferToHex(bufA), bufferToHex(bufB))
 }
 
 /**
@@ -102,7 +131,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
     const newHash = bufferToHex(derivedBits)
     
     // Constant-time comparison to prevent timing attacks
-    return hash === newHash
+    return constantTimeCompare(hash, newHash)
   } catch (error) {
     console.error('Password verification error:', error)
     return false
@@ -130,7 +159,7 @@ export async function generateSessionToken(userId: string, email: string): Promi
   const encodedPayload = btoa(payloadStr)
   
   // Sign the payload
-  const secret = process.env.ADMIN_SECRET || 'default-secret-change-me'
+  const secret = getAdminSecret()
   const secretBuffer = stringToBuffer(secret)
   
   const key = await crypto.subtle.importKey(
@@ -163,7 +192,7 @@ export async function verifySessionToken(token: string): Promise<{
     if (!encodedPayload || !signature) return { valid: false }
     
     // Verify signature
-    const secret = process.env.ADMIN_SECRET || 'default-secret-change-me'
+    const secret = getAdminSecret()
     const secretBuffer = stringToBuffer(secret)
     
     const key = await crypto.subtle.importKey(

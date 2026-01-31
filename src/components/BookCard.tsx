@@ -1,9 +1,11 @@
 'use client'
 
+import { memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart, Eye, AlertTriangle, GitCompare, Check } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { useCartStore } from '@/lib/store'
 import { useCompareStore } from '@/lib/compareStore'
@@ -16,8 +18,9 @@ interface BookCardProps {
   onQuickView?: () => void
 }
 
-export default function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
+function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
   const router = useRouter()
+  const t = useTranslations('common')
   const addItem = useCartStore(state => state.addItem)
   const { addBook, removeBook, isInCompare, canAdd } = useCompareStore()
   
@@ -171,7 +174,7 @@ export default function BookCard({ book, showQuickAdd = true, onQuickView }: Boo
               onClick={handleAddToCart}
               className="btn btn-primary btn-sm"
               style={{ flex: 1, pointerEvents: 'auto' }}
-              aria-label={`Add ${book.title} to cart`}
+              aria-label={t('addToCartAria', { title: book.title })}
             >
               <ShoppingCart size={16} aria-hidden="true" />
               ಕಾರ್ಟ್‌ಗೆ
@@ -184,7 +187,7 @@ export default function BookCard({ book, showQuickAdd = true, onQuickView }: Boo
                 color: 'var(--color-text)',
                 pointerEvents: 'auto'
               }}
-              aria-label={`Quick view ${book.title}`}
+              aria-label={t('quickViewAria', { title: book.title })}
             >
               <Eye size={16} aria-hidden="true" />
             </button>
@@ -277,3 +280,6 @@ export default function BookCard({ book, showQuickAdd = true, onQuickView }: Boo
     </div>
   )
 }
+
+// Memoized to optimize list rendering performance when parent filters change
+export default memo(BookCard)

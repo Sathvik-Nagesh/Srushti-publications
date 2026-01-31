@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, X, BookOpen, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
+import OptimizedImage from '@/components/OptimizedImage'
 import { useRouter } from 'next/navigation'
-import { useDeferredValue } from 'react'
 
 interface SearchResult {
   id: string
@@ -40,7 +39,6 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   
-  const deferredQuery = useDeferredValue(query)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -51,7 +49,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
     if (saved) {
       try {
         setRecentSearches(JSON.parse(saved))
-      } catch (e) {
+      } catch {
         // Ignore parse errors
       }
     }
@@ -66,7 +64,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
 
   // Search API call
   useEffect(() => {
-    if (deferredQuery.length < 2) {
+    if (query.length < 2) {
       setResults([])
       return
     }
@@ -74,7 +72,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
     const searchBooks = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(deferredQuery)}&limit=6`)
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=6`)
         const data = await response.json()
         if (data.success) {
           setResults(data.data)
@@ -86,9 +84,10 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
       }
     }
 
+    // Debounce the search to reduce API calls and re-renders
     const debounceTimer = setTimeout(searchBooks, 300)
     return () => clearTimeout(debounceTimer)
-  }, [deferredQuery])
+  }, [query])
 
   // Handle click outside
   useEffect(() => {
@@ -113,8 +112,17 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
       setSelectedIndex(prev => Math.max(prev - 1, -1))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (selectedIndex >= 0 && results[selectedIndex]) {
-        handleSelectResult(results[selectedIndex])
+      if (selectedIndex >= 0) {
+        if (results.length > 0) {
+          handleSelectResult(results[selectedIndex])
+        } else if (query.length < 2) {
+          // Handle recent/popular selection
+          if (selectedIndex < recentSearches.length) {
+            handleSuggestionClick(recentSearches[selectedIndex])
+          } else {
+            handleSuggestionClick(popularSearches[selectedIndex - recentSearches.length])
+          }
+        }
       } else if (query.length >= 2) {
         handleSearch()
       }
@@ -153,6 +161,23 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
     localStorage.removeItem('recentSearches')
   }
 
+  const getActiveDescendantId = () => {
+    if (selectedIndex === -1) return undefined
+
+    if (results.length > 0) {
+      return `search-result-${selectedIndex}`
+    }
+
+    if (query.length < 2) {
+      if (selectedIndex < recentSearches.length) {
+        return `recent-search-${selectedIndex}`
+      }
+      return `popular-search-${selectedIndex - recentSearches.length}`
+    }
+
+    return undefined
+  }
+
   return (
     <div ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
       {/* Search Input */}
@@ -166,7 +191,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
         transition: 'border-color 0.2s, box-shadow 0.2s',
         ...(isOpen ? { borderColor: 'var(--color-primary)', boxShadow: '0 0 0 3px rgba(234, 96, 42, 0.15)' } : {})
       }}>
-        <Search size={20} style={{ color: 'var(--color-text-muted)', marginRight: '0.75rem', flexShrink: 0 }} />
+        <Search size={20} style={{ color: 'var(--color-text-muted)', marginRight: '0.75rem', flexShrink: 0 }} aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
@@ -181,6 +206,12 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
           placeholder={placeholder}
           id="site-search"
           name="q"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen}
+          aria-controls="site-search-results"
+          aria-activedescendant={getActiveDescendantId()}
+          aria-label="ಪುಸ್ತಕಗಳನ್ನು ಹುಡುಕಿ"
           style={{
             flex: 1,
             border: 'none',
@@ -191,7 +222,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
           }}
         />
         {isLoading && (
-          <Loader2 size={18} style={{ color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }} />
+          <Loader2 size={18} style={{ color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }} aria-hidden="true" />
         )}
         {query && !isLoading && (
           <button
@@ -207,27 +238,33 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
               cursor: 'pointer',
               color: 'var(--color-text-muted)'
             }}
+            aria-label="ಹುಡುಕಾಟವನ್ನು ಅಳಿಸಿ"
           >
-            <X size={18} />
+            <X size={18} aria-hidden="true" />
           </button>
         )}
       </div>
 
       {/* Dropdown */}
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 0.5rem)',
-          left: 0,
-          right: 0,
-          background: 'white',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--color-border)',
-          maxHeight: '400px',
-          overflowY: 'auto',
-          zIndex: 1000
-        }}>
+        <div
+          id="site-search-results"
+          role="listbox"
+          aria-label="ಹುಡುಕಾಟ ಸಲಹೆಗಳು ಮತ್ತು ಫಲಿತಾಂಶಗಳು"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 0.5rem)',
+            left: 0,
+            right: 0,
+            background: 'white',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-lg)',
+            border: '1px solid var(--color-border)',
+            maxHeight: '400px',
+            overflowY: 'auto',
+            zIndex: 1000
+          }}
+        >
           {/* Search Results */}
           {query.length >= 2 && results.length > 0 && (
             <div style={{ padding: '0.5rem' }}>
@@ -237,6 +274,10 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
               {results.map((result, index) => (
                 <button
                   key={result.id}
+                  id={`search-result-${index}`}
+                  role="option"
+                  aria-selected={selectedIndex === index}
+                  tabIndex={-1}
                   onClick={() => handleSelectResult(result)}
                   style={{
                     width: '100%',
@@ -266,14 +307,13 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                       height: '100%',
                       position: 'relative'
                     }}>
-                      <img
+                      <OptimizedImage
                         src={result.image || '/placeholder-book.jpg'}
                         alt={result.title}
-                        style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder-book.jpg';
-                        }}
+                        fill
+                        sizes="48px"
+                        fallbackSrc="/placeholder-book.jpg"
+                        style={{ objectFit: 'cover' }}
                       />
                     </div>
                   </div>
@@ -328,7 +368,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                   onClose?.()
                 }}
               >
-                "{query}" ಗಾಗಿ ಎಲ್ಲಾ ಫಲಿತಾಂಶಗಳನ್ನು ನೋಡಿ →
+                &quot;{query}&quot; ಗಾಗಿ ಎಲ್ಲಾ ಫಲಿತಾಂಶಗಳನ್ನು ನೋಡಿ →
               </Link>
             </div>
           )}
@@ -338,7 +378,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
             <div style={{ padding: '2rem', textAlign: 'center' }}>
               <BookOpen size={32} style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }} />
               <p style={{ color: 'var(--color-text-light)' }}>
-                "{query}" ಗಾಗಿ ಯಾವುದೇ ಫಲಿತಾಂಶಗಳಿಲ್ಲ
+                &quot;{query}&quot; ಗಾಗಿ ಯಾವುದೇ ಫಲಿತಾಂಶಗಳಿಲ್ಲ
               </p>
             </div>
           )}
@@ -367,6 +407,7 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                         color: 'var(--color-primary)',
                         cursor: 'pointer'
                       }}
+                      aria-label="ಇತ್ತೀಚಿನ ಹುಡುಕಾಟಗಳನ್ನು ಅಳಿಸಿ"
                     >
                       ಅಳಿಸಿ
                     </button>
@@ -374,6 +415,10 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                   {recentSearches.map((term, index) => (
                     <button
                       key={term}
+                      id={`recent-search-${index}`}
+                      role="option"
+                      aria-selected={selectedIndex === index}
+                      tabIndex={-1}
                       onClick={() => handleSuggestionClick(term)}
                       style={{
                         width: '100%',
@@ -402,23 +447,33 @@ export default function SearchAutocomplete({ placeholder = 'ಪುಸ್ತಕ�
                   <TrendingUp size={14} /> ಜನಪ್ರಿಯ ಹುಡುಕಾಟಗಳು
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '0.5rem 0.75rem' }}>
-                  {popularSearches.map((term) => (
-                    <button
-                      key={term}
-                      onClick={() => handleSuggestionClick(term)}
-                      style={{
-                        padding: '0.375rem 0.75rem',
-                        background: 'var(--color-bg-alt)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-full)',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        transition: 'background 0.15s, border-color 0.15s'
-                      }}
-                    >
-                      {term}
-                    </button>
-                  ))}
+                  {popularSearches.map((term, index) => {
+                    const globalIndex = recentSearches.length + index
+                    const isSelected = selectedIndex === globalIndex
+                    return (
+                      <button
+                        key={term}
+                        id={`popular-search-${index}`}
+                        role="option"
+                        aria-selected={isSelected}
+                        tabIndex={-1}
+                        onClick={() => handleSuggestionClick(term)}
+                        style={{
+                          padding: '0.375rem 0.75rem',
+                          background: 'var(--color-bg-alt)',
+                          border: '1px solid',
+                          borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
+                          borderRadius: 'var(--radius-full)',
+                          fontSize: '0.875rem',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s, border-color 0.15s'
+                        }}
+                        onMouseEnter={() => setSelectedIndex(globalIndex)}
+                      >
+                        {term}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>

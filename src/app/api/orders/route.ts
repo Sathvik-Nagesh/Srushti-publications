@@ -3,6 +3,12 @@ import prisma from '@/lib/prisma'
 import { sendOrderConfirmation } from '@/lib/email'
 import { hash } from 'bcryptjs'
 
+interface OrderItemInput {
+  bookId: string
+  quantity: number
+  price?: number
+}
+
 // Helper to generate order number
 function generateOrderNumber() {
   const date = new Date()
@@ -33,11 +39,39 @@ export async function POST(request: NextRequest) {
     // We fetch books first to ensure we have stock and details for denormalization
     const books = await prisma.book.findMany({
         where: {
-            id: { in: items.map((i: any) => i.bookId) }
+            id: { in: items.map((i: OrderItemInput) => i.bookId) }
         }
     })
 
     const bookMap = new Map(books.map(b => [b.id, b]))
+
+    // Validate all items exist
+    for (const item of items) {
+        if (!bookMap.has(item.bookId)) {
+            return NextResponse.json(
+                { success: false, error: `Book not found: ${item.bookId}` },
+                { status: 400 }
+            )
+        }
+    }
+
+    // 🛡️ SECURITY: Calculate totals server-side to prevent manipulation
+    // Fetch site settings for shipping logic
+    const settings = await prisma.siteSettings.findFirst()
+    const freeShippingMin = settings?.freeShippingMin ?? 500
+    const defaultShipping = settings?.defaultShipping ?? 50
+
+    // Calculate subtotal from DB prices
+    let serverSubtotal = 0
+    items.forEach((item: OrderItemInput) => {
+        const book = bookMap.get(item.bookId)
+        if (book) {
+             serverSubtotal += book.sellingPrice * item.quantity
+        }
+    })
+
+    // Calculate Shipping
+    const serverShipping = serverSubtotal >= freeShippingMin ? 0 : defaultShipping
 
     const finalOrder = await prisma.$transaction(async (tx) => {
         // Handle Customer Creation / Linking
@@ -93,18 +127,45 @@ export async function POST(request: NextRequest) {
             })
         }
         
-        // Update Coupon Usage
+        // Calculate Discount & Update Coupon Usage
+        let serverDiscount = 0
         if (couponCode) {
-             // Find coupon first to get ID (assuming code is unique)
-             // This assumes couponCode is verified. Ideally re-verify here.
-             const offer = await tx.offer.findFirst({ where: { code: couponCode }})
+             const now = new Date()
+             const offer = await tx.offer.findFirst({
+                 where: {
+                     code: couponCode,
+                     isActive: true,
+                     startDate: { lte: now },
+                     endDate: { gte: now }
+                 }
+             })
+
              if (offer) {
-                 await tx.offer.update({
-                     where: { id: offer.id },
-                     data: { usedCount: { increment: 1 } }
-                 })
+                 // Verify limits
+                 if (offer.usageLimit && offer.usedCount >= offer.usageLimit) {
+                     // Coupon exhausted - ignore it (or could throw error)
+                 } else if (offer.minPurchase && serverSubtotal < offer.minPurchase) {
+                     // Min purchase not met - ignore
+                 } else {
+                     // Calculate discount
+                     if (offer.discountType === 'percentage') {
+                         serverDiscount = Math.round((serverSubtotal * offer.discountValue) / 100)
+                         if (offer.maxDiscount && serverDiscount > offer.maxDiscount) {
+                             serverDiscount = offer.maxDiscount
+                         }
+                     } else {
+                         serverDiscount = offer.discountValue
+                     }
+
+                     await tx.offer.update({
+                         where: { id: offer.id },
+                         data: { usedCount: { increment: 1 } }
+                     })
+                 }
              }
         }
+
+        const serverTotal = Math.max(0, serverSubtotal + serverShipping - serverDiscount)
 
         // Create Order
         return await tx.order.create({
@@ -120,11 +181,11 @@ export async function POST(request: NextRequest) {
               shippingState: shipping.state,
               shippingPincode: shipping.pincode,
               
-              subtotal: totals.subtotal,
-              discount: totals.discount || 0,
-              shippingCharge: totals.shipping,
+              subtotal: serverSubtotal,
+              discount: serverDiscount,
+              shippingCharge: serverShipping,
               taxAmount: 0,
-              totalAmount: totals.total,
+              totalAmount: serverTotal,
               
               status: 'PENDING',
               paymentStatus: 'PENDING', 
@@ -134,18 +195,18 @@ export async function POST(request: NextRequest) {
               customerId: customerId, // Link the customer
               
               items: {
-                  create: items.map((item: any) => {
+                  create: items.map((item: OrderItemInput) => {
                       const book = bookMap.get(item.bookId)!
                       return {
                           quantity: item.quantity,
-                          unitPrice: item.price,
-                          totalPrice: item.price * item.quantity,
+                          unitPrice: book.sellingPrice, // 🛡️ Use DB price
+                          totalPrice: book.sellingPrice * item.quantity, // 🛡️ Use DB price
                           discount: 0,
                           bookTitle: book.title,
                           bookAuthor: book.author,
                           bookCover: book.coverImage,
                           bookIsbn: book.isbn,
-                          book: { connect: { id: item.bookId } } // Explicitly connect book relation
+                          book: { connect: { id: item.bookId } }
                       }
                   })
               }

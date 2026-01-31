@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sign } from '@/lib/auth-edge'
 import prisma from '@/lib/prisma'
-import { verifyPassword, hashPassword } from '@/lib/password'
+import { verifyPassword, hashPassword, secureCompare } from '@/lib/password'
 import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function POST(request: NextRequest) {
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const adminEmail = process.env.ADMIN_EMAIL
     const adminPassword = process.env.ADMIN_PASSWORD
 
-    if (adminEmail && adminPassword && email === adminEmail && password === adminPassword) {
+    if (adminEmail && adminPassword && await secureCompare(email, adminEmail) && await secureCompare(password, adminPassword)) {
       // Create admin user in database with hashed password for future logins
       const passwordHash = await hashPassword(adminPassword)
       

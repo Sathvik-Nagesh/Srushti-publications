@@ -170,9 +170,21 @@ export async function middleware(request: NextRequest) {
     }
   }
   
-  // Protect admin routes (except login)
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+  // Protect admin routes (pages and API)
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isAdminApiRoute = pathname.startsWith('/api/admin')
+
+  if ((isAdminRoute || isAdminApiRoute) && pathname !== '/admin/login' && pathname !== '/api/admin/login') {
     if (!(await isAdminAuthenticated(request))) {
+      // For API routes, return 401 JSON
+      if (isAdminApiRoute) {
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+
+      // For pages, redirect to login
       const loginUrl = new URL('/admin/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)

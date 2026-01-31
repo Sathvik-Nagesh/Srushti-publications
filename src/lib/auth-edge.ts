@@ -1,32 +1,9 @@
 // Edge-compatible authentication utilities using Web Crypto API
-
-/**
- * Get the secret key for signing/verification
- * In production, ADMIN_SECRET must be set in environment variables
- * In development, a fallback is used for convenience
- */
-function getSecretKey(): string {
-  const secret = process.env.ADMIN_SECRET
-  
-  if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
-      // In production, log warning but don't crash - use a generated fallback
-      // This allows the app to run but sessions won't persist across deploys
-      console.warn('⚠️ ADMIN_SECRET not set in production. Please add it to environment variables.')
-      return 'temporary-fallback-' + (process.env.VERCEL_URL || 'local')
-    }
-    // Development fallback
-    return 'development-secret-key-change-in-production'
-  }
-  
-  return secret
-}
-
-const SECRET_KEY = getSecretKey()
+import { getAdminSecret } from './config'
 
 async function getKey() {
   const encoder = new TextEncoder();
-  const keyData = encoder.encode(SECRET_KEY);
+  const keyData = encoder.encode(getAdminSecret());
   return crypto.subtle.importKey(
     'raw',
     keyData,
