@@ -9,3 +9,7 @@ This journal records critical performance learnings, specific bottlenecks, and v
 ## 2026-01-28 - Expensive Intl Instantiation
 **Learning:** Instantiating `Intl.NumberFormat` and `Intl.DateTimeFormat` inside utility functions caused a ~100x slowdown (7.2s vs 62ms for 100k calls) in benchmarks. This is a significant bottleneck for lists rendering prices or dates.
 **Action:** Always cache `Intl` instances at the module level when locale and options are static.
+
+## 2025-05-20 - Memoization Breakage in Lists
+**Learning:** `BookCard` was wrapped in `React.memo` but received an inline function `() => setQuickViewBook(book)` from the parent list component (`BooksContent`). This defeated memoization, causing all book cards to re-render whenever parent state (like filters or pagination) changed.
+**Action:** When passing callbacks to memoized list items, use `useCallback` with arguments (e.g. `(item) => handler(item)`) and update the child component to accept this signature, rather than creating inline closures.

@@ -15,7 +15,7 @@ import toast from 'react-hot-toast'
 interface BookCardProps {
   book: Book
   showQuickAdd?: boolean
-  onQuickView?: () => void
+  onQuickView?: (book: Book) => void
 }
 
 function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
@@ -46,7 +46,7 @@ function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
     e.preventDefault()
     e.stopPropagation()
     if (onQuickView) {
-      onQuickView()
+      onQuickView(book)
     }
   }
 
