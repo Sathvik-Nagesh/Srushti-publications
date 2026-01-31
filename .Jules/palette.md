@@ -21,3 +21,7 @@
 ## 2025-01-31 - Semantic Retrofitting with ARIA Roles
 **Learning:** When refactoring complex layouts (like progress steppers) where changing the DOM structure (e.g., to `<ol>`) would break CSS positioning or flex behavior, using `role="list"` and `role="listitem"` is a safe and effective way to provide correct semantics without visual regressions.
 **Action:** Use `role="list"` on the container and `role="listitem"` on children for non-list elements that function as lists. Combine with `aria-current="step"` for process indicators.
+
+## 2025-02-01 - UI Verification in DB-Dependent App
+**Learning:** Verified a UI component in a DB-dependent app where `npm run dev` fails due to missing credentials. Created a temporary page `src/app/palette-verify/page.tsx` that bypasses server-side DB calls (like those in `HomePage`), allowing verification of client components (like `ScrollToTop`) within the `RootLayout` context.
+**Action:** When verifying UI in a broken or restricted environment, create a dedicated test route/page that isolates the component from failing data dependencies.

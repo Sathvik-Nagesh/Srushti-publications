@@ -26,7 +26,8 @@
     "increaseQuantity": "Increase quantity",
     "quantity": "Quantity",
     "addToCartAria": "Add {title} to cart",
-    "quickViewAria": "Quick view {title}"
+    "quickViewAria": "Quick view {title}",
+    "scrollToTop": "Scroll to top"
   },
   "hero": {
     "tagline": "Online Store for Kannada Books",

@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export default function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false)
+  const t = useTranslations('common')
   
   useEffect(() => {
     const toggleVisibility = () => {
@@ -30,7 +32,7 @@ export default function ScrollToTop() {
     <button
       onClick={scrollToTop}
       className={`scroll-to-top ${isVisible ? 'visible' : ''}`}
-      aria-label="Scroll to top"
+      aria-label={t('scrollToTop')}
       style={{
         position: 'fixed',
         bottom: '2rem',

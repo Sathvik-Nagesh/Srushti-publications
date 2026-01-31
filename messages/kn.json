@@ -26,7 +26,8 @@
     "increaseQuantity": "ಪ್ರಮಾಣವನ್ನು ಹೆಚ್ಚಿಸಿ",
     "quantity": "ಪ್ರಮಾಣ",
     "addToCartAria": "{title} ಅನ್ನು ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿ",
-    "quickViewAria": "{title} ತ್ವರಿತ ನೋಟ"
+    "quickViewAria": "{title} ತ್ವರಿತ ನೋಟ",
+    "scrollToTop": "ಪುಟದ ಮೇಲಕ್ಕೆ"
   },
   "hero": {
     "tagline": "ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ",
