@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Heart } from '@phosphor-icons/react'
+import { useTranslations } from 'next-intl'
 import { useWishlistStore } from '@/lib/wishlist'
 import toast from 'react-hot-toast'
 
@@ -20,6 +21,7 @@ interface WishlistButtonProps {
 }
 
 export default function WishlistButton({ book, size = 'md', showLabel = false }: WishlistButtonProps) {
+  const t = useTranslations('common')
   const [mounted, setMounted] = useState(false)
   const { addItem, removeItem, isInWishlist } = useWishlistStore()
   
@@ -52,7 +54,7 @@ export default function WishlistButton({ book, size = 'md', showLabel = false }:
         gap: '0.5rem',
         minWidth: showLabel ? undefined : 'auto'
       }}
-      aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+      aria-label={isWishlisted ? t('removeFromWishlist') : t('addToWishlist')}
       aria-pressed={isWishlisted}
     >
       <Heart 
@@ -60,7 +62,7 @@ export default function WishlistButton({ book, size = 'md', showLabel = false }:
         weight={isWishlisted ? 'fill' : 'bold'} 
         style={{ color: isWishlisted ? 'white' : 'currentColor' }}
       />
-      {showLabel && (isWishlisted ? 'ಸೇರಿಸಲಾಗಿದೆ' : 'ವಿಶ್‌ಲಿಸ್ಟ್‌ಗೆ')}
+      {showLabel && (isWishlisted ? t('wishlistAdded') : t('wishlistAdd'))}
     </button>
   )
 }

@@ -199,7 +199,7 @@ function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
                 color: inCompare ? 'white' : 'var(--color-text)',
                 pointerEvents: 'auto'
               }}
-              aria-label={`${inCompare ? 'Remove from' : 'Add to'} compare`}
+              aria-label={inCompare ? t('removeFromCompare') : t('addToCompare')}
             >
               {inCompare ? <Check size={16} aria-hidden="true" /> : <GitCompare size={16} aria-hidden="true" />}
             </button>

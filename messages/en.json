@@ -27,7 +27,13 @@
     "quantity": "Quantity",
     "addToCartAria": "Add {title} to cart",
     "quickViewAria": "Quick view {title}",
-    "scrollToTop": "Scroll to top"
+    "scrollToTop": "Scroll to top",
+    "addToWishlist": "Add to wishlist",
+    "removeFromWishlist": "Remove from wishlist",
+    "wishlistAdded": "Added",
+    "wishlistAdd": "To Wishlist",
+    "addToCompare": "Add to compare",
+    "removeFromCompare": "Remove from compare"
   },
   "hero": {
     "tagline": "Online Store for Kannada Books",
