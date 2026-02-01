@@ -39,3 +39,7 @@
 **Vulnerability:** Multiple API endpoints (`/api/books`, `/api/categories`, `/api/site-settings`) allowed unauthenticated POST/PUT requests. Middleware protection was insufficient as it didn't cover these specific paths.
 **Learning:** Middleware pattern matching is fragile. If a new API route is added that doesn't match the protected patterns (like `/api/admin/*`), it defaults to being public.
 **Prevention:** Enforce "Defense in Depth" by adding explicit authentication checks inside the route handlers for all state-changing operations (POST, PUT, DELETE), regardless of middleware configuration. Use a shared, reusable verification helper.
+## 2025-02-18 - Critical: Unprotected Site Settings Update
+**Vulnerability:** The `/api/site-settings` PUT endpoint was completely unprotected, allowing any user to modify global site configuration (titles, descriptions, contact info).
+**Learning:** Middleware path matching (`/api/admin`) is insufficient if sensitive endpoints exist outside that structure (e.g. `/api/site-settings`). Route handlers must enforce their own authentication.
+**Prevention:** Created `verifyAdminSession` helper in `src/lib/auth-edge.ts` and mandated its use in all data-modifying API routes.

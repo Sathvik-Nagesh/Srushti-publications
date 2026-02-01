@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
+import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,14 +103,35 @@ export default function LoginPage() {
               <div style={{ position: 'relative' }}>
                 <Lock size={18} style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                 <input 
-                  type="password" 
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input" 
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ paddingLeft: '2.5rem', paddingRight: '3rem' }}
                   placeholder="********" 
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    right: '1rem',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 

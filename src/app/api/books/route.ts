@@ -60,6 +60,16 @@ export async function GET(request: NextRequest) {
       where.isOnSale = true
     }
     
+    // Author filter
+    const author = searchParams.get('author')
+    if (author) {
+      where.OR = [
+        ...(where.OR as any[] || []),
+        { author: { contains: author, mode: 'insensitive' } },
+        { authorEn: { contains: author, mode: 'insensitive' } },
+      ]
+    }
+    
     // Build order by
     let orderBy: Record<string, string>[] = []
     switch (sortBy) {

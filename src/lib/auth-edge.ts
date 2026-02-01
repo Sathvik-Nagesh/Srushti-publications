@@ -1,4 +1,5 @@
 // Edge-compatible authentication utilities using Web Crypto API
+import { NextRequest } from 'next/server'
 import { getAdminSecret } from './config'
 import type { NextRequest } from 'next/server'
 
@@ -36,20 +37,46 @@ export async function sign(data: string): Promise<string> {
  * Verify data against signature
  */
 export async function verify(data: string, signature: string): Promise<boolean> {
-  const key = await getKey();
-  const encoder = new TextEncoder();
+  try {
+    const key = await getKey();
+    const encoder = new TextEncoder();
 
-  // Convert hex string to buffer
-  const signatureBuffer = new Uint8Array(
-    signature.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
-  );
+    // Convert hex string to buffer
+    const signatureBuffer = new Uint8Array(
+      signature.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
+    );
 
-  return crypto.subtle.verify(
-    'HMAC',
-    key,
-    signatureBuffer,
-    encoder.encode(data)
-  );
+    return crypto.subtle.verify(
+      'HMAC',
+      key,
+      signatureBuffer,
+      encoder.encode(data)
+    );
+  } catch (error) {
+    console.error('Signature verification failed:', error)
+    return false
+  }
+}
+
+/**
+ * Verify admin session from request cookies
+ * @param request NextRequest
+ */
+export async function verifyAdminSession(request: NextRequest): Promise<boolean> {
+  const adminSession = request.cookies.get('admin_session')
+  if (!adminSession?.value) return false
+
+  const parts = adminSession.value.split('.')
+  if (parts.length !== 2) return false
+
+  const [encodedPayload, signature] = parts
+
+  try {
+    const payload = atob(encodedPayload)
+    return await verify(payload, signature)
+  } catch {
+    return false
+  }
 }
 
 /**

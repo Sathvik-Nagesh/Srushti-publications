@@ -230,6 +230,62 @@ ${data.shippingCity}, ${data.shippingState} - ${data.shippingPincode}
 
 ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್
     `
+  }),
+
+  passwordReset: (data: { customerName: string, resetLink: string }) => ({
+    subject: `ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Noto Sans Kannada', Arial, sans-serif; line-height: 1.6; color: #1f2937; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #d97706; color: white; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }
+    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
+    .btn { display: inline-block; background: #d97706; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; }
+    .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 12px 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</h1>
+      <p>ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ</p>
+    </div>
+    
+    <div class="content">
+      <p>ನಮಸ್ಕಾರ ${data.customerName},</p>
+      <p>ನಿಮ್ಮ ಖಾತೆಯ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಮರುಹೊಂದಿಸಲು ವಿನಂತಿಯನ್ನು ನಾವು ಸ್ವೀಕರಿಸಿದ್ದೇವೆ.</p>
+      <p>ಕೆಳಗಿನ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡುವ ಮೂಲಕ ನೀವು ಹೊಸ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಹೊಂದಿಸಬಹುದು:</p>
+      
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${data.resetLink}" class="btn">ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ</a>
+      </div>
+      
+      <p style="font-size: 14px; color: #6b7280;">ಈ ಲಿಂಕ್ 1 ಗಂಟೆಯವರೆಗೆ ಮಾತ್ರ ಮಾನ್ಯವಾಗಿರುತ್ತದೆ.</p>
+      <p style="font-size: 14px; color: #6b7280;">ನೀವು ಇದನ್ನು ವಿನಂತಿಸದಿದ್ದರೆ, ದಯವಿಟ್ಟು ಈ ಇಮೇಲ್ ಅನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ.</p>
+    </div>
+    
+    <div class="footer">
+      <p>ಸಂಪರ್ಕ: support@srushtipublications.com</p>
+      <p>© ${new Date().getFullYear()} ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</p>
+    </div>
+  </div>
+</body>
+</html>
+    `,
+    text: `
+ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ - ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್
+
+ನಮಸ್ಕಾರ ${data.customerName},
+
+ನಿಮ್ಮ ಖಾತೆಯ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಮರುಹೊಂದಿಸಲು ಕೆಳಗಿನ ಲಿಂಕ್ ಬಳಸಿ:
+${data.resetLink}
+
+ಈ ಲಿಂಕ್ 1 ಗಂಟೆಯವರೆಗೆ ಮಾತ್ರ ಮಾನ್ಯವಾಗಿರುತ್ತದೆ.
+    `
   })
 }
 
@@ -357,6 +413,12 @@ export async function sendShippingUpdate(data: ShippingUpdateData): Promise<bool
     await updateEmailStatus(emailLog.id, success ? 'sent' : 'failed')
   }
 
+  return success
+}
+
+export async function sendPasswordReset(email: string, name: string, resetLink: string): Promise<boolean> {
+  const template = emailTemplates.passwordReset({ customerName: name, resetLink })
+  const success = await sendEmail(email, template.subject, template.html, template.text)
   return success
 }
 

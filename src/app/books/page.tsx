@@ -1,28 +1,49 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import BookCardSkeleton from '@/components/BookCardSkeleton'
 import BookCard from '@/components/BookCard'
-import { BookOpen, Filter, ChevronDown, X, Grid, List, SlidersHorizontal, ArrowLeft, ArrowRight } from 'lucide-react'
+import QuickViewModal from '@/components/QuickViewModal'
+import { BookOpen, Filter, X, Grid, List, SlidersHorizontal, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, AlertCircle, Loader2 } from 'lucide-react'
 import { useCategories } from '@/lib/hooks/useCategories'
+import { useBooks, prefetchBooks } from '@/lib/hooks/useDataFetching'
 import type { Book } from '@/lib/types'
 
 function BooksContent() {
   const searchParams = useSearchParams()
-  const [books, setBooks] = useState<Book[]>([])
-  const categories = useCategories()
-  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const pathname = usePathname()
+  
+  const { categories } = useCategories()
   const [showFilters, setShowFilters] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [quickViewBook, setQuickViewBook] = useState<Book | null>(null)
   
-  // Filters
+  // Initialize filters from URL
+  const getInitialFilters = useCallback(() => {
+    return {
+      category: searchParams.get('category') || '',
+      minPrice: parseInt(searchParams.get('minPrice') || '0'),
+      maxPrice: parseInt(searchParams.get('maxPrice') || '2000'),
+      sortBy: searchParams.get('sortBy') || 'newest',
+      page: parseInt(searchParams.get('page') || '1'),
+      newRelease: searchParams.get('filter') === 'new' || searchParams.get('newRelease') === 'true',
+      bestSeller: searchParams.get('filter') === 'bestseller' || searchParams.get('bestSeller') === 'true',
+      onSale: searchParams.get('filter') === 'sale' || searchParams.get('onSale') === 'true',
+      inStock: searchParams.get('inStock') === 'true',
+      author: searchParams.get('author') || '',
+    }
+  }, [searchParams])
+
+  // Filters State
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000])
+  const [priceError, setPriceError] = useState<string>('')
   const [sortBy, setSortBy] = useState('newest')
   const [filterLabels, setFilterLabels] = useState({
     newRelease: false,
@@ -30,87 +51,111 @@ function BooksContent() {
     onSale: false,
     inStock: false
   })
+  const [authorFilter, setAuthorFilter] = useState('')
   
   // Pagination
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
 
-
-  // Get init filter from URL
+  // Initialize from URL on mount
   useEffect(() => {
-    const filter = searchParams.get('filter')
-    const category = searchParams.get('category')
+    const filters = getInitialFilters()
+    setSelectedCategory(filters.category)
+    setPriceRange([filters.minPrice, filters.maxPrice])
+    setSortBy(filters.sortBy)
+    setPage(filters.page)
+    setAuthorFilter(filters.author)
+    setFilterLabels({
+      newRelease: filters.newRelease,
+      bestSeller: filters.bestSeller,
+      onSale: filters.onSale,
+      inStock: filters.inStock
+    })
+  }, []) // Only on mount
+
+  // Sync filters to URL
+  const syncToUrl = useCallback(() => {
+    const params = new URLSearchParams()
     
-    if (filter === 'new') {
-      setFilterLabels(prev => ({ ...prev, newRelease: true }))
-    } else if (filter === 'bestseller') {
-      setFilterLabels(prev => ({ ...prev, bestSeller: true }))
-    } else if (filter === 'sale') {
-      setFilterLabels(prev => ({ ...prev, onSale: true }))
-    }
+    if (selectedCategory) params.set('category', selectedCategory)
+    if (priceRange[0] > 0) params.set('minPrice', priceRange[0].toString())
+    if (priceRange[1] < 2000) params.set('maxPrice', priceRange[1].toString())
+    if (sortBy !== 'newest') params.set('sortBy', sortBy)
+    if (page > 1) params.set('page', page.toString())
+    if (filterLabels.newRelease) params.set('newRelease', 'true')
+    if (filterLabels.bestSeller) params.set('bestSeller', 'true')
+    if (filterLabels.onSale) params.set('onSale', 'true')
+    if (filterLabels.inStock) params.set('inStock', 'true')
+    if (authorFilter) params.set('author', authorFilter)
     
-    if (category) {
-      setSelectedCategory(category)
+    const queryString = params.toString()
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname
+    router.replace(newUrl, { scroll: false })
+  }, [selectedCategory, priceRange, sortBy, page, filterLabels, authorFilter, pathname, router])
+
+  // Price validation
+  useEffect(() => {
+    if (priceRange[0] > priceRange[1]) {
+      setPriceError('ಕನಿಷ್ಠ ಬೆಲೆ ಗರಿಷ್ಠಕ್ಕಿಂತ ಕಡಿಮೆ ಇರಬೇಕು')
+    } else {
+      setPriceError('')
     }
-  }, [searchParams])
+  }, [priceRange])
+
+  // Use SWR-based data fetching hook with caching
+  const { 
+    books, 
+    total: totalBooks, 
+    totalPages, 
+    isLoading: loading, 
+    isValidating 
+  } = useBooks({
+    categoryId: selectedCategory || undefined,
+    minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+    maxPrice: priceRange[1] < 2000 ? priceRange[1] : undefined,
+    sortBy,
+    page,
+    limit: 12,
+    inStock: filterLabels.inStock || undefined,
+    isNewRelease: filterLabels.newRelease || undefined,
+    isBestSeller: filterLabels.bestSeller || undefined,
+    isOnSale: filterLabels.onSale || undefined,
+    author: authorFilter || undefined
+  })
+
+  // Sync to URL when filters change
+  useEffect(() => {
+    if (priceRange[0] > priceRange[1]) return // Skip if price is invalid
+    syncToUrl()
+  }, [selectedCategory, priceRange, filterLabels, sortBy, page, authorFilter, syncToUrl])
+
+  // Reset page when filters change (but not when page itself changes)
+  const prevFiltersRef = useCallback(() => {
+    return `${selectedCategory}-${priceRange.join('-')}-${JSON.stringify(filterLabels)}-${sortBy}-${authorFilter}`
+  }, [selectedCategory, priceRange, filterLabels, sortBy, authorFilter])
   
-  // Fetch Books with Filters
+  const [prevFilters, setPrevFilters] = useState(prevFiltersRef())
+  
   useEffect(() => {
-    const fetchBooks = async () => {
-      setLoading(true)
-      try {
-        const params = new URLSearchParams()
-        params.set('page', page.toString())
-        params.set('limit', '12') // Pagination
-        params.set('isActive', 'true')
-        
-        if (selectedCategory) params.set('categoryId', selectedCategory)
-        
-        // Only send price if modified from default wide range or strictly needed
-        if (priceRange[0] > 0) params.set('minPrice', priceRange[0].toString())
-        if (priceRange[1] < 2000) params.set('maxPrice', priceRange[1].toString())
-        
-        if (filterLabels.newRelease) params.set('isNewRelease', 'true')
-        if (filterLabels.bestSeller) params.set('isBestSeller', 'true')
-        if (filterLabels.onSale) params.set('isOnSale', 'true')
-        if (filterLabels.inStock) params.set('inStock', 'true')
-        
-        params.set('sortBy', sortBy)
-
-        const res = await fetch(`/api/books?${params.toString()}`)
-        const data = await res.json()
-        
-        if (data.success) {
-           setBooks(data.data.items)
-           setTotalPages(data.data.totalPages)
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
+    const currentFilters = prevFiltersRef()
+    if (currentFilters !== prevFilters) {
+      setPage(1)
+      setPrevFilters(currentFilters)
     }
-    
-    // Debounce slightly to avoid rapid reloading on slider
-    const timer = setTimeout(() => {
-       fetchBooks()
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [selectedCategory, priceRange, filterLabels, sortBy, page])
-
-  // Reset page when filters change
-  useEffect(() => {
-     setPage(1)
-  }, [selectedCategory, filterLabels, priceRange, sortBy])
+  }, [prevFiltersRef, prevFilters])
   
   const handleApplyFilters = () => {
     setShowFilters(false)
   }
+
+  const handleQuickView = useCallback((book: Book) => {
+    setQuickViewBook(book)
+  }, [])
   
   const clearFilters = () => {
     setSelectedCategory('')
     setPriceRange([0, 2000])
     setSortBy('newest')
+    setAuthorFilter('')
     setFilterLabels({
       newRelease: false,
       bestSeller: false,
@@ -118,6 +163,233 @@ function BooksContent() {
       inStock: false
     })
   }
+
+  const hasActiveFilters = selectedCategory || priceRange[0] > 0 || priceRange[1] < 2000 || 
+    filterLabels.newRelease || filterLabels.bestSeller || filterLabels.onSale || filterLabels.inStock || authorFilter
+
+  // Pagination with jump and prefetching
+  const handlePrefetch = useCallback((targetPage: number) => {
+    if (targetPage > 0 && targetPage <= totalPages && targetPage !== page) {
+      prefetchBooks({
+        categoryId: selectedCategory || undefined,
+        minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+        maxPrice: priceRange[1] < 2000 ? priceRange[1] : undefined,
+        sortBy,
+        page: targetPage,
+        limit: 12,
+        inStock: filterLabels.inStock || undefined,
+        isNewRelease: filterLabels.newRelease || undefined,
+        isBestSeller: filterLabels.bestSeller || undefined,
+        isOnSale: filterLabels.onSale || undefined,
+        author: authorFilter || undefined
+      })
+    }
+  }, [selectedCategory, priceRange, sortBy, filterLabels, authorFilter, totalPages, page])
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null
+    
+    const pages: (number | string)[] = []
+    const showEllipsisStart = page > 3
+    const showEllipsisEnd = page < totalPages - 2
+    
+    // Always show first page
+    pages.push(1)
+    
+    if (showEllipsisStart) pages.push('...')
+    
+    // Show pages around current
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+      if (!pages.includes(i)) pages.push(i)
+    }
+    
+    if (showEllipsisEnd) pages.push('...')
+    
+    // Always show last page
+    if (totalPages > 1 && !pages.includes(totalPages)) pages.push(totalPages)
+    
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '2rem', flexWrap: 'wrap' }}>
+        {/* Previous Button with prefetch */}
+        <button 
+          disabled={page === 1} 
+          onClick={() => setPage(page - 1)}
+          onMouseEnter={() => handlePrefetch(page - 1)}
+          className="btn btn-outline btn-sm"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+        >
+          <ChevronLeft size={16} /> ಹಿಂದೆ
+        </button>
+        
+        {pages.map((p, idx) => (
+          typeof p === 'number' ? (
+            <button
+              key={idx}
+              onClick={() => setPage(p)}
+              onMouseEnter={() => handlePrefetch(p)}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-md)',
+                border: p === page ? 'none' : '1px solid var(--color-border)',
+                background: p === page ? 'var(--color-primary)' : 'white',
+                color: p === page ? 'white' : 'var(--color-text)',
+                fontWeight: p === page ? 600 : 400,
+                cursor: 'pointer'
+              }}
+            >
+              {p}
+            </button>
+          ) : (
+            <span key={idx} style={{ padding: '0 0.25rem', color: 'var(--color-text-muted)' }}>...</span>
+          )
+        ))}
+        
+        {/* Next Button with prefetch */}
+        <button 
+          disabled={page === totalPages} 
+          onClick={() => setPage(page + 1)}
+          onMouseEnter={() => handlePrefetch(page + 1)}
+          className="btn btn-outline btn-sm"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+        >
+          ಮುಂದೆ <ChevronRight size={16} />
+        </button>
+        
+        {/* Revalidating indicator */}
+        {isValidating && !loading && (
+          <div style={{ 
+            marginLeft: '0.5rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.25rem',
+            color: 'var(--color-text-muted)',
+            fontSize: '0.75rem'
+          }}>
+            <Loader2 size={14} className="animate-spin" />
+            <span>ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ...</span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Filter Sidebar Component (reused for desktop & mobile)
+  const FilterSidebar = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* Categories */}
+      <div>
+        <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
+          ವಿಭಾಗ
+        </h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="radio"
+              name={`category-${isMobile ? 'mobile' : 'desktop'}`}
+              checked={selectedCategory === ''}
+              onChange={() => setSelectedCategory('')}
+              style={{ accentColor: 'var(--color-primary)' }}
+            />
+            <span style={{ fontSize: '0.9375rem' }}>ಎಲ್ಲಾ ವಿಭಾಗಗಳು</span>
+          </label>
+          {categories.map(cat => (
+            <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="radio"
+                name={`category-${isMobile ? 'mobile' : 'desktop'}`}
+                checked={selectedCategory === cat.id}
+                onChange={() => setSelectedCategory(cat.id)}
+                style={{ accentColor: 'var(--color-primary)' }}
+              />
+              <span style={{ fontSize: '0.9375rem' }}>{cat.name}</span>
+              {cat.bookCount > 0 && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>({cat.bookCount})</span>
+              )}
+            </label>
+          ))}
+        </div>
+      </div>
+      
+      {/* Price Range */}
+      <div>
+        <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
+          ಬೆಲೆ ವ್ಯಾಪ್ತಿ
+        </h4>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <input
+            type="number"
+            placeholder="₹0"
+            value={priceRange[0]}
+            onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+            className="input"
+            style={{ width: '100px', padding: '0.5rem' }}
+            min={0}
+          />
+          <span>-</span>
+          <input
+            type="number"
+            placeholder="₹2000"
+            value={priceRange[1]}
+            onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 2000])}
+            className="input"
+            style={{ width: '100px', padding: '0.5rem' }}
+            min={0}
+          />
+        </div>
+        {priceError && (
+          <p style={{ color: 'var(--color-error)', fontSize: '0.75rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <AlertCircle size={12} /> {priceError}
+          </p>
+        )}
+      </div>
+      
+      {/* Labels */}
+      <div>
+        <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
+          ಲೇಬಲ್‌ಗಳು
+        </h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={filterLabels.newRelease}
+              onChange={(e) => setFilterLabels(prev => ({ ...prev, newRelease: e.target.checked }))}
+              style={{ accentColor: 'var(--color-primary)' }}
+            />
+            <span className="badge badge-new" style={{ fontSize: '0.75rem' }}>ಹೊಸ ಬಿಡುಗಡೆ</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={filterLabels.bestSeller}
+              onChange={(e) => setFilterLabels(prev => ({ ...prev, bestSeller: e.target.checked }))}
+              style={{ accentColor: 'var(--color-primary)' }}
+            />
+            <span className="badge badge-bestseller" style={{ fontSize: '0.75rem' }}>ಬೆಸ್ಟ್ ಸೆಲ್ಲರ್</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={filterLabels.onSale}
+              onChange={(e) => setFilterLabels(prev => ({ ...prev, onSale: e.target.checked }))}
+              style={{ accentColor: 'var(--color-primary)' }}
+            />
+            <span className="badge badge-sale" style={{ fontSize: '0.75rem' }}>ರಿಯಾಯಿತಿ</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={filterLabels.inStock}
+              onChange={(e) => setFilterLabels(prev => ({ ...prev, inStock: e.target.checked }))}
+              style={{ accentColor: 'var(--color-primary)' }}
+            />
+            <span style={{ fontSize: '0.875rem' }}>ಸ್ಟಾಕ್‌ನಲ್ಲಿದೆ</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  )
   
   return (
     <>
@@ -138,7 +410,7 @@ function BooksContent() {
               📚 ಎಲ್ಲಾ ಪುಸ್ತಕಗಳು
             </h1>
             <p style={{ color: 'var(--color-text-light)' }}>
-              ನನ್ನ ಸಮೃದ್ಧ ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಸಂಗ್ರಹವನ್ನು ಅನ್ವೇಷಿಸಿ
+              ನಮ್ಮ ಸಮೃದ್ಧ ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಸಂಗ್ರಹವನ್ನು ಅನ್ವೇಷಿಸಿ
             </p>
           </div>
         </div>
@@ -148,7 +420,7 @@ function BooksContent() {
             display: 'grid',
             gridTemplateColumns: '280px 1fr',
             gap: '2rem'
-          }}>
+          }} className="books-layout">
             {/* Sidebar Filters - Desktop */}
             <aside className="hide-mobile" style={{
               background: 'white',
@@ -168,126 +440,28 @@ function BooksContent() {
                   <Filter size={18} style={{ display: 'inline', marginRight: '0.5rem' }} />
                   ಫಿಲ್ಟರ್‌ಗಳು
                 </h3>
-                <button
-                  onClick={clearFilters}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-primary)',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  ಎಲ್ಲಾ ತೆಗೆ
-                </button>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-primary)',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    ಎಲ್ಲಾ ತೆಗೆ
+                  </button>
+                )}
               </div>
               
-              {/* Categories */}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
-                  ವಿಭಾಗ
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="radio"
-                      name="category"
-                      checked={selectedCategory === ''}
-                      onChange={() => setSelectedCategory('')}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span style={{ fontSize: '0.9375rem' }}>ಎಲ್ಲಾ ವಿಭಾಗಗಳು</span>
-                  </label>
-                  {categories.map(cat => (
-                    <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                      <input
-                        type="radio"
-                        name="category"
-                        checked={selectedCategory === cat.id}
-                        onChange={() => setSelectedCategory(cat.id)}
-                        style={{ accentColor: 'var(--color-primary)' }}
-                      />
-                      <span style={{ fontSize: '0.9375rem' }}>{cat.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Price Range */}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
-                  ಬೆಲೆ ವ್ಯಾಪ್ತಿ
-                </h4>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <input
-                    type="number"
-                    placeholder="₹0"
-                    value={priceRange[0]}
-                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                    className="input"
-                    style={{ width: '100px', padding: '0.5rem' }}
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    placeholder="₹2000"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 2000])}
-                    className="input"
-                    style={{ width: '100px', padding: '0.5rem' }}
-                  />
-                </div>
-              </div>
-              
-              {/* Labels */}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
-                  ಲೇಬಲ್‌ಗಳು
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={filterLabels.newRelease}
-                      onChange={(e) => setFilterLabels(prev => ({ ...prev, newRelease: e.target.checked }))}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span className="badge badge-new" style={{ fontSize: '0.75rem' }}>ಹೊಸ ಬಿಡುಗಡೆ</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={filterLabels.bestSeller}
-                      onChange={(e) => setFilterLabels(prev => ({ ...prev, bestSeller: e.target.checked }))}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span className="badge badge-bestseller" style={{ fontSize: '0.75rem' }}>ಬೆಸ್ಟ್ ಸೆಲ್ಲರ್</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={filterLabels.onSale}
-                      onChange={(e) => setFilterLabels(prev => ({ ...prev, onSale: e.target.checked }))}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span className="badge badge-sale" style={{ fontSize: '0.75rem' }}>ರಿಯಾಯಿತಿ</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={filterLabels.inStock}
-                      onChange={(e) => setFilterLabels(prev => ({ ...prev, inStock: e.target.checked }))}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span style={{ fontSize: '0.875rem' }}>ಸ್ಟಾಕ್‌ನಲ್ಲಿದೆ</span>
-                  </label>
-                </div>
-              </div>
+              <FilterSidebar />
               
               <button
                 onClick={handleApplyFilters}
                 className="btn btn-primary"
-                style={{ width: '100%' }}
+                style={{ width: '100%', marginTop: '1.5rem' }}
               >
                 ಫಿಲ್ಟರ್ ಅನ್ವಯಿಸಿ
               </button>
@@ -306,8 +480,18 @@ function BooksContent() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <span style={{ color: 'var(--color-text-light)' }}>
-                    {loading ? '...' : books.length} ಪುಸ್ತಕಗಳು
+                    {loading ? '...' : `${totalBooks} ಪುಸ್ತಕಗಳು`}
                   </span>
+                  
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: 'var(--color-error)' }}
+                    >
+                      <X size={14} /> ಫಿಲ್ಟರ್ ತೆಗೆ
+                    </button>
+                  )}
                   
                   {/* Mobile Filter Toggle */}
                   <button
@@ -388,38 +572,22 @@ function BooksContent() {
               ) : (
                 <div className={viewMode === 'grid' ? "product-grid" : "product-list"}>
                   {books.map(book => (
-                    <BookCard key={book.id} book={book} />
+                    <BookCard 
+                      key={book.id} 
+                      book={book} 
+                      onQuickView={handleQuickView}
+                    />
                   ))}
                 </div>
               )}
 
-             {/* Pagination */}
-              {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
-                   <button 
-                     disabled={page === 1} 
-                     onClick={() => setPage(page - 1)}
-                     className="btn btn-outline"
-                    >
-                      <ArrowLeft size={16} /> ಹಿಂದೆ
-                   </button>
-                   <span style={{ display: 'flex', alignItems: 'center' }}>
-                      ಪುಟ {page} / {totalPages}
-                   </span>
-                   <button 
-                     disabled={page === totalPages} 
-                     onClick={() => setPage(page + 1)}
-                     className="btn btn-outline"
-                    >
-                      ಮುಂದೆ <ArrowRight size={16} />
-                   </button>
-                </div>
-              )}
+              {/* Pagination */}
+              {renderPagination()}
             </div>
           </div>
         </div>
         
-        {/* Mobile Filter Modal */}
+        {/* Mobile Filter Modal - COMPLETE */}
         {showFilters && (
           <div style={{
             position: 'fixed',
@@ -428,7 +596,7 @@ function BooksContent() {
             zIndex: 1000,
             display: 'flex',
             justifyContent: 'flex-end'
-          }}>
+          }} onClick={(e) => e.target === e.currentTarget && setShowFilters(false)}>
             <div style={{
               width: '85%',
               maxWidth: '350px',
@@ -458,47 +626,50 @@ function BooksContent() {
                 </button>
               </div>
               
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem' }}>ವಿಭಾಗ</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="radio"
-                      name="category-mobile"
-                      checked={selectedCategory === ''}
-                      onChange={() => setSelectedCategory('')}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span>ಎಲ್ಲಾ ವಿಭಾಗಗಳು</span>
-                  </label>
-                  {categories.map(cat => (
-                    <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                      <input
-                        type="radio"
-                        name="category-mobile"
-                        checked={selectedCategory === cat.id}
-                        onChange={() => setSelectedCategory(cat.id)}
-                        style={{ accentColor: 'var(--color-primary)' }}
-                      />
-                      <span>{cat.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              <FilterSidebar isMobile={true} />
               
-              <button
-                onClick={handleApplyFilters}
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: '1rem' }}
-              >
-                ಅನ್ವಯಿಸಿ
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                <button
+                  onClick={clearFilters}
+                  className="btn btn-outline"
+                  style={{ flex: 1 }}
+                >
+                  ತೆಗೆ
+                </button>
+                <button
+                  onClick={handleApplyFilters}
+                  className="btn btn-primary"
+                  style={{ flex: 1 }}
+                >
+                  ಅನ್ವಯಿಸಿ
+                </button>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Quick View Modal */}
+        {quickViewBook && (
+          <QuickViewModal 
+            book={quickViewBook} 
+            onClose={() => setQuickViewBook(null)} 
+          />
         )}
       </main>
       <Footer />
       <ScrollToTop />
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .books-layout {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
     </>
   )
 }

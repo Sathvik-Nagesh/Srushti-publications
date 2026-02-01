@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, GripVertical, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { invalidateCategoryCache } from '@/lib/hooks/useCategories'
 
 interface Category {
   id: string
@@ -82,6 +83,7 @@ export default function AdminCategoriesPage() {
       if (data.success) {
         toast.success(editingCategory ? 'ವಿಭಾಗ ನವೀಕರಿಸಲಾಗಿದೆ!' : 'ಹೊಸ ವಿಭಾಗ ಸೇರಿಸಲಾಗಿದೆ!')
         setShowModal(false)
+        invalidateCategoryCache() // Clear client-side cache
         fetchCategories()
       } else {
         throw new Error(data.error)
@@ -101,6 +103,7 @@ export default function AdminCategoriesPage() {
         
         if (data.success) {
           toast.success('ವಿಭಾಗ ಅಳಿಸಲಾಗಿದೆ')
+          invalidateCategoryCache()
           fetchCategories()
         } else {
           toast.error(data.error || 'ಅಳಿಸಲು ವಿಫಲವಾಗಿದೆ')
@@ -120,6 +123,7 @@ export default function AdminCategoriesPage() {
       })
       const data = await res.json()
       if (data.success) {
+        invalidateCategoryCache()
         fetchCategories()
         toast.success('ಸ್ಥಿತಿ ಬದಲಾಯಿಸಲಾಗಿದೆ')
       }

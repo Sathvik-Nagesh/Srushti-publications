@@ -1,26 +1,78 @@
-import DOMPurify from 'isomorphic-dompurify'
 import { z } from 'zod'
 
 /**
- * Sanitizes a string by stripping HTML tags and potentially dangerous characters.
- * Useful for cleaning user input before storage or display.
+ * Edge-compatible HTML sanitization
+ * Replaces isomorphic-dompurify which uses jsdom and causes ESM issues on Vercel
  */
-export const sanitize = (dirty: string): string => {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: [], // Strip all tags by default for text fields (names, etc)
-    ALLOWED_ATTR: []
-  }) as string
+
+// HTML entities for escaping
+const HTML_ENTITIES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#x27;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;'
 }
 
 /**
- * Sanitizes a rich text string allows safe HTML tags.
- * Useful for descriptions or reviews if rich text is enabled.
+ * Escape HTML entities to prevent XSS
+ */
+function escapeHtml(str: string): string {
+  return str.replace(/[&<>"'`=/]/g, char => HTML_ENTITIES[char] || char)
+}
+
+/**
+ * Remove HTML tags from string
+ */
+function stripTags(str: string): string {
+  // Remove all HTML tags
+  return str
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove style tags
+    .replace(/<[^>]+>/g, '') // Remove all other tags
+    .replace(/<!--[\s\S]*?-->/g, '') // Remove HTML comments
+}
+
+/**
+ * Sanitizes a string by stripping HTML tags and escaping dangerous characters.
+ * Useful for cleaning user input before storage or display.
+ */
+export const sanitize = (dirty: string): string => {
+  if (!dirty || typeof dirty !== 'string') return ''
+  
+  return stripTags(dirty)
+    .replace(/javascript:/gi, '') // Remove javascript: URLs
+    .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .trim()
+}
+
+/**
+ * Sanitizes and escapes a string for safe HTML display
+ */
+export const sanitizeAndEscape = (dirty: string): string => {
+  if (!dirty || typeof dirty !== 'string') return ''
+  return escapeHtml(sanitize(dirty))
+}
+
+/**
+ * Sanitizes a rich text string - for now, we just strip dangerous content
+ * In a real app, you might want to use a whitelist-based approach on the client
  */
 export const sanitizeRichText = (dirty: string): string => {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'li', 'ol'],
-    ALLOWED_ATTR: ['href', 'target', 'rel']
-  }) as string
+  if (!dirty || typeof dirty !== 'string') return ''
+  
+  // Remove dangerous patterns but keep basic HTML
+  return dirty
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+=/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .trim()
 }
 
 // Common Validation Schemas
@@ -31,3 +83,4 @@ export const schemas = {
   phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits').optional().nullable(),
   uuid: z.string().uuid()
 }
+
