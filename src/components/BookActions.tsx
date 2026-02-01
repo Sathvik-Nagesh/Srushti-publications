@@ -52,10 +52,8 @@ export default function BookActions({ book }: BookActionsProps) {
     
     setIsAddingToCart(true)
     
-    // Add multiple quantities to cart
-    for (let i = 0; i < quantity; i++) {
-        addItem(book as any)
-    }
+    // Batch add to cart
+    addItem(book, quantity)
     
     toast.success(`${quantity} ಪುಸ್ತಕಗಳನ್ನು ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಲಾಗಿದೆ!`)
     
