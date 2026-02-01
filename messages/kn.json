@@ -27,7 +27,13 @@
     "quantity": "ಪ್ರಮಾಣ",
     "addToCartAria": "{title} ಅನ್ನು ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿ",
     "quickViewAria": "{title} ತ್ವರಿತ ನೋಟ",
-    "scrollToTop": "ಪುಟದ ಮೇಲಕ್ಕೆ"
+    "scrollToTop": "ಪುಟದ ಮೇಲಕ್ಕೆ",
+    "addToWishlist": "ವಿಶ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿಸಿ",
+    "removeFromWishlist": "ವಿಶ್‌ಲಿಸ್ಟ್‌ನಿಂದ ತೆಗೆದುಹಾಕಿ",
+    "wishlistAdded": "ಸೇರಿಸಲಾಗಿದೆ",
+    "wishlistAdd": "ವಿಶ್‌ಲಿಸ್ಟ್‌ಗೆ",
+    "addToCompare": "ಹೋಲಿಕೆಗೆ ಸೇರಿಸಿ",
+    "removeFromCompare": "ಹೋಲಿಕೆಯಿಂದ ತೆಗೆದುಹಾಕಿ"
   },
   "hero": {
     "tagline": "ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ",
