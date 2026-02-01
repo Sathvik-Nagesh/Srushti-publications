@@ -7,6 +7,7 @@ import WhatsAppButton from '@/components/WhatsAppButton'
 import CompareWidget from '@/components/CompareWidget'
 import SkipToContent from '@/components/SkipToContent'
 import { ScreenReaderAnnouncer } from '@/components/AccessibilityUtils'
+import ErrorBoundaryWrapper from '@/components/ErrorBoundaryWrapper'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ServiceWorkerProvider } from '@/lib/hooks/useServiceWorker'
 import { Noto_Sans_Kannada } from 'next/font/google'
@@ -122,7 +123,9 @@ export default async function RootLayout({
             />
             <ServiceWorkerProvider>
               <AuthProvider>
-                {children}
+                <ErrorBoundaryWrapper>
+                  {children}
+                </ErrorBoundaryWrapper>
               </AuthProvider>
             </ServiceWorkerProvider>
             
