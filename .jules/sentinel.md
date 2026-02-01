@@ -34,3 +34,8 @@
 **Vulnerability:** The admin fallback login (`src/app/api/admin/login/route.ts`) used direct string comparison (`===`) for environment variable credentials. This allowed timing attacks and leaked the length of the secrets.
 **Learning:** Even fallback/dev-only authentication paths must be secure. Comparing variable-length secrets directly is never safe.
 **Prevention:** Use a hashing-based comparison (`secureCompare`) that hashes both inputs before comparing them constant-time. This masks the length and standardizes the comparison time.
+
+## 2025-02-18 - Critical: Unprotected Site Settings Update
+**Vulnerability:** The `/api/site-settings` PUT endpoint was completely unprotected, allowing any user to modify global site configuration (titles, descriptions, contact info).
+**Learning:** Middleware path matching (`/api/admin`) is insufficient if sensitive endpoints exist outside that structure (e.g. `/api/site-settings`). Route handlers must enforce their own authentication.
+**Prevention:** Created `verifyAdminSession` helper in `src/lib/auth-edge.ts` and mandated its use in all data-modifying API routes.

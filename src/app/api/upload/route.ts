@@ -1,27 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage, deleteImage } from '@/lib/cloudinary'
-import { verify } from '@/lib/auth-edge'
-
-async function checkAuth(request: NextRequest): Promise<boolean> {
-  const adminSession = request.cookies.get('admin_session')
-  if (!adminSession?.value) return false
-
-  const parts = adminSession.value.split('.')
-  if (parts.length !== 2) return false
-
-  const [encodedPayload, signature] = parts
-
-  try {
-    const payload = Buffer.from(encodedPayload, 'base64').toString()
-    return await verify(payload, signature)
-  } catch {
-    return false
-  }
-}
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // POST /api/upload - Upload an image
 export async function POST(request: NextRequest) {
-  if (!(await checkAuth(request))) {
+  if (!(await verifyAdminSession(request))) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 }
@@ -85,7 +68,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/upload - Delete an image
 export async function DELETE(request: NextRequest) {
-  if (!(await checkAuth(request))) {
+  if (!(await verifyAdminSession(request))) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 }
