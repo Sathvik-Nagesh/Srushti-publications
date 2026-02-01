@@ -286,6 +286,79 @@ ${data.resetLink}
 
 ಈ ಲಿಂಕ್ 1 ಗಂಟೆಯವರೆಗೆ ಮಾತ್ರ ಮಾನ್ಯವಾಗಿರುತ್ತದೆ.
     `
+  }),
+
+  deliveryConfirmation: (data: { 
+    orderNumber: string, 
+    customerName: string, 
+    customerEmail: string 
+  }) => ({
+    subject: `ಡೆಲಿವರಿ ಯಶಸ್ವಿ! - #${data.orderNumber} | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Noto Sans Kannada', Arial, sans-serif; line-height: 1.6; color: #1f2937; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }
+    .content { background: #fff; padding: 30px; border: 1px solid #e5e7eb; }
+    .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 12px 12px; }
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+    .btn { display: inline-block; background: #d97706; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 8px; }
+    .btn-outline { background: transparent; border: 2px solid #d97706; color: #d97706; }
+    h1 { margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="success-icon">✅</div>
+      <h1>ಡೆಲಿವರಿ ಯಶಸ್ವಿ!</h1>
+      <p style="margin: 8px 0 0 0; opacity: 0.9;">Your order has been delivered</p>
+    </div>
+    
+    <div class="content">
+      <p>ಪ್ರಿಯ ${data.customerName},</p>
+      <p>ನಿಮ್ಮ ಆರ್ಡರ್ <strong>#${data.orderNumber}</strong> ಯಶಸ್ವಿಯಾಗಿ ತಲುಪಿದೆ!</p>
+      
+      <div style="background: #ecfdf5; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
+        <p style="font-size: 18px; margin: 0 0 16px 0;">ನಿಮ್ಮ ಅನುಭವವನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</p>
+        <p style="color: #6b7280; margin: 0 0 16px 0;">Share your experience and help other readers</p>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://srushtipublications.com'}/account" class="btn">⭐ ಪುಸ್ತಕ ರಿವ್ಯೂ ಬರೆಯಿರಿ</a>
+      </div>
+      
+      <p style="background: #fef3c7; padding: 12px; border-radius: 8px; font-size: 14px;">
+        💬 ಸಮಸ್ಯೆಯಿದ್ದರೆ ದಯವಿಟ್ಟು 7 ದಿನಗಳೊಳಗೆ ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ.<br>
+        <span style="font-size: 13px;">If you face any issues, please contact us within 7 days.</span>
+      </p>
+      
+      <p style="text-align: center; margin-top: 24px;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://srushtipublications.com'}/books" class="btn btn-outline">📚 ಇನ್ನಷ್ಟು ಪುಸ್ತಕಗಳನ್ನು ನೋಡಿ</a>
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>ಧನ್ಯವಾದಗಳು! Thank you for shopping with us!</p>
+      <p>© ${new Date().getFullYear()} ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</p>
+    </div>
+  </div>
+</body>
+</html>
+    `,
+    text: `
+ಡೆಲಿವರಿ ಯಶಸ್ವಿ! - #${data.orderNumber}
+
+ಪ್ರಿಯ ${data.customerName},
+
+ನಿಮ್ಮ ಆರ್ಡರ್ #${data.orderNumber} ಯಶಸ್ವಿಯಾಗಿ ತಲುಪಿದೆ!
+
+ನಿಮ್ಮ ಅನುಭವವನ್ನು ಹಂಚಿಕೊಳ್ಳಿ - ಪುಸ್ತಕ ರಿವ್ಯೂ ಬರೆಯಿರಿ.
+
+ಧನ್ಯವಾದಗಳು!
+ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್
+    `
   })
 }
 
@@ -422,4 +495,29 @@ export async function sendPasswordReset(email: string, name: string, resetLink: 
   return success
 }
 
+export async function sendDeliveryConfirmation(data: { 
+  orderNumber: string, 
+  customerName: string, 
+  customerEmail: string 
+}): Promise<boolean> {
+  const template = emailTemplates.deliveryConfirmation(data)
+  
+  const emailLog = await logEmail(
+    'delivery_confirmation',
+    data.customerEmail,
+    template.subject,
+    undefined,
+    data
+  )
+
+  const success = await sendEmail(data.customerEmail, template.subject, template.html, template.text)
+  
+  if (emailLog) {
+    await updateEmailStatus(emailLog.id, success ? 'sent' : 'failed')
+  }
+
+  return success
+}
+
 export { emailTemplates, logEmail, updateEmailStatus }
+
