@@ -118,38 +118,84 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
   const relatedBooks = await getRelatedBooks(book.categoryId, book.id)
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
 
-  const jsonLd = {
+  // Product JSON-LD with enhanced data
+  const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: book.title,
     image: book.coverImage,
     description: book.description,
     sku: book.isbn || book.id,
+    isbn: book.isbn || undefined,
+    author: {
+      '@type': 'Person',
+      name: book.author
+    },
     brand: {
       '@type': 'Brand',
-      name: 'Srushti Publications'
+      name: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್'
     },
+    category: book.category?.name,
+    inLanguage: 'kn',
+    numberOfPages: book.pages || undefined,
     offers: {
       '@type': 'Offer',
       url: `https://srushtipublications.com/books/${book.slug}`,
       priceCurrency: 'INR',
-      price: book.sellingPrice,
+      price: book.sellingPrice.toFixed(2),
       availability: book.stockQuantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      itemCondition: 'https://schema.org/NewCondition'
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      // Dynamic rating if available, else standard fallback or hidden
-      ratingValue: '4.8', 
-      reviewCount: '12'
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: {
+        '@type': 'Organization',
+        name: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್'
+      },
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     }
+  }
+
+  // Breadcrumb JSON-LD for navigation
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'ಮುಖಪುಟ',
+        item: 'https://srushtipublications.com'
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'ಪುಸ್ತಕಗಳು',
+        item: 'https://srushtipublications.com/books'
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: book.category?.name || 'Category',
+        item: `https://srushtipublications.com/categories/${book.category?.slug || ''}`
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: book.title,
+        item: `https://srushtipublications.com/books/${book.slug}`
+      }
+    ]
   }
 
   return (
     <>
+      {/* Product structured data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      {/* Breadcrumb structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <Header />
       <main style={{ minHeight: '100vh', background: 'var(--color-bg-alt)' }}>
