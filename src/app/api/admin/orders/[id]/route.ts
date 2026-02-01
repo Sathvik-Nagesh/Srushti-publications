@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { sendShippingUpdate } from '@/lib/email'
+import { sendShippingUpdate, sendDeliveryConfirmation } from '@/lib/email'
 
 // Helper to generate tracking URL
 function getTrackingUrl(courier: string, trackingNumber: string): string {
@@ -121,8 +121,9 @@ export async function PATCH(
       }
     }
     
-    // If status changed to DELIVERED, update book sales count
+    // If status changed to DELIVERED, update book sales count and send email
     if (body.status === 'DELIVERED' && existing.status !== 'DELIVERED') {
+      // Update sales counts
       for (const item of order.items) {
         await prisma.book.update({
           where: { id: item.bookId },
@@ -130,6 +131,18 @@ export async function PATCH(
             salesCount: { increment: item.quantity }
           }
         })
+      }
+      
+      // Send delivery confirmation email
+      try {
+        await sendDeliveryConfirmation({
+          orderNumber: existing.orderNumber,
+          customerName: existing.customerName,
+          customerEmail: existing.customerEmail
+        })
+      } catch (emailError) {
+        console.error('Failed to send delivery confirmation email:', emailError)
+        // Don't fail the request, just log it
       }
     }
     
