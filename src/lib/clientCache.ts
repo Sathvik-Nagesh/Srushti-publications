@@ -75,6 +75,14 @@ export async function getCachedBooks(): Promise<Book[] | null> {
 
 export async function cacheBooks(books: Book[]): Promise<void> {
   try {
+    // Defensive check: ensure books is an array
+    if (!Array.isArray(books)) {
+      console.warn('cacheBooks: Expected array but received:', typeof books)
+      return
+    }
+    
+    if (books.length === 0) return
+    
     const db = await getDB()
     const tx = db.transaction('books', 'readwrite')
     const now = Date.now()
@@ -146,6 +154,14 @@ export async function getCachedCategories(): Promise<Category[] | null> {
 
 export async function cacheCategories(categories: Category[]): Promise<void> {
   try {
+    // Defensive check: ensure categories is an array
+    if (!Array.isArray(categories)) {
+      console.warn('cacheCategories: Expected array but received:', typeof categories)
+      return
+    }
+    
+    if (categories.length === 0) return
+    
     const db = await getDB()
     const tx = db.transaction('categories', 'readwrite')
     const now = Date.now()

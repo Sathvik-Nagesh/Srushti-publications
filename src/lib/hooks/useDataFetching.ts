@@ -81,16 +81,21 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksResult {
     
     const data = await res.json()
     
-    if (data.success) {
-      // Cache the books
-      await cacheBooks(data.data)
+    if (data.success && data.data) {
+      // API returns { success: true, data: { items: [...], total, page, ... } }
+      const booksData = data.data
+      
+      // Cache the books array (not the paginated object)
+      if (Array.isArray(booksData.items)) {
+        await cacheBooks(booksData.items)
+      }
       
       const response: PaginatedResponse<Book> = {
-        items: data.data,
-        total: data.pagination.total,
-        page: data.pagination.page,
-        limit: data.pagination.limit,
-        totalPages: data.pagination.totalPages
+        items: booksData.items || [],
+        total: booksData.total || 0,
+        page: booksData.page || 1,
+        limit: booksData.limit || 12,
+        totalPages: booksData.totalPages || 0
       }
       
       // Cache the full response for this query
