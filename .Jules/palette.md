@@ -25,3 +25,7 @@
 ## 2025-02-01 - UI Verification in DB-Dependent App
 **Learning:** Verified a UI component in a DB-dependent app where `npm run dev` fails due to missing credentials. Created a temporary page `src/app/palette-verify/page.tsx` that bypasses server-side DB calls (like those in `HomePage`), allowing verification of client components (like `ScrollToTop`) within the `RootLayout` context.
 **Action:** When verifying UI in a broken or restricted environment, create a dedicated test route/page that isolates the component from failing data dependencies.
+
+## 2025-02-02 - Modal Accessibility Essentials
+**Learning:** Found that custom modals (QuickViewModal) were missing basic accessibility features like `Escape` key support, `role="dialog"`, and focus management, making them traps for keyboard users.
+**Action:** When implementing or refactoring modals, always include: `role="dialog"`, `aria-modal="true"`, `useEffect` for `Escape` key, and initial focus management (focusing the close button or first interactive element).

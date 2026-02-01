@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { X, ShoppingCart, Heart, Share2, Eye, ChevronLeft, ChevronRight, AlertTriangle, Check } from 'lucide-react'
+import { X, ShoppingCart, Share2, Eye, ChevronLeft, ChevronRight, AlertTriangle, Check } from 'lucide-react'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { useCartStore } from '@/lib/store'
 import type { Book } from '@/lib/types'
@@ -18,12 +18,27 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
   const [quantity, setQuantity] = useState(1)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const addItem = useCartStore(state => state.addItem)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
   const isOutOfStock = book.stockQuantity <= 0
   const isLowStock = book.stockQuantity > 0 && book.stockQuantity <= 5
   
   const allImages = [book.coverImage, ...(book.additionalImages || [])].filter(Boolean)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+
+    // Focus the close button on mount for accessibility
+    closeButtonRef.current?.focus()
+
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
   
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -47,6 +62,9 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
   
   return (
     <div 
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
       style={{
         position: 'fixed',
         inset: 0,
@@ -74,7 +92,9 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
       >
         {/* Close Button */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
+          aria-label="ಮುಚ್ಚಿ"
           style={{
             position: 'absolute',
             top: '1rem',
@@ -208,7 +228,7 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
             )}
             
             {/* Title */}
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1.3 }}>
+            <h2 id="modal-title" style={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1.3 }}>
               {book.title}
             </h2>
             
