@@ -146,6 +146,10 @@ function BooksContent() {
   const handleApplyFilters = () => {
     setShowFilters(false)
   }
+
+  const handleQuickView = useCallback((book: Book) => {
+    setQuickViewBook(book)
+  }, [])
   
   const clearFilters = () => {
     setSelectedCategory('')
@@ -571,7 +575,7 @@ function BooksContent() {
                     <BookCard 
                       key={book.id} 
                       book={book} 
-                      onQuickView={() => setQuickViewBook(book)}
+                      onQuickView={handleQuickView}
                     />
                   ))}
                 </div>
