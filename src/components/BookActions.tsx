@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart, Heart, Share2, AlertCircle, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -12,9 +12,31 @@ interface BookActionsProps {
   book: Book
 }
 
+// Track book view on mount (fire and forget, non-blocking)
+function useTrackView(slug: string) {
+  useEffect(() => {
+    // Use sendBeacon for non-blocking, reliable tracking
+    // This works even if user navigates away immediately
+    if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+      navigator.sendBeacon(`/api/books/${slug}/view`)
+    } else {
+      // Fallback for older browsers
+      fetch(`/api/books/${slug}/view`, { 
+        method: 'POST',
+        keepalive: true 
+      }).catch(() => {
+        // Ignore errors - view tracking is not critical
+      })
+    }
+  }, [slug])
+}
+
 export default function BookActions({ book }: BookActionsProps) {
   const router = useRouter()
   const addItem = useCartStore(state => state.addItem)
+  
+  // Track view (non-blocking, rate-limited on server)
+  useTrackView(book.slug)
   
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)

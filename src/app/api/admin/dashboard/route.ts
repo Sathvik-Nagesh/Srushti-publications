@@ -80,35 +80,29 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Best sellers - aggregate by book
-    const orderItems = await prisma.orderItem.findMany({
-      include: {
-        book: {
-          select: { id: true, title: true, sellingPrice: true }
-        }
-      }
+    // Best sellers - use salesCount field directly (already maintained when orders are delivered)
+    // This is MUCH more efficient than aggregating all order items
+    const bestSellerBooks = await prisma.book.findMany({
+      where: {
+        isActive: true,
+        salesCount: { gt: 0 }
+      },
+      select: {
+        id: true,
+        title: true,
+        salesCount: true,
+        sellingPrice: true
+      },
+      orderBy: { salesCount: 'desc' },
+      take: 4
     })
 
-    const bookSales = new Map<string, { id: string; title: string; salesCount: number; revenue: number }>()
-    for (const item of orderItems) {
-      if (!item.book) continue
-      const existing = bookSales.get(item.book.id)
-      if (existing) {
-        existing.salesCount += item.quantity
-        existing.revenue += item.unitPrice * item.quantity
-      } else {
-        bookSales.set(item.book.id, {
-          id: item.book.id,
-          title: item.book.title,
-          salesCount: item.quantity,
-          revenue: item.unitPrice * item.quantity
-        })
-      }
-    }
-
-    const bestSellers = Array.from(bookSales.values())
-      .sort((a, b) => b.salesCount - a.salesCount)
-      .slice(0, 4)
+    const bestSellers = bestSellerBooks.map(book => ({
+      id: book.id,
+      title: book.title,
+      salesCount: book.salesCount,
+      revenue: book.salesCount * book.sellingPrice // Approximate based on current price
+    }))
 
     // Weekly revenue data for chart (last 7 days)
     const weeklyRevenue: { day: string; revenue: number; orders: number }[] = []

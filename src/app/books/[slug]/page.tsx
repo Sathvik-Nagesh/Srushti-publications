@@ -82,15 +82,11 @@ async function getBook(slug: string) {
 
   if (!book) return null
 
-  // Increment view count (fire and forget)
-  // Note: doing this in a server component might run on every render/revalidate.
-  // Ideally use a separate API beacon or keep this lightweight.
-  // We'll skip it here to keep the server component pure or move it to a client effect if tracking is strictly needed.
-  // OR, we accept it runs on page load.
-  await prisma.book.update({
-    where: { id: book.id },
-    data: { viewCount: { increment: 1 } }
-  })
+  // NOTE: View count increment moved to client-side beacon to avoid:
+  // 1. Blocking the page render
+  // 2. Running on every ISR revalidation
+  // 3. Incrementing for bot crawls
+  // The client component BookActions can call /api/books/[slug]/view endpoint
 
   return book
 }
