@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { checkRateLimit, API_RATE_LIMITS } from '@/lib/rateLimit'
+import { checkRateLimit, API_RATE_LIMITS, getClientIp } from '@/lib/rateLimit'
 
 // POST /api/coupons/verify - Verify and apply a coupon code
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 'unknown'
+    const ip = getClientIp(request)
     const rateCheck = checkRateLimit(`coupon:${ip}`, API_RATE_LIMITS.general)
     if (!rateCheck.allowed) {
       return NextResponse.json(

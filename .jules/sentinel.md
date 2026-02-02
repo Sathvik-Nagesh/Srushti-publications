@@ -39,3 +39,8 @@
 **Vulnerability:** The `/api/site-settings` PUT endpoint was completely unprotected, allowing any user to modify global site configuration (titles, descriptions, contact info).
 **Learning:** Middleware path matching (`/api/admin`) is insufficient if sensitive endpoints exist outside that structure (e.g. `/api/site-settings`). Route handlers must enforce their own authentication.
 **Prevention:** Created `verifyAdminSession` helper in `src/lib/auth-edge.ts` and mandated its use in all data-modifying API routes.
+
+## 2025-02-18 - High: Inconsistent IP Extraction in Rate Limiting
+**Vulnerability:** API routes were manually extracting IP addresses using `request.headers.get('x-forwarded-for') || 'unknown'`, which allows attackers to bypass rate limits by appending random values to the `X-Forwarded-For` header (e.g. `1.2.3.4, random`).
+**Learning:** Using the raw `X-Forwarded-For` string as a rate limit key is insecure. The header often contains a comma-separated list of IPs.
+**Prevention:** Implemented a centralized `getClientIp` helper in `src/lib/rateLimit.ts` that safely parses the first IP from `X-Forwarded-For` (standard proxy behavior) or falls back to `X-Real-IP`. Refactored all API routes to use this helper.

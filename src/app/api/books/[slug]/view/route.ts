@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { checkRateLimit } from '@/lib/rateLimit'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // POST /api/books/[slug]/view - Increment view count (client-side beacon)
 // This is called by client components to avoid DB writes on SSR/ISR
@@ -12,7 +12,7 @@ export async function POST(
     const { slug } = await params
     
     // Rate limit by IP to prevent abuse
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'anonymous'
+    const ip = getClientIp(request)
     const rateCheck = checkRateLimit(`view:${ip}:${slug}`, {
       windowMs: 60000, // 1 minute
       maxRequests: 1   // Max 1 view count per minute per book per IP

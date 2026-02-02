@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { hashPassword, generateToken, generateSessionToken } from '@/lib/password'
-import { checkRateLimit } from '@/lib/rateLimit'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { schemas } from '@/lib/sanitization'
 import { z } from 'zod'
 
@@ -16,7 +16,7 @@ const registerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 'unknown'
+    const ip = getClientIp(request)
     const rateCheck = checkRateLimit(`register:${ip}`, { windowMs: 60000, maxRequests: 5 })
     if (!rateCheck.allowed) {
       return NextResponse.json(

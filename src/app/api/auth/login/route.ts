@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyPassword, generateSessionToken } from '@/lib/password'
-import { checkRateLimit } from '@/lib/rateLimit'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // POST /api/auth/login - Customer login
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 'unknown'
+    const ip = getClientIp(request)
     const rateCheck = checkRateLimit(`login:${ip}`, { windowMs: 60000, maxRequests: 10 })
     if (!rateCheck.allowed) {
       return NextResponse.json(

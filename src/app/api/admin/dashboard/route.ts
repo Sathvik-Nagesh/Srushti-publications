@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { checkRateLimit, getCached, setCache, API_RATE_LIMITS } from '@/lib/rateLimit'
+import { checkRateLimit, getCached, setCache, API_RATE_LIMITS, getClientIp } from '@/lib/rateLimit'
 
 // GET /api/admin/dashboard - Get dashboard analytics
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 'admin'
+    const ip = getClientIp(request)
     const rateCheck = checkRateLimit(`dashboard:${ip}`, API_RATE_LIMITS.dashboard)
     if (!rateCheck.allowed) {
       return NextResponse.json(
