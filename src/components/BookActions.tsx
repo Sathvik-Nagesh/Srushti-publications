@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShoppingCart, Heart, Share2, AlertCircle, Check } from 'lucide-react'
+import { ShoppingCart, Heart, Share2, AlertCircle, Check, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QuantitySelector from './QuantitySelector'
 import { useCartStore } from '@/lib/store'
@@ -147,7 +147,11 @@ export default function BookActions({ book }: BookActionsProps) {
           className="btn btn-outline btn-lg"
           style={{ flex: 1, minWidth: '200px' }}
         >
-          <ShoppingCart size={20} />
+          {isAddingToCart ? (
+            <Loader2 className="animate-spin" size={20} />
+          ) : (
+            <ShoppingCart size={20} />
+          )}
           ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿ
         </button>
         <button
