@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { checkRateLimit, API_RATE_LIMITS } from '@/lib/rateLimit'
+import { checkRateLimit, API_RATE_LIMITS, getClientIp } from '@/lib/rateLimit'
 import { cookies } from 'next/headers'
 
 // Helper to get or create session ID
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 'unknown'
+    const ip = getClientIp(request)
     const rateCheck = checkRateLimit(`wishlist:${ip}`, API_RATE_LIMITS.general)
     if (!rateCheck.allowed) {
       return NextResponse.json(

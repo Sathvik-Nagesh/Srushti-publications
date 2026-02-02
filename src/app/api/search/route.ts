@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { checkRateLimit, getCached, setCache, API_RATE_LIMITS } from '@/lib/rateLimit'
+import { checkRateLimit, getCached, setCache, API_RATE_LIMITS, getClientIp } from '@/lib/rateLimit'
 
 // Fuzzy search helper - calculates similarity between strings
 // Optimized to O(min(m,n)) space complexity
@@ -78,9 +78,7 @@ function similarityScore(query: string, text: string): number {
 export async function GET(request: NextRequest) {
   try {
     // Get client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown'
+    const ip = getClientIp(request)
     
     // Check rate limit
     const rateCheck = checkRateLimit(`search:${ip}`, API_RATE_LIMITS.search)

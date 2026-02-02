@@ -3,6 +3,25 @@
  * Prevents excessive database queries and protects against abuse
  */
 
+import { NextRequest } from 'next/server'
+
+/**
+ * Get client IP address safely handling proxy headers
+ */
+export function getClientIp(request: Request | NextRequest): string {
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim()
+  }
+
+  const realIp = request.headers.get('x-real-ip')
+  if (realIp) {
+    return realIp.trim()
+  }
+
+  return 'unknown'
+}
+
 // Simple in-memory rate limiter (for development/single server)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
