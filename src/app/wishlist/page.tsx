@@ -8,15 +8,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import { Heart, ShoppingCart, Trash, Books } from '@phosphor-icons/react'
 import { useWishlistStore, WishlistItem } from '@/lib/wishlist'
 import { useCartStore } from '@/lib/store'
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('kn-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
+import { formatCurrency } from '@/lib/utils'
 
 export default function WishlistPage() {
   const [mounted, setMounted] = useState(false)
@@ -24,6 +16,7 @@ export default function WishlistPage() {
   const addToCart = useCartStore(state => state.addItem)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
 
