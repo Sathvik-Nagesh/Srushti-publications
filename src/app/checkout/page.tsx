@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, MapPin, Phone, User, Mail, Truck, CreditCard, ShieldCheck, Ticket, X, Check, Lock } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, User, Mail, Truck, CreditCard, ShieldCheck, Ticket, X, Check, Lock, Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCartStore, useCartTotals } from '@/lib/store'
 import { formatCurrency } from '@/lib/utils'
@@ -588,9 +588,16 @@ export default function CheckoutPage() {
                     form="checkout-form"
                     disabled={isSubmitting}
                     className="btn btn-primary btn-lg"
-                    style={{ width: '100%', marginTop: '0.5rem' }}
+                    style={{ width: '100%', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
-                    {isSubmitting ? 'ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತಿದೆ...' : `ಆರ್ಡರ್ ಮಾಡಿ (Place Order) • ${formatCurrency(total)}`}
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="animate-spin" size={24} />
+                            ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತಿದೆ...
+                        </>
+                    ) : (
+                        `ಆರ್ಡರ್ ಮಾಡಿ (Place Order) • ${formatCurrency(total)}`
+                    )}
                 </button>
 
                 <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--color-text-light)', marginTop: '1rem' }}>
