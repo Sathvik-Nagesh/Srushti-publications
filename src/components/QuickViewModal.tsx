@@ -8,6 +8,7 @@ import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
 import { useCartStore } from '@/lib/store'
 import type { Book } from '@/lib/types'
 import toast from 'react-hot-toast'
+import QuantitySelector from './QuantitySelector'
 
 interface QuickViewModalProps {
   book: Book
@@ -150,6 +151,7 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
                 <>
                   <button
                     onClick={() => setCurrentImageIndex((prev) => prev === 0 ? allImages.length - 1 : prev - 1)}
+                    aria-label="ಹಿಂದಿನ ಚಿತ್ರ"
                     style={{
                       position: 'absolute',
                       left: '0.5rem',
@@ -171,6 +173,7 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
                   </button>
                   <button
                     onClick={() => setCurrentImageIndex((prev) => prev === allImages.length - 1 ? 0 : prev + 1)}
+                    aria-label="ಮುಂದಿನ ಚಿತ್ರ"
                     style={{
                       position: 'absolute',
                       right: '0.5rem',
@@ -314,46 +317,11 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
             {!isOutOfStock && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
                 <span style={{ fontSize: '0.875rem', color: 'var(--color-text-light)' }}>ಸಂಖ್ಯೆ:</span>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  border: '1px solid var(--color-border)', 
-                  borderRadius: 'var(--radius-md)' 
-                }}>
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    style={{
-                      width: '36px',
-                      height: '36px',
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      fontSize: '1.25rem'
-                    }}
-                  >
-                    -
-                  </button>
-                  <span style={{ 
-                    width: '40px', 
-                    textAlign: 'center', 
-                    fontWeight: 600 
-                  }}>
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => setQuantity(Math.min(book.stockQuantity, quantity + 1))}
-                    style={{
-                      width: '36px',
-                      height: '36px',
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      fontSize: '1.25rem'
-                    }}
-                  >
-                    +
-                  </button>
-                </div>
+                <QuantitySelector
+                  quantity={quantity}
+                  maxQuantity={book.stockQuantity}
+                  onQuantityChange={setQuantity}
+                />
               </div>
             )}
             
@@ -378,6 +346,7 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
               <button
                 onClick={handleShare}
                 className="btn btn-outline"
+                aria-label="ಹಂಚಿಕೊಳ್ಳಿ"
                 style={{ width: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Share2 size={18} />
