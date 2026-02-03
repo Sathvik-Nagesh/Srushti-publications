@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { Toaster } from 'react-hot-toast'
+import { Analytics } from '@vercel/analytics/react'
 import CookieConsent from '@/components/CookieConsent'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import CompareWidget from '@/components/CompareWidget'
@@ -135,6 +136,9 @@ export default async function RootLayout({
             <CookieConsent />
           </ScreenReaderAnnouncer>
         </NextIntlClientProvider>
+        
+        {/* Vercel Analytics - Only active in production on Vercel */}
+        <Analytics />
       </body>
     </html>
   )
