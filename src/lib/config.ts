@@ -8,10 +8,8 @@ export const getAdminSecret = (): string => {
   
   if (!secret) {
     if (process.env.NODE_ENV === 'production') {
-      // In production, log warning but don't crash - use a generated fallback
-      // This allows the app to run but sessions won't persist across deploys
-      console.warn('⚠️ ADMIN_SECRET not set in production. Please add it to environment variables.')
-      return 'temporary-fallback-' + (process.env.VERCEL_URL || 'local')
+      // Sentinel: Enforce secure configuration in production
+      throw new Error('CRITICAL SECURITY ERROR: ADMIN_SECRET environment variable is not set. The application cannot start securely.')
     }
     // Development fallback
     console.warn('WARNING: Using default ADMIN_SECRET. Do not use this in production.')
@@ -20,4 +18,3 @@ export const getAdminSecret = (): string => {
   
   return secret
 }
-
