@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Globe } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 const languages = [
   { code: 'kn', name: 'ಕನ್ನಡ', flag: '🇮🇳' },
@@ -17,6 +18,7 @@ interface LanguageSwitcherProps {
 
 export default function LanguageSwitcher({ currentLocale: initialLocale }: LanguageSwitcherProps) {
   const router = useRouter()
+  const t = useTranslations('common')
   const [currentLocale, setCurrentLocale] = useState(initialLocale)
   const [isOpen, setIsOpen] = useState(false)
 
@@ -24,6 +26,17 @@ export default function LanguageSwitcher({ currentLocale: initialLocale }: Langu
   useEffect(() => {
     setCurrentLocale(initialLocale)
   }, [initialLocale])
+
+  // Handle Escape key to close menu
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
 
   const handleLanguageChange = async (locale: string) => {
     // Optimistic UI update
@@ -43,6 +56,10 @@ export default function LanguageSwitcher({ currentLocale: initialLocale }: Langu
     <div style={{ position: 'relative' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        id="language-switcher-trigger"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        aria-controls="language-menu"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -55,7 +72,7 @@ export default function LanguageSwitcher({ currentLocale: initialLocale }: Langu
           fontSize: '0.875rem',
           fontWeight: 500
         }}
-        aria-label="Change language"
+        aria-label={t('changeLanguage')}
       >
         <Globe size={16} />
         <span>{currentLang.flag} {currentLang.code.toUpperCase()}</span>
@@ -72,6 +89,9 @@ export default function LanguageSwitcher({ currentLocale: initialLocale }: Langu
             onClick={() => setIsOpen(false)}
           />
           <div
+            id="language-menu"
+            role="menu"
+            aria-labelledby="language-switcher-trigger"
             style={{
               position: 'absolute',
               top: '100%',
@@ -89,6 +109,7 @@ export default function LanguageSwitcher({ currentLocale: initialLocale }: Langu
             {languages.map((lang) => (
               <button
                 key={lang.code}
+                role="menuitem"
                 onClick={() => handleLanguageChange(lang.code)}
                 style={{
                   display: 'flex',

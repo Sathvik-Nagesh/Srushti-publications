@@ -25,6 +25,7 @@
     "decreaseQuantity": "Decrease quantity",
     "increaseQuantity": "Increase quantity",
     "quantity": "Quantity",
+    "changeLanguage": "Change language",
     "addToCartAria": "Add {title} to cart",
     "quickViewAria": "Quick view {title}",
     "scrollToTop": "Scroll to top",
