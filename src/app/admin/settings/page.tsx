@@ -125,9 +125,7 @@ export default function AdminSettingsPage() {
       const data = await res.json()
       
       if (data.success) {
-        toast.success('ಪಾಸ್‌ವರ್ಡ್ ಯಶಸ್ವಿಯಾಗಿ ದೃಢೀಕರಿಸಲಾಗಿದೆ!')
-        // Show instructions in an alert
-        alert(`${data.message}\n\n${data.instructions.join('\n')}\n\nNew Hash:\n${data.newPasswordHash}`)
+        toast.success(data.message || 'ಪಾಸ್‌ವರ್ಡ್ ಯಶಸ್ವಿಯಾಗಿ ಬದಲಾಯಿಸಲಾಗಿದೆ!')
         setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' })
       } else {
         toast.error(data.error || 'ಪಾಸ್‌ವರ್ಡ್ ಬದಲಾಯಿಸಲು ವಿಫಲವಾಗಿದೆ')

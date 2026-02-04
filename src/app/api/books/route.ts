@@ -18,14 +18,19 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'newest'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '12')
+    const includeInactive = searchParams.get('includeInactive') === 'true' // For admin use
     
     // Build where clause
     const where: Record<string, unknown> = {
-      isActive: true,
       sellingPrice: {
         gte: minPrice,
         lte: maxPrice
       }
+    }
+    
+    // Only filter by isActive if NOT including inactive (normal user view)
+    if (!includeInactive) {
+      where.isActive = true
     }
     
     // Search filter

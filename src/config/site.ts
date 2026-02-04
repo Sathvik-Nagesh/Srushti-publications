@@ -2,7 +2,7 @@ export const siteConfig = {
   // Brand Identity
   name: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
   nameEn: 'Srushti Publications',
-  tagline: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ ಮತ್ತು ಶೈಕ್ಷಣಿಕ ಪುಸ್ತಕಗಳ ಪ್ರಕಾಶಕರು',
+  tagline: ' ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು',
   description: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಖರೀದಿಸಿ. ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ - ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು.',
   keywords: 'ಕನ್ನಡ ಪುಸ್ತಕಗಳು, kannada books, kannada literature, ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
   logo: '/logo.jpg',

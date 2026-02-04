@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import prisma from '@/lib/prisma'
+import { verifyPassword, hashPassword } from '@/lib/password'
+import { verify } from '@/lib/auth-edge'
 
-// POST /api/admin/change-password - Change admin password
+// Get current admin user from session cookie
+async function getAdminFromSession(request: NextRequest) {
+  const adminSession = request.cookies.get('admin_session')
+  if (!adminSession?.value) return null
+
+  const parts = adminSession.value.split('.')
+  if (parts.length !== 2) return null
+
+  const [encodedPayload, signature] = parts
+  
+  try {
+    const payload = atob(encodedPayload)
+    const isValid = await verify(payload, signature)
+    if (!isValid) return null
+    
+    const data = JSON.parse(payload)
+    return data
+  } catch (e) {
+    return null
+  }
+}
+
+// POST /api/admin/change-password - Change admin password (auto-update in database)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -10,72 +34,141 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!currentPassword || !newPassword || !confirmPassword) {
       return NextResponse.json(
-        { success: false, error: 'All fields are required' },
+        { success: false, error: 'ಎಲ್ಲಾ ಕ್ಷೇತ್ರಗಳು ಅಗತ್ಯವಿದೆ' },
         { status: 400 }
       )
     }
     
     if (newPassword !== confirmPassword) {
       return NextResponse.json(
-        { success: false, error: 'New passwords do not match' },
+        { success: false, error: 'ಹೊಸ ಪಾಸ್‌ವರ್ಡ್‌ಗಳು ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ' },
         { status: 400 }
       )
     }
     
     if (newPassword.length < 8) {
       return NextResponse.json(
-        { success: false, error: 'Password must be at least 8 characters' },
+        { success: false, error: 'ಪಾಸ್‌ವರ್ಡ್ ಕನಿಷ್ಠ 8 ಅಕ್ಷರಗಳು ಇರಬೇಕು' },
         { status: 400 }
       )
     }
     
-    // Get current admin password from environment
+    // Get current admin from session
+    const sessionData = await getAdminFromSession(request)
+    
+    if (sessionData?.userId) {
+      // Database-based admin user
+      const adminUser = await prisma.adminUser.findUnique({
+        where: { id: sessionData.userId }
+      })
+      
+      if (!adminUser) {
+        return NextResponse.json(
+          { success: false, error: 'ಬಳಕೆದಾರರು ಕಂಡುಬಂದಿಲ್ಲ' },
+          { status: 404 }
+        )
+      }
+      
+      // Verify current password
+      const isValid = await verifyPassword(currentPassword, adminUser.passwordHash)
+      
+      if (!isValid) {
+        return NextResponse.json(
+          { success: false, error: 'ಪ್ರಸ್ತುತ ಪಾಸ್‌ವರ್ಡ್ ತಪ್ಪಾಗಿದೆ' },
+          { status: 401 }
+        )
+      }
+      
+      // Hash and update the new password
+      const newPasswordHash = await hashPassword(newPassword)
+      
+      await prisma.adminUser.update({
+        where: { id: adminUser.id },
+        data: { 
+          passwordHash: newPasswordHash,
+          updatedAt: new Date()
+        }
+      })
+      
+      return NextResponse.json({
+        success: true,
+        message: 'ಪಾಸ್‌ವರ್ಡ್ ಯಶಸ್ವಿಯಾಗಿ ಬದಲಾಯಿಸಲಾಗಿದೆ!'
+      })
+    }
+    
+    // Fallback: Environment variable based auth (legacy)
     const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
     const adminPassword = process.env.ADMIN_PASSWORD
+    const adminEmail = process.env.ADMIN_EMAIL
     
-    // Verify current password
+    // Verify current password against env vars
     let isValidPassword = false
     
     if (adminPasswordHash) {
-      // If we have a hash, compare with bcrypt
-      isValidPassword = await bcrypt.compare(currentPassword, adminPasswordHash)
+      isValidPassword = await verifyPassword(currentPassword, adminPasswordHash)
     } else if (adminPassword) {
-      // Fallback to plain text comparison (for initial setup)
       isValidPassword = currentPassword === adminPassword
     }
     
     if (!isValidPassword) {
       return NextResponse.json(
-        { success: false, error: 'Current password is incorrect' },
+        { success: false, error: 'ಪ್ರಸ್ತುತ ಪಾಸ್‌ವರ್ಡ್ ತಪ್ಪಾಗಿದೆ' },
         { status: 401 }
       )
     }
     
     // Hash the new password
-    const newPasswordHash = await bcrypt.hash(newPassword, 12)
+    const newPasswordHash = await hashPassword(newPassword)
     
-    // In a production environment, you would update this in your database
-    // or a secure configuration store. For now, we'll return instructions.
+    // Try to find or create AdminUser in database
+    if (adminEmail) {
+      const existingUser = await prisma.adminUser.findUnique({
+        where: { email: adminEmail.toLowerCase() }
+      })
+      
+      if (existingUser) {
+        // Update existing user
+        await prisma.adminUser.update({
+          where: { id: existingUser.id },
+          data: { 
+            passwordHash: newPasswordHash,
+            updatedAt: new Date()
+          }
+        })
+        
+        return NextResponse.json({
+          success: true,
+          message: 'ಪಾಸ್‌ವರ್ಡ್ ಯಶಸ್ವಿಯಾಗಿ ಬದಲಾಯಿಸಲಾಗಿದೆ!'
+        })
+      } else {
+        // Create new admin user in database
+        await prisma.adminUser.create({
+          data: {
+            email: adminEmail.toLowerCase(),
+            passwordHash: newPasswordHash,
+            name: 'Admin',
+            role: 'superadmin',
+            isActive: true
+          }
+        })
+        
+        return NextResponse.json({
+          success: true,
+          message: 'ಪಾಸ್‌ವರ್ಡ್ ಯಶಸ್ವಿಯಾಗಿ ಬದಲಾಯಿಸಲಾಗಿದೆ! ಡೇಟಾಬೇಸ್‌ಗೆ ಮೈಗ್ರೇಟ್ ಆಗಿದೆ.'
+        })
+      }
+    }
     
-    // Since we can't modify environment variables at runtime,
-    // we'll return the new hash for manual update
+    // If no email configured, return error
     return NextResponse.json({
-      success: true,
-      message: 'Password validated! Please update your environment variables.',
-      instructions: [
-        '1. Update your .env file with:',
-        `   ADMIN_PASSWORD_HASH="${newPasswordHash}"`,
-        '2. Remove or comment out ADMIN_PASSWORD',
-        '3. Restart your server',
-        '4. Login with your new password'
-      ],
-      newPasswordHash
-    })
+      success: false,
+      error: 'ADMIN_EMAIL ಕಾನ್ಫಿಗರ್ ಆಗಿಲ್ಲ. .env ಫೈಲ್‌ನಲ್ಲಿ ADMIN_EMAIL ಸೇರಿಸಿ.'
+    }, { status: 400 })
     
   } catch (error) {
     console.error('Error changing password:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to change password' },
+      { success: false, error: 'ಪಾಸ್‌ವರ್ಡ್ ಬದಲಾಯಿಸಲು ವಿಫಲವಾಗಿದೆ' },
       { status: 500 }
     )
   }

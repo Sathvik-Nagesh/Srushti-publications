@@ -115,16 +115,15 @@ export async function POST(request: NextRequest) {
             customerId = newCustomer.id
         }
 
-        // Decrease Stock
+        // 🛡️ SECURITY: Validate stock availability but DO NOT decrement yet
+        // Stock is decremented ONLY after successful payment (in verify-payment route)
+        // This prevents double-decrementation and allows proper stock restoration on failed payments
         for (const item of items) {
             const book = bookMap.get(item.bookId)
             if (!book) throw new Error(`Book not found: ${item.bookId}`)
-            if (book.stockQuantity < item.quantity) throw new Error(`Insufficient stock: ${book.title}`)
-            
-            await tx.book.update({
-                where: { id: item.bookId },
-                data: { stockQuantity: { decrement: item.quantity } }
-            })
+            if (book.stockQuantity < item.quantity) {
+                throw new Error(`ಸ್ಟಾಕ್ ಇಲ್ಲ: ${book.title}. ಲಭ್ಯವಿರುವುದು: ${book.stockQuantity}`)
+            }
         }
         
         // Calculate Discount & Update Coupon Usage

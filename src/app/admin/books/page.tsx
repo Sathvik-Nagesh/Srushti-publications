@@ -60,6 +60,7 @@ export default function AdminBooksPage() {
       const params = new URLSearchParams()
       params.set('page', page.toString())
       params.set('limit', '20')
+      params.set('includeInactive', 'true') // Admin sees all books including inactive
       if (searchQuery) params.set('search', searchQuery)
       if (filterCategory) params.set('categoryId', filterCategory)
 
@@ -119,12 +120,13 @@ export default function AdminBooksPage() {
   }
   
   const handleDeleteBook = async (bookSlug: string) => {
-    if (confirm('ಈ ಪುಸ್ತಕವನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?')) {
+    if (confirm('ಈ ಪುಸ್ತಕವನ್ನು ಡೇಟಾಬೇಸ್‌ನಿಂದ ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?\n\nಇದನ್ನು ಹಿಂತಿರುಗಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ!')) {
       try {
-        const res = await fetch(`/api/books/${bookSlug}`, { method: 'DELETE' })
+        // Use admin endpoint for hard delete from database
+        const res = await fetch(`/api/admin/books/${bookSlug}`, { method: 'DELETE' })
         const data = await res.json()
         if (data.success) {
-          toast.success('ಪುಸ್ತಕ ಅಳಿಸಲಾಗಿದೆ')
+          toast.success(data.message || 'ಪುಸ್ತಕ ಡೇಟಾಬೇಸ್‌ನಿಂದ ಅಳಿಸಲಾಗಿದೆ')
           fetchBooks(pagination.page)
         } else {
           toast.error(data.error || 'ಅಳಿಸಲು ವಿಫಲವಾಗಿದೆ')
@@ -137,13 +139,14 @@ export default function AdminBooksPage() {
   
   const handleToggleActive = async (book: Book) => {
     try {
-      const res = await fetch(`/api/books/${book.slug}`, {
+      // Use admin endpoint for toggling active status
+      const res = await fetch(`/api/admin/books/${book.slug}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !book.isActive })
       })
       if (res.ok) {
-        toast.success('ಸ್ಥಿತಿ ಬದಲಾಯಿಸಲಾಗಿದೆ')
+        toast.success(book.isActive ? 'ಪುಸ್ತಕ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ' : 'ಪುಸ್ತಕ ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ')
         fetchBooks(pagination.page)
       } else {
         toast.error('ವಿಫಲವಾಗಿದೆ')
