@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { Clock, Zap } from 'lucide-react'
 
 interface SaleTimerProps {
@@ -12,7 +12,8 @@ interface SaleTimerProps {
 // Settings storage key (same as in site-config page)
 const SETTINGS_KEY = 'srushti_site_settings'
 
-const TimeBox = ({ value, label, variant }: { value: number; label: string; variant: string }) => (
+// Memoized to prevent re-renders on every second tick when values haven't changed
+const TimeBox = memo(({ value, label, variant }: { value: number; label: string; variant: string }) => (
   <div style={{
     display: 'flex',
     flexDirection: 'column',
@@ -41,9 +42,12 @@ const TimeBox = ({ value, label, variant }: { value: number; label: string; vari
       {label}
     </span>
   </div>
-)
+))
 
-const Separator = ({ variant }: { variant: string }) => (
+TimeBox.displayName = 'TimeBox'
+
+// Memoized to prevent re-renders on every second tick
+const Separator = memo(({ variant }: { variant: string }) => (
   <span style={{
     fontSize: variant === 'compact' ? '1rem' : '1.5rem',
     fontWeight: 700,
@@ -51,7 +55,9 @@ const Separator = ({ variant }: { variant: string }) => (
   }}>
     :
   </span>
-)
+))
+
+Separator.displayName = 'Separator'
 
 export default function SaleTimer({ 
   endDate: propEndDate,
