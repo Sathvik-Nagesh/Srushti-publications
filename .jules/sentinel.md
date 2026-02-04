@@ -44,3 +44,8 @@
 **Vulnerability:** API routes were manually extracting IP addresses using `request.headers.get('x-forwarded-for') || 'unknown'`, which allows attackers to bypass rate limits by appending random values to the `X-Forwarded-For` header (e.g. `1.2.3.4, random`).
 **Learning:** Using the raw `X-Forwarded-For` string as a rate limit key is insecure. The header often contains a comma-separated list of IPs.
 **Prevention:** Implemented a centralized `getClientIp` helper in `src/lib/rateLimit.ts` that safely parses the first IP from `X-Forwarded-For` (standard proxy behavior) or falls back to `X-Real-IP`. Refactored all API routes to use this helper.
+
+## 2025-02-19 - Critical: Middleware Trap in API Routes
+**Vulnerability:** `POST` endpoints for books and categories (`/api/books`, `/api/categories`) were unprotected because the middleware only targeted `/admin` and `/api/admin` paths.
+**Learning:** Relying on path-based middleware for security is brittle. If a developer names an endpoint differently (e.g. for RESTful consistency), it bypasses global protections.
+**Prevention:** Always enforce authentication explicitly within the route handler for critical operations (POST/PUT/DELETE), regardless of middleware coverage.
