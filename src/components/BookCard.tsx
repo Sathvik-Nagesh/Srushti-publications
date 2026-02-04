@@ -22,12 +22,16 @@ function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
   const router = useRouter()
   const t = useTranslations('common')
   const addItem = useCartStore(state => state.addItem)
-  const { addBook, removeBook, isInCompare, canAdd } = useCompareStore()
+
+  // Optimize compare store selectors to prevent unnecessary re-renders
+  const inCompare = useCompareStore(state => state.books.some(b => b.id === book.id))
+  const addBook = useCompareStore(state => state.addBook)
+  const removeBook = useCompareStore(state => state.removeBook)
+  const canAdd = useCompareStore(state => state.canAdd)
   
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
   const isOutOfStock = book.stockQuantity <= 0
   const isLowStock = book.stockQuantity > 0 && book.stockQuantity <= 5
-  const inCompare = isInCompare(book.id)
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
