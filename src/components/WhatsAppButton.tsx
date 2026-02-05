@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageCircle, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface WhatsAppButtonProps {
   phoneNumber?: string
@@ -12,6 +13,7 @@ export default function WhatsAppButton({
   phoneNumber = '919845096668',
   message = 'ನಮಸ್ಕಾರ! ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ ಬಗ್ಗೆ ಮಾಹಿತಿ ಬೇಕು.'
 }: WhatsAppButtonProps) {
+  const t = useTranslations('common')
   const [isVisible, setIsVisible] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
   const [tooltipDismissed, setTooltipDismissed] = useState(false)
@@ -139,7 +141,7 @@ export default function WhatsAppButton({
         onClick={handleClick}
         onMouseEnter={() => !tooltipDismissed && setShowTooltip(true)}
         onMouseLeave={() => tooltipDismissed && setShowTooltip(false)}
-        aria-label="Chat on WhatsApp"
+        aria-label={t('contact')}
         style={{
           width: 56,
           height: 56,
