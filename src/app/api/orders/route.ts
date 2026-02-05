@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { sendOrderConfirmation } from '@/lib/email'
 import { hash } from 'bcryptjs'
+import { verifySessionToken } from '@/lib/password'
+import { cookies } from 'next/headers'
 
 interface OrderItemInput {
   bookId: string
@@ -30,6 +32,20 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Invalid order data' },
         { status: 400 }
       )
+    }
+
+    // Check authentication for address updates
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get('customer_session')?.value
+    let isVerifiedUser = false
+    let verifiedUserId: string | undefined = undefined
+
+    if (sessionToken) {
+      const tokenData = await verifySessionToken(sessionToken)
+      if (tokenData.valid && tokenData.email === customer.email) {
+        isVerifiedUser = true
+        verifiedUserId = tokenData.userId
+      }
     }
 
     // 2. Generate Order Number
@@ -85,8 +101,9 @@ export async function POST(request: NextRequest) {
         if (existingCustomer) {
             customerId = existingCustomer.id
             
-            // Update address if requested OR if request explicitly says saveAddress
-            if (body.saveAddress) {
+            // 🛡️ SECURITY: Only update address if user is authenticated and matches
+            // Prevents unauthenticated users from overwriting existing customer addresses
+            if (body.saveAddress && isVerifiedUser && verifiedUserId === existingCustomer.id) {
                 await tx.customer.update({
                     where: { id: existingCustomer.id },
                     data: {
