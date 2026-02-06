@@ -100,6 +100,14 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 20) // Max 20 results
     const categorySlug = searchParams.get('category')
 
+    // Sentinel: Limit query length to prevent ReDoS and high CPU usage
+    if (query.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Query too long. Maximum 100 characters.' },
+        { status: 400 }
+      )
+    }
+
     if (query.length < 2) {
       return NextResponse.json({
         success: true,

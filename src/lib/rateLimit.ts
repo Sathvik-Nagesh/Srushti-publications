@@ -9,8 +9,17 @@ import { NextRequest } from 'next/server'
  * Get client IP address safely handling proxy headers
  */
 export function getClientIp(request: Request | NextRequest): string {
+  // Use Next.js platform IP if available (most secure as it's provided by the platform)
+  const req = request as any
+  if (req.ip) {
+    return req.ip
+  }
+
   const forwardedFor = request.headers.get('x-forwarded-for')
   if (forwardedFor) {
+    // Return the first IP in the list (standard convention)
+    // Note: If not running on a trusted platform like Vercel, the first IP
+    // can be spoofed by the client. We rely on the platform to overwrite/append trusted IPs.
     return forwardedFor.split(',')[0].trim()
   }
 
