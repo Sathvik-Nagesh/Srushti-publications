@@ -96,7 +96,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const query = searchParams.get('q')?.trim() || ''
+    // Sentinel: Truncate query to 100 chars to prevent ReDoS/DoS in fuzzy search
+    const query = (searchParams.get('q')?.trim() || '').slice(0, 100)
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 20) // Max 20 results
     const categorySlug = searchParams.get('category')
 
