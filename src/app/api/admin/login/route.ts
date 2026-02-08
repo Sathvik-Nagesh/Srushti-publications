@@ -4,6 +4,10 @@ import prisma from '@/lib/prisma'
 import { verifyPassword, hashPassword, secureCompare } from '@/lib/password'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
+// Pre-calculated hash for timing attack mitigation
+// Generated from 'dummy_password_for_timing_mitigation'
+const DUMMY_HASH = '79b5c4854423467682992e025278301e9a032790006fa170cf03d65daa857ed1:4892e3b9905ea6cf5bc84cf25f40e2d471dfebd495f5451d1c0086d0b26c0d09523ec3cffa10d015267781fcd91b15130e01ed2f333ff32ed53bf24dedde2888'
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
@@ -80,6 +84,10 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Invalid credentials' },
         { status: 401 }
       )
+    } else {
+      // Sentinel: Prevent user enumeration via timing attacks
+      // Even if user is not found, verify a dummy password to simulate the time cost
+      await verifyPassword(password, DUMMY_HASH)
     }
 
     // Fallback to environment variable authentication (for initial setup)
