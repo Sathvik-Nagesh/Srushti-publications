@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
+/**
+ * @deprecated This file contains legacy authentication logic and should not be used.
+ * Please use the secure authentication implementation in src/app/api/admin/login/route.ts
+ */
+
 // Simple session-based admin auth
 // For production, use a proper auth library like NextAuth.js
 
@@ -29,8 +34,12 @@ function generateSessionToken(): string {
 // Verify admin credentials
 export async function verifyCredentials(email: string, password: string): Promise<boolean> {
   // Get admin credentials from environment
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@srushtipublications.com'
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123' // Change in production!
+  const adminEmail = process.env.ADMIN_EMAIL
+  const adminPassword = process.env.ADMIN_PASSWORD
+
+  if (!adminEmail || !adminPassword) {
+    return false
+  }
   
   return email === adminEmail && password === adminPassword
 }
@@ -70,6 +79,7 @@ export function destroySession(token: string): void {
 }
 
 // Middleware helper to check admin auth
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function requireAdminAuth(request: NextRequest): Promise<{ 
   authenticated: boolean
   email?: string 

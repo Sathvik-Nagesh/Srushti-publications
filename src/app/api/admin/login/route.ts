@@ -4,6 +4,10 @@ import prisma from '@/lib/prisma'
 import { verifyPassword, hashPassword, secureCompare } from '@/lib/password'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
+// Pre-calculated hash for timing attack mitigation
+// Generated with: 100000 iterations, SHA-512
+const DUMMY_HASH = '0530337255d87c72f81c831068a23190492319d8d4d88c469e37e0ec337e6b7c:b48f7653b9f688a2f06fee2220526c1f96e89f9127ecf92de5bf73c44a09b22caf5b051af468497c53d61150fa1f262fd064d7f50a5febef69047f9c7ac2d286'
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
@@ -34,6 +38,8 @@ export async function POST(request: NextRequest) {
     if (adminUser) {
       // Database-based auth with hashed password
       if (!adminUser.isActive) {
+        // Still verify password to prevent timing attacks on disabled accounts
+        await verifyPassword(password, adminUser.passwordHash)
         return NextResponse.json(
           { success: false, error: 'Account is disabled' },
           { status: 401 }
@@ -80,6 +86,10 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Invalid credentials' },
         { status: 401 }
       )
+    } else {
+      // Timing attack mitigation: verify against dummy hash
+      // This ensures response time is consistent whether user exists or not
+      await verifyPassword(password, DUMMY_HASH)
     }
 
     // Fallback to environment variable authentication (for initial setup)
