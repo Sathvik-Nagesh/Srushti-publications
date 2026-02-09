@@ -23,6 +23,10 @@ const SUSPICIOUS_PATTERNS = [
 ]
 
 function getRateLimitKey(request: NextRequest): string {
+  // Use Next.js platform IP if available (most secure)
+  const req = request as any
+  if (req.ip) return req.ip
+
   const forwarded = request.headers.get('x-forwarded-for')
   const ip = forwarded ? forwarded.split(',')[0].trim() : 'anonymous'
   return ip
