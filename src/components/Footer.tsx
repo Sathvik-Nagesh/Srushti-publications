@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react'
 import { siteConfig } from '@/config/site'
 
@@ -26,14 +27,15 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="footer-brand">
             <div style={{ position: 'relative', height: '60px', marginBottom: '1rem' }}>
-              <img
+              <Image
                 src={siteConfig.logo}
                 alt={siteConfig.name}
-                style={{ 
-                  height: '100%', 
-                  width: 'auto',
+                fill
+                sizes="200px"
+                style={{
+                  objectFit: 'contain',
+                  objectPosition: 'left',
                   borderRadius: '8px',
-                  objectFit: 'contain'
                 }}
               />
             </div>
