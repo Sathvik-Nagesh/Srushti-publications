@@ -49,3 +49,8 @@
 **Vulnerability:** `POST` endpoints for books and categories (`/api/books`, `/api/categories`) were unprotected because the middleware only targeted `/admin` and `/api/admin` paths.
 **Learning:** Relying on path-based middleware for security is brittle. If a developer names an endpoint differently (e.g. for RESTful consistency), it bypasses global protections.
 **Prevention:** Always enforce authentication explicitly within the route handler for critical operations (POST/PUT/DELETE), regardless of middleware coverage.
+
+## 2025-02-23 - High: User Enumeration via Timing Attack in Login
+**Vulnerability:** The admin login endpoint (`/api/admin/login`) returned significantly faster for non-existent users compared to existing users with incorrect passwords. This happened because `verifyPassword` (PBKDF2) was skipped for non-existent users.
+**Learning:** Authentication endpoints must have consistent response times regardless of whether the user exists or not. Skipping expensive operations for invalid users leaks their non-existence.
+**Prevention:** Implement a "dummy verification" step. If the user is not found, execute `verifyPassword` against a pre-calculated dummy hash to simulate the processing time of a valid user check.

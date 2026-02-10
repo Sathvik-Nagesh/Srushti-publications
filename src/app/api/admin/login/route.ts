@@ -33,16 +33,17 @@ export async function POST(request: NextRequest) {
 
     if (adminUser) {
       // Database-based auth with hashed password
-      if (!adminUser.isActive) {
-        return NextResponse.json(
-          { success: false, error: 'Account is disabled' },
-          { status: 401 }
-        )
-      }
-
+      // Verify password first to prevent timing leak regarding account status
       const isValid = await verifyPassword(password, adminUser.passwordHash)
 
       if (isValid) {
+        if (!adminUser.isActive) {
+          return NextResponse.json(
+            { success: false, error: 'Account is disabled' },
+            { status: 401 }
+          )
+        }
+
         // Update last login
         await prisma.adminUser.update({
           where: { id: adminUser.id },
@@ -86,15 +87,20 @@ export async function POST(request: NextRequest) {
     const adminEmail = process.env.ADMIN_EMAIL
     const adminPassword = process.env.ADMIN_PASSWORD
 
-    if (adminEmail && adminPassword && await secureCompare(email, adminEmail) && await secureCompare(password, adminPassword)) {
+    // Check environment variables first (fast)
+    const isEnvAuth = adminEmail && adminPassword &&
+                      await secureCompare(email, adminEmail) &&
+                      await secureCompare(password, adminPassword)
+
+    if (isEnvAuth) {
       // Create admin user in database with hashed password for future logins
-      const passwordHash = await hashPassword(adminPassword)
+      const passwordHash = await hashPassword(adminPassword!)
       
       const newAdmin = await prisma.adminUser.upsert({
-        where: { email: adminEmail },
+        where: { email: adminEmail! },
         update: { lastLoginAt: new Date() },
         create: {
-          email: adminEmail,
+          email: adminEmail!,
           passwordHash,
           name: 'Admin',
           role: 'superadmin',
@@ -126,6 +132,18 @@ export async function POST(request: NextRequest) {
       })
 
       return response
+    }
+
+    // Sentinel: Mitigation for Timing Attacks
+    // If user is not found in DB and env auth fails, we must simulate the time taken
+    // by verifyPassword to prevent username enumeration via timing analysis.
+    //
+    // Without this, invalid emails return faster (DB lookup + env check) than
+    // valid emails with wrong passwords (DB lookup + verifyPassword).
+    // verifyPassword does PBKDF2 derivation which is intentionally slow.
+    const DUMMY_HASH = '281460c9a61d6f0a1a27bc928e3c4d82c746b4f5dddf855094dba658358217f5:c201606a0f614674fc5e6c68ba2afdc34da9032a22581c31e5892fcf3cd6e3b15f34bf5348efbad23de4d38f3b6bc02b1d247dd915c29767129c1c900298a4d3'
+    if (!adminUser) {
+      await verifyPassword(password, DUMMY_HASH)
     }
 
     return NextResponse.json(
