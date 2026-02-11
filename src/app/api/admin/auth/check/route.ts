@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { verify } from '@/lib/auth-edge'
+import { verifySessionToken } from '@/lib/auth-edge'
 
 // GET /api/admin/auth/check - Verify if user is authenticated
 export async function GET() {
@@ -12,23 +12,15 @@ export async function GET() {
       return NextResponse.json({ authenticated: false }, { status: 401 })
     }
     
-    const token = sessionCookie.value
-    const [encodedPayload, signature] = token.split('.')
+    const payload = await verifySessionToken(sessionCookie.value)
     
-    if (!encodedPayload || !signature) {
-      return NextResponse.json({ authenticated: false }, { status: 401 })
-    }
-    
-    const payload = atob(encodedPayload)
-    const isValid = await verify(payload, signature)
-    
-    if (!isValid) {
+    if (!payload) {
       return NextResponse.json({ authenticated: false }, { status: 401 })
     }
     
     return NextResponse.json({ 
       authenticated: true,
-      user: JSON.parse(payload)
+      user: payload
     })
   } catch (error) {
     console.error('Auth check error:', error)

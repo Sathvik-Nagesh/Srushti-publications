@@ -2,6 +2,11 @@
 import { NextRequest } from 'next/server'
 import { getAdminSecret } from './config'
 
+export interface SessionPayload {
+  exp?: number
+  [key: string]: unknown
+}
+
 async function getKey() {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(getAdminSecret());
@@ -58,6 +63,38 @@ export async function verify(data: string, signature: string): Promise<boolean> 
 }
 
 /**
+ * Verify token string, check signature and expiration
+ * Sentinel: Added to enforce expiration and prevent replay attacks
+ */
+export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
+  const parts = token.split('.')
+  if (parts.length !== 2) return null
+
+  const [encodedPayload, signature] = parts
+
+  try {
+    const payloadString = atob(encodedPayload)
+    const isValidSignature = await verify(payloadString, signature)
+
+    if (!isValidSignature) return null
+
+    const payload = JSON.parse(payloadString)
+
+    // Sentinel: Enforce expiration claim
+    // If exp is missing or in the past, token is invalid
+    const now = Math.floor(Date.now() / 1000)
+    if (!payload.exp || typeof payload.exp !== 'number' || payload.exp < now) {
+      return null
+    }
+
+    return payload
+  } catch {
+    // console.error('Token verification failed:', error)
+    return null
+  }
+}
+
+/**
  * Verify admin session from request cookies
  * @param request NextRequest
  */
@@ -65,15 +102,6 @@ export async function verifyAdminSession(request: NextRequest): Promise<boolean>
   const adminSession = request.cookies.get('admin_session')
   if (!adminSession?.value) return false
 
-  const parts = adminSession.value.split('.')
-  if (parts.length !== 2) return false
-
-  const [encodedPayload, signature] = parts
-
-  try {
-    const payload = atob(encodedPayload)
-    return await verify(payload, signature)
-  } catch {
-    return false
-  }
+  const payload = await verifySessionToken(adminSession.value)
+  return !!payload
 }

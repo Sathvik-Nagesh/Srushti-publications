@@ -51,11 +51,13 @@ export async function POST(request: NextRequest) {
         })
 
         // Create signed session token
+        // Sentinel: Added expiration (24h) to payload to prevent replay attacks
         const payload = JSON.stringify({
           type: 'admin',
           userId: adminUser.id,
           email: adminUser.email,
-          role: adminUser.role
+          role: adminUser.role,
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
         })
         const signature = await sign(payload)
         const token = `${btoa(payload)}.${signature}`
@@ -109,11 +111,13 @@ export async function POST(request: NextRequest) {
       })
 
       // Create signed session token
+      // Sentinel: Added expiration (24h) to payload to prevent replay attacks
       const payload = JSON.stringify({
         type: 'admin',
         userId: newAdmin.id,
         email: newAdmin.email,
-        role: newAdmin.role
+        role: newAdmin.role,
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
       })
       const signature = await sign(payload)
       const token = `${btoa(payload)}.${signature}`

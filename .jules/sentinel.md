@@ -54,3 +54,8 @@
 **Vulnerability:** The admin login endpoint (`/api/admin/login`) returned significantly faster for non-existent users compared to existing users with incorrect passwords. This happened because `verifyPassword` (PBKDF2) was skipped for non-existent users.
 **Learning:** Authentication endpoints must have consistent response times regardless of whether the user exists or not. Skipping expensive operations for invalid users leaks their non-existence.
 **Prevention:** Implement a "dummy verification" step. If the user is not found, execute `verifyPassword` against a pre-calculated dummy hash to simulate the processing time of a valid user check.
+
+## 2025-02-24 - High: Missing Session Expiration in Token Payload
+**Vulnerability:** The admin session token used a signed payload but did not include an expiration (`exp`) claim. While the cookie had `maxAge`, the server logic (middleware) trusted any validly signed token indefinitely, allowing permanent session replay if a token was stolen.
+**Learning:** Relying solely on cookie expiration is insecure because cookies are client-side controls. The server must enforce expiration internally within the signed/encrypted payload.
+**Prevention:** Always include `exp` claim in JWT/signed tokens and enforce checks for it during verification, regardless of transport mechanism.
