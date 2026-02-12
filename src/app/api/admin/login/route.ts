@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
           type: 'admin',
           userId: adminUser.id,
           email: adminUser.email,
-          role: adminUser.role
+          role: adminUser.role,
+          exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
         })
         const signature = await sign(payload)
         const token = `${btoa(payload)}.${signature}`
@@ -113,7 +114,8 @@ export async function POST(request: NextRequest) {
         type: 'admin',
         userId: newAdmin.id,
         email: newAdmin.email,
-        role: newAdmin.role
+        role: newAdmin.role,
+        exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
       })
       const signature = await sign(payload)
       const token = `${btoa(payload)}.${signature}`
