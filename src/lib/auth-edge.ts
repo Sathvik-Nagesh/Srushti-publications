@@ -58,6 +58,36 @@ export async function verify(data: string, signature: string): Promise<boolean> 
 }
 
 /**
+ * Verify session token string
+ * @param token The token string (payload.signature)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function verifySessionToken(token: string): Promise<any | null> {
+  const parts = token.split('.')
+  if (parts.length !== 2) return null
+
+  const [encodedPayload, signature] = parts
+
+  try {
+    const payload = atob(encodedPayload)
+    const isValid = await verify(payload, signature)
+
+    if (!isValid) return null
+
+    const data = JSON.parse(payload)
+
+    // Check expiration if present
+    if (data.exp && Date.now() > data.exp) {
+      return null
+    }
+
+    return data
+  } catch {
+    return null
+  }
+}
+
+/**
  * Verify admin session from request cookies
  * @param request NextRequest
  */
@@ -65,15 +95,6 @@ export async function verifyAdminSession(request: NextRequest): Promise<boolean>
   const adminSession = request.cookies.get('admin_session')
   if (!adminSession?.value) return false
 
-  const parts = adminSession.value.split('.')
-  if (parts.length !== 2) return false
-
-  const [encodedPayload, signature] = parts
-
-  try {
-    const payload = atob(encodedPayload)
-    return await verify(payload, signature)
-  } catch {
-    return false
-  }
+  const data = await verifySessionToken(adminSession.value)
+  return !!data
 }

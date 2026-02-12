@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verify } from '@/lib/auth-edge'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // Rate limiting map - in production, use Redis
 const rateLimit = new Map<string, { count: number; timestamp: number }>()
@@ -74,20 +74,7 @@ function isSuspiciousRequest(request: NextRequest): boolean {
 
 // Admin session check - verifies signed token
 async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
-  const adminSession = request.cookies.get('admin_session')
-  if (!adminSession?.value) return false
-
-  const parts = adminSession.value.split('.')
-  if (parts.length !== 2) return false
-
-  const [encodedPayload, signature] = parts
-  
-  try {
-    const payload = atob(encodedPayload)
-    return await verify(payload, signature)
-  } catch (e) {
-    return false
-  }
+  return verifyAdminSession(request)
 }
 
 export async function middleware(request: NextRequest) {

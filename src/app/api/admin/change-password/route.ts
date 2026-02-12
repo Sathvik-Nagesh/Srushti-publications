@@ -1,28 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyPassword, hashPassword } from '@/lib/password'
-import { verify } from '@/lib/auth-edge'
+import { verifySessionToken } from '@/lib/auth-edge'
 
 // Get current admin user from session cookie
 async function getAdminFromSession(request: NextRequest) {
   const adminSession = request.cookies.get('admin_session')
   if (!adminSession?.value) return null
 
-  const parts = adminSession.value.split('.')
-  if (parts.length !== 2) return null
-
-  const [encodedPayload, signature] = parts
-  
-  try {
-    const payload = atob(encodedPayload)
-    const isValid = await verify(payload, signature)
-    if (!isValid) return null
-    
-    const data = JSON.parse(payload)
-    return data
-  } catch (e) {
-    return null
-  }
+  return verifySessionToken(adminSession.value)
 }
 
 // POST /api/admin/change-password - Change admin password (auto-update in database)
