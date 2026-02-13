@@ -54,3 +54,8 @@
 **Vulnerability:** The admin login endpoint (`/api/admin/login`) returned significantly faster for non-existent users compared to existing users with incorrect passwords. This happened because `verifyPassword` (PBKDF2) was skipped for non-existent users.
 **Learning:** Authentication endpoints must have consistent response times regardless of whether the user exists or not. Skipping expensive operations for invalid users leaks their non-existence.
 **Prevention:** Implement a "dummy verification" step. If the user is not found, execute `verifyPassword` against a pre-calculated dummy hash to simulate the processing time of a valid user check.
+
+## 2025-02-24 - Critical: Unprotected Customer API Endpoints
+**Vulnerability:** The `GET /api/admin/customers` and `GET /api/admin/customers/[id]` endpoints exposed all customer data (PII) without any explicit authentication check, relying solely on path-based middleware.
+**Learning:** Middleware path matching is fragile and can be bypassed or misconfigured. Sensitive data endpoints must *always* enforce authentication explicitly within the handler.
+**Prevention:** Added `verifyAdminSession` check to both endpoints to enforce admin authentication at the application level.
