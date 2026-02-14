@@ -54,3 +54,8 @@
 **Vulnerability:** The admin login endpoint (`/api/admin/login`) returned significantly faster for non-existent users compared to existing users with incorrect passwords. This happened because `verifyPassword` (PBKDF2) was skipped for non-existent users.
 **Learning:** Authentication endpoints must have consistent response times regardless of whether the user exists or not. Skipping expensive operations for invalid users leaks their non-existence.
 **Prevention:** Implement a "dummy verification" step. If the user is not found, execute `verifyPassword` against a pre-calculated dummy hash to simulate the processing time of a valid user check.
+
+## 2025-02-24 - High: Logic Flaw in Stock Validation
+**Vulnerability:** The order creation logic iterated over items individually to check stock, allowing a user to bypass stock limits by splitting the quantity of a single book across multiple item entries (e.g. purchasing 11 copies as 6+5 when only 10 were available).
+**Learning:** Iterating over user-controlled input lists without aggregation can lead to race conditions or logic bypasses against global constraints (like total stock).
+**Prevention:** Always aggregate resource usage (quantities, costs, etc.) by resource ID before validating against limits. Use `Map` or similar structures to sum up totals first.

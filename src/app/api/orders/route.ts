@@ -135,10 +135,16 @@ export async function POST(request: NextRequest) {
         // 🛡️ SECURITY: Validate stock availability but DO NOT decrement yet
         // Stock is decremented ONLY after successful payment (in verify-payment route)
         // This prevents double-decrementation and allows proper stock restoration on failed payments
+        const quantityMap = new Map<string, number>()
         for (const item of items) {
-            const book = bookMap.get(item.bookId)
-            if (!book) throw new Error(`Book not found: ${item.bookId}`)
-            if (book.stockQuantity < item.quantity) {
+            const current = quantityMap.get(item.bookId) || 0
+            quantityMap.set(item.bookId, current + item.quantity)
+        }
+
+        for (const [bookId, totalQuantity] of quantityMap.entries()) {
+            const book = bookMap.get(bookId)
+            if (!book) throw new Error(`Book not found: ${bookId}`)
+            if (book.stockQuantity < totalQuantity) {
                 throw new Error(`ಸ್ಟಾಕ್ ಇಲ್ಲ: ${book.title}. ಲಭ್ಯವಿರುವುದು: ${book.stockQuantity}`)
             }
         }

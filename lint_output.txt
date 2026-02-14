@@ -1,0 +1,528 @@
+
+> srushti-publication@0.1.0 lint
+> eslint
+
+
+/app/next.config.ts
+  6:28  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/app/public/sw.js
+  1:7  warning  'CACHE_NAME' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/about/page.tsx
+  5:49  warning  'Calendar' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/account/page.tsx
+  16:3  warning  'Heart' is defined but never used  @typescript-eslint/no-unused-vars
+  17:3  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/analytics/page.tsx
+  12:3  warning  'ShoppingCart' is defined but never used  @typescript-eslint/no-unused-vars
+  13:3  warning  'IndianRupee' is defined but never used   @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/books/page.tsx
+    8:3   warning  'Filter' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   13:3   warning  'MoreVertical' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+   16:3   warning  'Download' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   17:3   warning  'Upload' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   78:14  warning  'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   96:6   warning  React Hook useEffect has a missing dependency: 'fetchBooks'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  104:6   warning  React Hook useEffect has a missing dependency: 'fetchBooks'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  134:16  warning  'err' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  154:14  warning  'e' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/categories/page.tsx
+   91:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:16  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  130:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  169:37  warning  'idx' is defined but never used           @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/customers/[id]/page.tsx
+  5:51  warning  'Calendar' is defined but never used    @typescript-eslint/no-unused-vars
+  5:61  warning  'DollarSign' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/customers/page.tsx
+  5:18  warning  'Eye' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/inventory/page.tsx
+   53:6   warning  React Hook useEffect has a missing dependency: 'fetchInventory'. Either include it or remove the dependency array                                                                                                                                                                        react-hooks/exhaustive-deps
+   72:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   93:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  273:31  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/app/src/app/admin/layout.tsx
+  16:3  warning  'Package' is defined but never used     @typescript-eslint/no-unused-vars
+  17:3  warning  'TrendingUp' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/offers/page.tsx
+    4:78   warning  'ToggleLeft' is defined but never used   @typescript-eslint/no-unused-vars
+    4:90   warning  'ToggleRight' is defined but never used  @typescript-eslint/no-unused-vars
+    4:103  warning  'Power' is defined but never used        @typescript-eslint/no-unused-vars
+  149:14   warning  'error' is defined but never used        @typescript-eslint/no-unused-vars
+  176:14   warning  'error' is defined but never used        @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/orders/[id]/page.tsx
+   6:26  warning  'formatDate' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+  99:6   warning  React Hook useEffect has a missing dependency: 'fetchOrder'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/app/src/app/admin/orders/page.tsx
+    5:82  warning  'Clock' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+    5:89  warning  'Filter' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   86:6   warning  React Hook useEffect has a missing dependency: 'fetchOrders'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  161:18  warning  'e' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/page.tsx
+  19:26  warning  'formatDate' is defined but never used  @typescript-eslint/no-unused-vars
+  20:8   warning  'toast' is defined but never used       @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/reviews/page.tsx
+   4:34  warning  'User' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   4:40  warning  'Search' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  54:6   warning  React Hook useEffect has a missing dependency: 'fetchReviews'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  75:14  warning  'error' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/settings/page.tsx
+   76:14  warning  'e' is defined but never used      @typescript-eslint/no-unused-vars
+  101:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  133:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  178:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/admin/site-config/page.tsx
+   12:3   warning  'Image' is defined but never used                                @typescript-eslint/no-unused-vars
+   14:3   warning  'Check' is defined but never used                                @typescript-eslint/no-unused-vars
+   95:72  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  484:21  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  484:50  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/app/src/app/api/admin/books/[id]/route.ts
+   67:25  warning  'coverImagePublicId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   69:23  error    Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  140:14  warning  'e' is defined but never used                            @typescript-eslint/no-unused-vars
+
+/app/src/app/api/admin/customers/[id]/route.ts
+  42:13  warning  'passwordHash' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/admin/inventory/route.ts
+  49:24  warning  'lowStock' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/admin/orders/[id]/route.ts
+  76:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/api/admin/orders/route.ts
+  14:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/api/admin/reviews/route.ts
+  13:9  error  'whereClause' is never reassigned. Use 'const' instead  prefer-const
+
+/app/src/app/api/auth/logout/route.ts
+  1:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/auth/me/route.ts
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/books/route.ts
+  77:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/api/categories/[id]/route.ts
+   28:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  100:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/coupons/route.ts
+  10:11  warning  'subtotalParam' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/customer/orders/route.ts
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/invoice/[orderNumber]/route.ts
+  33:11  warning  'baseAmount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/orders/route.ts
+  280:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/api/reviews/route.ts
+    3:47  warning  'API_RATE_LIMITS' is defined but never used  @typescript-eslint/no-unused-vars
+  109:13  warning  'e' is defined but never used                @typescript-eslint/no-unused-vars
+
+/app/src/app/api/settings/hero/route.ts
+  51:33  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  52:31  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  53:37  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  54:36  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  55:31  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  56:31  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  70:11  warning  'body' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/api/wishlist/route.ts
+  7:29  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/books/[slug]/page.tsx
+  148:33  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/app/src/app/books/[slug]/page.tsx:148:33
+  146 |         name: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್'
+  147 |       },
+> 148 |       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      |                                 ^^^^^^^^^^ Cannot call impure function
+  149 |     }
+  150 |   }
+  151 |  react-hooks/purity
+  342:44  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+
+/app/src/app/books/page.tsx
+   12:62  warning  'ArrowLeft' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   12:73  warning  'ArrowRight' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   62:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/app/books/page.tsx:62:5
+  60 |   useEffect(() => {
+  61 |     const filters = getInitialFilters()
+> 62 |     setSelectedCategory(filters.category)
+     |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  63 |     setPriceRange([filters.minPrice, filters.maxPrice])
+  64 |     setSortBy(filters.sortBy)
+  65 |     setPage(filters.page)                                                                                                                                                                                                                                                                                 react-hooks/set-state-in-effect
+   73:6   warning  React Hook useEffect has a missing dependency: 'getInitialFilters'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+   98:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/app/books/page.tsx:98:7
+   96 |   useEffect(() => {
+   97 |     if (priceRange[0] > priceRange[1]) {
+>  98 |       setPriceError('ಕನಿಷ್ಠ ಬೆಲೆ ಗರಿಷ್ಠಕ್ಕಿಂತ ಕಡಿಮೆ ಇರಬೇಕು')
+      |       ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+   99 |     } else {
+  100 |       setPriceError('')
+  101 |     }                                                                                                                                                                                                                                                                                                                               react-hooks/set-state-in-effect
+  141:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/app/books/page.tsx:141:7
+  139 |     const currentFilters = prevFiltersRef()
+  140 |     if (currentFilters !== prevFilters) {
+> 141 |       setPage(1)
+      |       ^^^^^^^ Avoid calling setState() directly within an effect
+  142 |       setPrevFilters(currentFilters)
+  143 |     }
+  144 |   }, [prevFiltersRef, prevFilters])                                                                                                                                                                                                                                                                                                                   react-hooks/set-state-in-effect
+  459:16  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/app/src/app/books/page.tsx:459:16
+  457 |               </div>
+  458 |
+> 459 |               <FilterSidebar />
+      |                ^^^^^^^^^^^^^ This component is created during render
+  460 |
+  461 |               <button
+  462 |                 onClick={handleApplyFilters}
+
+/app/src/app/books/page.tsx:278:25
+  276 |
+  277 |   // Filter Sidebar Component (reused for desktop & mobile)
+> 278 |   const FilterSidebar = ({ isMobile = false }: { isMobile?: boolean }) => (
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 279 |     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 280 |       {/* Categories */}
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 391 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 392 |   )
+      | ^^^^ The component is created during render here
+  393 |
+  394 |   return (
+  395 |     <>                                                         react-hooks/static-components
+  629:16  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/app/src/app/books/page.tsx:629:16
+  627 |               </div>
+  628 |
+> 629 |               <FilterSidebar isMobile={true} />
+      |                ^^^^^^^^^^^^^ This component is created during render
+  630 |
+  631 |               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+  632 |                 <button
+
+/app/src/app/books/page.tsx:278:25
+  276 |
+  277 |   // Filter Sidebar Component (reused for desktop & mobile)
+> 278 |   const FilterSidebar = ({ isMobile = false }: { isMobile?: boolean }) => (
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 279 |     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 280 |       {/* Categories */}
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 391 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 392 |   )
+      | ^^^^ The component is created during render here
+  393 |
+  394 |   return (
+  395 |     <>  react-hooks/static-components
+
+/app/src/app/bulk-orders/page.tsx
+  13:3  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/cart/page.tsx
+  15:9  warning  'router' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  21:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/app/cart/page.tsx:21:5
+  19 |
+  20 |   useEffect(() => {
+> 21 |     setMounted(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  22 |   }, [])
+  23 |
+  24 |   const handleRemoveItem = (bookId: string, title: string) => {  react-hooks/set-state-in-effect
+
+/app/src/app/categories/[slug]/page.tsx
+  37:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/app/categories/[slug]/page.tsx:37:5
+  35 |
+  36 |   useEffect(() => {
+> 37 |     setLoading(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |     // Simulate API call
+  39 |     setTimeout(() => {
+  40 |       setCategory(mockCategories[slug] || null)  react-hooks/set-state-in-effect
+
+/app/src/app/categories/page.tsx
+  8:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/checkout/page.tsx
+   38:60  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  528:59  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  528:75  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/app/src/app/compare/page.tsx
+  20:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/app/compare/page.tsx:20:5
+  18 |
+  19 |   useEffect(() => {
+> 20 |     setMounted(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |   }, [])
+  22 |
+  23 |   if (!mounted) {  react-hooks/set-state-in-effect
+  84:28  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+
+/app/src/app/error.tsx
+   18:53  error  Unexpected any. Specify a different type                                                                                                               @typescript-eslint/no-explicit-any
+   19:18  error  Unexpected any. Specify a different type                                                                                                               @typescript-eslint/no-explicit-any
+  104:11  error  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+/app/src/app/forgot-password/page.tsx
+  34:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/global-error.tsx
+  22:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/login/page.tsx
+  151:32  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+/app/src/app/order-confirmation/page.tsx
+   26:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/order-success/page.tsx
+  24:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/app/reset-password/page.tsx
+  15:9   warning  'email' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  61:14  warning  'error' is defined but never used           @typescript-eslint/no-unused-vars
+
+/app/src/app/search/page.tsx
+   9:10  warning  'BookOpen' is defined but never used        @typescript-eslint/no-unused-vars
+   9:28  warning  'Filter' is defined but never used          @typescript-eslint/no-unused-vars
+   9:36  warning  'ChevronDown' is defined but never used     @typescript-eslint/no-unused-vars
+   9:52  warning  'Loader2' is defined but never used         @typescript-eslint/no-unused-vars
+  10:10  warning  'formatCurrency' is defined but never used  @typescript-eslint/no-unused-vars
+  20:31  warning  'error' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/shipping/page.tsx
+  6:41  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/app/track-order/page.tsx
+   3:20  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  87:14  warning  'err' is defined but never used        @typescript-eslint/no-unused-vars
+
+/app/src/components/AsyncBoundary.tsx
+  23:3  warning  'errorFallback' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/components/BookActions.tsx
+  76:16  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/components/BookReviews.tsx
+  228:22  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  259:11  warning  'success' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  412:49  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  433:14  warning  'error' is defined but never used             @typescript-eslint/no-unused-vars
+
+/app/src/components/BookReviewsSection.tsx
+    4:16  warning  'ThumbsUp' is defined but never used                             @typescript-eslint/no-unused-vars
+    4:26  warning  'User' is defined but never used                                 @typescript-eslint/no-unused-vars
+   96:14  warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  243:42  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  243:57  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/app/src/components/BundleSuggestion.tsx
+  3:20  warning  'useEffect' is defined but never used                    @typescript-eslint/no-unused-vars
+  5:8   warning  'Link' is defined but never used                         @typescript-eslint/no-unused-vars
+  7:26  warning  'calculateDiscountPercentage' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/components/CompareWidget.tsx
+  15:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/components/CompareWidget.tsx:15:5
+  13 |
+  14 |   useEffect(() => {
+> 15 |     setMounted(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  16 |   }, [])
+  17 |
+  18 |   // Don't render on server or if no books  react-hooks/set-state-in-effect
+
+/app/src/components/CookieConsent.tsx
+  54:126  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  54:133  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/app/src/components/ErrorBoundary.tsx
+  38:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/components/ImageCropper.tsx
+    3:28  warning  'useEffect' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+    6:20  warning  'ZoomIn' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    6:28  warning  'ZoomOut' is defined but never used                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+    6:37  warning  'RotateCw' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   34:17  warning  'setScale' is assigned a value but never used                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   35:18  warning  'setRotate' is assigned a value but never used                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   67:11  warning  'centerX' is assigned a value but never used                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   68:11  warning  'centerY' is assigned a value but never used                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  147:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/app/src/components/JsonLd.tsx
+  1:8  warning  'Script' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/components/OptimizedImage.tsx
+  28:10  warning  'hasError' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/components/Skeletons.tsx
+  3:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  3:21  warning  'useState' is defined but never used   @typescript-eslint/no-unused-vars
+
+/app/src/components/SkipToContent.tsx
+  3:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/components/StructuredData.tsx
+  2:16  warning  'Category' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/components/TrustBadges.tsx
+  3:36  warning  'CreditCard' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/contexts/AuthContext.tsx
+   73:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+   94:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  123:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  144:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/hooks/useLatest.ts
+  28:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/lib/adminAuth.ts
+  73:40  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/lib/clientCache.ts
+   19:34  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+   69:30  warning  'cachedAt' is defined but never used           @typescript-eslint/no-unused-vars
+  107:13  warning  'cachedAt' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  127:30  warning  'cachedAt' is defined but never used           @typescript-eslint/no-unused-vars
+  148:35  warning  'cachedAt' is defined but never used           @typescript-eslint/no-unused-vars
+  195:57  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+/app/src/lib/data.ts
+  45:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/lib/email.ts
+  380:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/lib/hooks/useDataFetching.ts
+  5:3  warning  'getCachedBooks' is defined but never used  @typescript-eslint/no-unused-vars
+
+/app/src/lib/jsonld.ts
+  17:9  warning  'hasDiscount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/app/src/lib/password.ts
+   77:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  176:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  200:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  209:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  210:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/lib/rateLimit.ts
+  13:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/app/src/lib/razorpay.ts
+  32:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/app/src/middleware.ts
+  27:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 187 problems (68 errors, 119 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
