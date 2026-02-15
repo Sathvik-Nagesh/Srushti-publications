@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { checkRateLimit, getCached, setCache, API_RATE_LIMITS, getClientIp } from '@/lib/rateLimit'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/admin/dashboard - Get dashboard analytics
 export async function GET(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     // Rate limiting
     const ip = getClientIp(request)

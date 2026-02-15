@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/admin/orders - Get all orders with filters
 export async function GET(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
