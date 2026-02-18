@@ -54,3 +54,8 @@
 **Vulnerability:** The admin login endpoint (`/api/admin/login`) returned significantly faster for non-existent users compared to existing users with incorrect passwords. This happened because `verifyPassword` (PBKDF2) was skipped for non-existent users.
 **Learning:** Authentication endpoints must have consistent response times regardless of whether the user exists or not. Skipping expensive operations for invalid users leaks their non-existence.
 **Prevention:** Implement a "dummy verification" step. If the user is not found, execute `verifyPassword` against a pre-calculated dummy hash to simulate the processing time of a valid user check.
+
+## 2025-02-24 - Critical: Payment Bypass via Unchecked Order ID
+**Vulnerability:** The `/api/orders/verify-payment` endpoint verified the Razorpay signature but failed to check if the `razorpay_order_id` in the request matched the `razorpayOrderId` stored in the database. This allowed IDOR attacks where a valid signature for a cheap order could be used to mark an expensive order as PAID.
+**Learning:** Signature verification alone proves *integrity* of the payload, but not *authorization* or *association* with the correct resource. Always cross-reference external IDs with internal records.
+**Prevention:** Explicitly validate that the external ID (e.g., `razorpay_order_id`) matches the one stored in the internal record (`order.razorpayOrderId`) before accepting the payment. Fail securely if the internal record is missing the ID.
