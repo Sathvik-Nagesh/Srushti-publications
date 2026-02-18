@@ -52,6 +52,17 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    // Sentinel: Validate razorpay_order_id to prevent IDOR/payment bypass
+    // We must ensure the payment verification request matches the order's intent.
+    // If the order has a linked Razorpay Order ID, it MUST match the one in the request.
+    if (order.razorpayOrderId && order.razorpayOrderId !== razorpay_order_id) {
+      console.error(`Payment mismatch for order ${orderNumber}: expected ${order.razorpayOrderId}, got ${razorpay_order_id}`)
+      return NextResponse.json(
+        { success: false, error: 'Payment details do not match order records' },
+        { status: 400 }
+      )
+    }
     
     // Update order status
     const updatedOrder = await prisma.order.update({
