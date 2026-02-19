@@ -46,6 +46,11 @@ export const metadata: Metadata = {
   description: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಖರೀದಿಸಿ. ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ - ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು.',
   keywords: 'ಕನ್ನಡ ಪುಸ್ತಕಗಳು, kannada books, kannada literature, ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
   authors: [{ name: 'Srushti Publications' }],
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/logo.jpg',
+    apple: '/logo.jpg'
+  },
   openGraph: {
     title: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ | ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ',
     description: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಖರೀದಿಸಿ.',
