@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage, deleteImage } from '@/lib/cloudinary'
 import { verifyAdminSession } from '@/lib/auth-edge'
 
+// Whitelist allowed folders to prevent path traversal
+const ALLOWED_FOLDERS = ['books', 'authors', 'categories', 'banners', 'products', 'site']
+
 // POST /api/upload - Upload an image
 export async function POST(request: NextRequest) {
   if (!(await verifyAdminSession(request))) {
@@ -15,6 +18,14 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const folder = formData.get('folder') as string | null
+
+    // Sentinel: Validate folder to prevent path traversal
+    if (folder && !ALLOWED_FOLDERS.includes(folder)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid folder. Allowed: ${ALLOWED_FOLDERS.join(', ')}` },
+        { status: 400 }
+      )
+    }
 
     if (!file) {
       return NextResponse.json(

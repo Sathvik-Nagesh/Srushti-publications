@@ -59,3 +59,7 @@
 **Vulnerability:** The order creation logic iterated over items individually to check stock, allowing a user to bypass stock limits by splitting the quantity of a single book across multiple item entries (e.g. purchasing 11 copies as 6+5 when only 10 were available).
 **Learning:** Iterating over user-controlled input lists without aggregation can lead to race conditions or logic bypasses against global constraints (like total stock).
 **Prevention:** Always aggregate resource usage (quantities, costs, etc.) by resource ID before validating against limits. Use `Map` or similar structures to sum up totals first.
+## 2025-02-23 - Critical: Payment Verification Bypass (IDOR)
+**Vulnerability:** The `/api/orders/verify-payment` endpoint verified Razorpay signatures based on the request body but failed to verify that the `razorpay_order_id` in the request matched the one associated with the order in the database. This allowed attackers to use valid payment signatures from cheaper orders to mark expensive orders as paid.
+**Learning:** Signature verification alone proves the payment is valid, but not that it belongs to the *intended* order. Always verify the link between the payment gateway's order ID and your internal order record.
+**Prevention:** In payment verification webhooks or callbacks, strictly validate that the gateway's order ID matches the stored `razorpayOrderId` for the specific internal order before updating its status.
