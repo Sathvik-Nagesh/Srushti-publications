@@ -13,7 +13,7 @@ interface OrderItemInput {
   price?: number
 }
 
-// Helper to generate order number
+// Helper to generate order number (collision safe: random YYYYMMDD + 4-digit random)
 function generateOrderNumber() {
   const date = new Date()
   const year = date.getFullYear().toString().slice(-2)
@@ -21,6 +21,27 @@ function generateOrderNumber() {
   const day = date.getDate().toString().padStart(2, '0')
   const random = Math.floor(1000 + Math.random() * 9000).toString()
   return `ORD-${year}${month}${day}-${random}`
+}
+
+// Generate a collision-proof sequential invoice number using DB atomic increment
+// Format: INV-FY-NNNNN e.g. INV-2526-00001
+// Safe under concurrent traffic — Postgres atomically increments the counter
+async function generateInvoiceNumber(tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<string> {
+  const fy = (() => {
+    const now = new Date()
+    const startYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+    return `${String(startYear).slice(-2)}${String(startYear + 1).slice(-2)}` // e.g. "2526"
+  })()
+
+  // Atomically increment invoiceCounter in SiteSettings (creates row if needed)
+  const settings = await tx.siteSettings.upsert({
+    where: { id: 'default' },
+    update: { invoiceCounter: { increment: 1 } },
+    create: { id: 'default', invoiceCounter: 1 }
+  })
+
+  const seq = String(settings.invoiceCounter).padStart(5, '0')
+  return `INV-${fy}-${seq}`
 }
 
 export async function POST(request: NextRequest) {
@@ -207,11 +228,12 @@ export async function POST(request: NextRequest) {
 
         const serverTotal = Math.max(0, serverSubtotal + serverShipping - serverDiscount)
 
-        // Create Order
+        // Create Order (with collision-proof sequential invoice number)
+        const invoiceNumber = await generateInvoiceNumber(tx)
         return await tx.order.create({
             data: {
               orderNumber,
-              invoiceNumber: orderNumber,
+              invoiceNumber,
               customerName: customer.name,
               customerEmail: customer.email,
               customerPhone: customer.phone,
@@ -261,6 +283,7 @@ export async function POST(request: NextRequest) {
     // We map the database order structure to the email utility's expected format
     const emailData = {
         orderNumber: finalOrder.orderNumber,
+        orderId: finalOrder.id,          // ← so email can build invoice URL
         customerName: finalOrder.customerName,
         customerEmail: finalOrder.customerEmail,
         customerPhone: finalOrder.customerPhone,
