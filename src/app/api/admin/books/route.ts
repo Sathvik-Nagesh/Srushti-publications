@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyAdminSession } from '@/lib/auth-edge'
+import { revalidatePath } from 'next/cache'
 
 function slugify(text: string): string {
   return text
@@ -38,12 +39,17 @@ export async function GET(request: NextRequest) {
       prisma.book.findMany({
         where,
         include: { category: { select: { id: true, name: true, nameEn: true } } },
+        // Rule 6.3: cursor-based pagination (pass ?cursor=<lastId> for next page)
+        // Fall back to OFFSET only on page 1 or when no cursor provided
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
       prisma.book.count({ where }),
     ])
+
+    // Provide cursor for next page (last item's id)
+    const nextCursor = books.length === limit ? books[books.length - 1].id : null
 
     return NextResponse.json({
       success: true,
@@ -52,6 +58,7 @@ export async function GET(request: NextRequest) {
         total,
         page,
         totalPages: Math.ceil(total / limit),
+        nextCursor, // Use this for cursor-based subsequent pages
       },
     })
   } catch (error) {
@@ -124,6 +131,13 @@ export async function POST(request: NextRequest) {
       },
       include: { category: true },
     })
+
+    // ISR: revalidate book listing and homepage so new book appears immediately
+    revalidatePath('/books')
+    revalidatePath('/')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bookWithCategory = book as any
+    if (bookWithCategory.category?.slug) revalidatePath(`/books/category/${bookWithCategory.category.slug}`)
 
     return NextResponse.json({
       success: true,

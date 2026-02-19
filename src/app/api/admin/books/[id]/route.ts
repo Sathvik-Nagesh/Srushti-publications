@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+import { deleteImage } from '@/lib/cloudinary'
 
 // GET /api/admin/books/[id] - Get book by slug (ID) for Admin (includes inactive)
 export async function GET(
@@ -91,11 +93,25 @@ export async function PATCH(
     // Explicitly delete categoryId from data bucket to avoid "Unknown argument" error
     // (It was already removed via destructuring above, but ensuring consistency)
 
+    // ----- Cloudinary: delete old image if a NEW cover was uploaded -----
+    if (body.coverImagePublicId && existingBook.coverImagePublicId &&
+        body.coverImagePublicId !== existingBook.coverImagePublicId) {
+      // Non-blocking: fire and forget (don't delay the response)
+      deleteImage(existingBook.coverImagePublicId).catch((err: unknown) =>
+        console.error('[Cloudinary] Failed to delete old cover:', err)
+      )
+    }
+
     const book = await prisma.book.update({
       where: { slug },
       data: updateData
     })
-    
+
+    // ISR: revalidate the book detail page and the books listing page
+    revalidatePath(`/books/${book.slug}`)
+    revalidatePath('/books')
+    revalidatePath('/')
+
     return NextResponse.json({
       success: true,
       data: book,
@@ -125,7 +141,18 @@ export async function DELETE(
     await prisma.book.delete({
       where: { slug }
     })
-    
+
+    // ----- Cloudinary: delete cover image from storage -----
+    if (existingBook.coverImagePublicId) {
+      deleteImage(existingBook.coverImagePublicId).catch((err: unknown) =>
+        console.error('[Cloudinary] Failed to delete image on book delete:', err)
+      )
+    }
+
+    // ISR: revalidate listing and home pages
+    revalidatePath('/books')
+    revalidatePath('/')
+
     return NextResponse.json({ success: true, message: 'Book deleted completely' })
   } catch (error) {
     console.error('Error deleting book:', error)

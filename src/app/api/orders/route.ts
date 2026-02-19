@@ -4,6 +4,8 @@ import { sendOrderConfirmation } from '@/lib/email'
 import { hash } from 'bcryptjs'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 interface OrderItemInput {
   bookId: string
@@ -23,6 +25,22 @@ function generateOrderNumber() {
 
 export async function POST(request: NextRequest) {
   try {
+    // --- RATE LIMITING (Supabase best practice: protect DB from connection exhaustion) ---
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(ip, 'orders/create', { limit: 5, windowSecs: 60 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ತುಂಬಾ ಹೆಚ್ಚು ವಿನಂತಿಗಳು. ದಯವಿಟ್ಟು ಒಂದು ನಿಮಿಷ ಕಾಯಿರಿ.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rateCheck.resetAt.getTime() - Date.now()) / 1000).toString(),
+            'X-RateLimit-Remaining': '0',
+          }
+        }
+      )
+    }
+
     const body = await request.json()
     const { customer, shipping, items, totals, couponCode, notes, createAccount, password } = body
 
