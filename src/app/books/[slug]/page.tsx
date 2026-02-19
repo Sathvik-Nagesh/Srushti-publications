@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import prisma from '@/lib/prisma'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -20,12 +20,15 @@ import {
 } from 'lucide-react'
 
 // Dynamic import for heavy client components
-const BookReviews = dynamic(() => import('@/components/BookReviews'), {
+const BookReviews = dynamicImport(() => import('@/components/BookReviews'), {
   loading: () => <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-xl)' }} />
 })
 
-// Enable ISR: Revalidate book detail page every hour
-export const revalidate = 3600
+// The root layout uses next-intl which reads cookies() for locale detection.
+// This makes the entire page tree dynamic — we cannot use ISR (revalidate)
+// alongside dynamic cookie reads in a parent layout.
+// force-dynamic = server-render on every request (still fast via Vercel Edge).
+export const dynamic = 'force-dynamic'
 
 // Generate static params for the most popular books to speed up build and initial hits
 export async function generateStaticParams() {
