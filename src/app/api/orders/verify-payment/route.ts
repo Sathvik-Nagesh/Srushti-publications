@@ -52,6 +52,16 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    // Sentinel: Verify that the payment corresponds to this specific order
+    // This prevents reuse of valid payment signatures from other orders (IDOR/Replay Attack)
+    if (!order.razorpayOrderId || order.razorpayOrderId !== razorpay_order_id) {
+      console.error(`Payment verification mismatch: Order ${orderNumber} expects ${order.razorpayOrderId}, got ${razorpay_order_id}`)
+      return NextResponse.json(
+        { success: false, error: 'Invalid payment verification details' },
+        { status: 400 }
+      )
+    }
     
     // Update order status
     const updatedOrder = await prisma.order.update({
