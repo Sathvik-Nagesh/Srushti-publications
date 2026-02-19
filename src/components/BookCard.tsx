@@ -93,7 +93,9 @@ function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
             style={{ 
-              objectFit: 'cover',
+              objectFit: 'contain',
+              objectPosition: 'center',
+              background: '#f8f5ef',
             }}
           />
         </Link>

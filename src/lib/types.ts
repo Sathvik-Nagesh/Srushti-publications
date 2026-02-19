@@ -8,9 +8,10 @@ export interface Book {
   slug: string
   author: string
   authorEn?: string | null
-  description: string
+  description?: string | null
   descriptionEn?: string | null
-  coverImage: string
+  coverImage?: string | null
+  coverImagePublicId?: string | null
   additionalImages: string[]
   mrp: number
   sellingPrice: number

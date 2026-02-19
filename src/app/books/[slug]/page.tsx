@@ -60,11 +60,11 @@ export async function generateMetadata(
 
   return {
     title: `${book.title} by ${book.author} | Srushti Publications`,
-    description: book.description.substring(0, 160),
+    description: (book.description || '').substring(0, 160),
     openGraph: {
       title: book.title,
-      description: book.description.substring(0, 160),
-      images: [book.coverImage],
+      description: (book.description || '').substring(0, 160),
+      images: book.coverImage ? [book.coverImage] : [],
       type: 'book',
     },
   }

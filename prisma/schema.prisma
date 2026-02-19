@@ -37,9 +37,10 @@ model Book {
   slug            String   @unique
   author          String   // Author name in Kannada
   authorEn        String?  // Optional English author name
-  description     String   @db.Text // Full Kannada description
+  description     String?  @db.Text // Full Kannada description
   descriptionEn   String?  @db.Text // Optional English description
-  coverImage      String   // Cover image URL
+  coverImage      String?  // Cover image URL (optional to allow saving without image)
+  coverImagePublicId String? // Cloudinary public ID for image deletion
   additionalImages String[] // Array of additional image URLs
   
   // Pricing

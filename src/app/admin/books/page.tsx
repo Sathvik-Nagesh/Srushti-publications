@@ -60,11 +60,12 @@ export default function AdminBooksPage() {
       const params = new URLSearchParams()
       params.set('page', page.toString())
       params.set('limit', '20')
-      params.set('includeInactive', 'true') // Admin sees all books including inactive
       if (searchQuery) params.set('search', searchQuery)
       if (filterCategory) params.set('categoryId', filterCategory)
 
-      const res = await fetch(`/api/books?${params.toString()}`)
+      // Use admin endpoint - returns all books including inactive, with auth
+      const res = await fetch(`/api/admin/books?${params.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       
       if (data.success) {

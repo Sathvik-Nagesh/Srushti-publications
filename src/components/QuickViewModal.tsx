@@ -25,7 +25,7 @@ export default function QuickViewModal({ book, onClose }: QuickViewModalProps) {
   const isOutOfStock = book.stockQuantity <= 0
   const isLowStock = book.stockQuantity > 0 && book.stockQuantity <= 5
   
-  const allImages = [book.coverImage, ...(book.additionalImages || [])].filter(Boolean)
+  const allImages = [book.coverImage, ...(book.additionalImages || [])].filter((img): img is string => Boolean(img))
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

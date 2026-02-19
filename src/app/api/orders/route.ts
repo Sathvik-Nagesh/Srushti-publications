@@ -277,10 +277,26 @@ export async function POST(request: NextRequest) {
       orderNumber: finalOrder.orderNumber
     }, { status: 201 })
 
-  } catch (error: any) {
-    console.error('Order Creation Error:', error)
+  } catch (error: unknown) {
+    // Log full error details SERVER-SIDE only
+    if (error instanceof Error) {
+      console.error('[API][orders/create] Error:', error.message, error.stack)
+      // Only pass through if it's a known validation error we control (e.g. stock check)
+      const isKnownError = error.message.startsWith('ಸ್ಟಾಕ್') ||
+        error.message.startsWith('Invalid') ||
+        error.message.startsWith('Missing')
+      if (isKnownError) {
+        return NextResponse.json(
+          { success: false, error: error.message },
+          { status: 400 }
+        )
+      }
+    } else {
+      console.error('[API][orders/create] Unknown error:', error)
+    }
+    // Generic error for client - never expose internal details
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create order' },
+      { success: false, error: 'ಆರ್ಡರ್ ರಚಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.' },
       { status: 500 }
     )
   }

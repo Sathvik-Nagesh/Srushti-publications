@@ -42,7 +42,9 @@ export default function BookImage({ src, alt, className }: BookImageProps) {
         fill
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         style={{ 
-          objectFit: 'cover',
+          objectFit: 'contain',
+          objectPosition: 'center',
+          background: '#f8f5ef',
         }}
         onError={() => setError(true)}
       />
