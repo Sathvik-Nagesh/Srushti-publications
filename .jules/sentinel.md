@@ -63,3 +63,8 @@
 **Vulnerability:** The `/api/orders/verify-payment` endpoint verified Razorpay signatures based on the request body but failed to verify that the `razorpay_order_id` in the request matched the one associated with the order in the database. This allowed attackers to use valid payment signatures from cheaper orders to mark expensive orders as paid.
 **Learning:** Signature verification alone proves the payment is valid, but not that it belongs to the *intended* order. Always verify the link between the payment gateway's order ID and your internal order record.
 **Prevention:** In payment verification webhooks or callbacks, strictly validate that the gateway's order ID matches the stored `razorpayOrderId` for the specific internal order before updating its status.
+
+## 2025-02-25 - Critical: Unprotected Admin Offer Management
+**Vulnerability:** The `/api/admin/offers` endpoint lacked authentication checks in both GET and POST handlers, relying solely on path-based middleware which is a single point of failure. This allowed unauthorized users to create coupons and view internal offer metrics.
+**Learning:** Middleware protections for API routes are insufficient as a sole defense. If middleware is misconfigured or bypassed, routes become publicly accessible.
+**Prevention:** Explicitly call `verifyAdminSession(request)` at the start of every admin API route handler. This provides defense-in-depth.

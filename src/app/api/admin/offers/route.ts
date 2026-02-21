@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/admin/offers - Get all offers
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const offers = await prisma.offer.findMany({
       orderBy: { createdAt: 'desc' }
@@ -23,6 +31,13 @@ export async function GET() {
 
 // POST /api/admin/offers - Create new offer
 export async function POST(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json()
     
