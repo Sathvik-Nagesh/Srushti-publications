@@ -116,11 +116,11 @@ export default function RefundPolicyPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                     <Mail size={16} style={{ color: 'var(--color-primary)' }} />
-                    <a href="mailto:returns@srushtipublication.com" style={{ color: 'var(--color-primary)' }}>returns@srushtipublication.com</a>
+                    <a href="mailto:srushtinagesh@gmail.com" style={{ color: 'var(--color-primary)' }}>srushtinagesh@gmail.com</a>
                   </p>
                   <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                     <Phone size={16} style={{ color: 'var(--color-primary)' }} />
-                    <a href="tel:+919876543210" style={{ color: 'var(--color-primary)' }}>+91 98765 43210</a>
+                    <a href="tel:+919845096668" style={{ color: 'var(--color-primary)' }}>+91 98450 96668</a>
                   </p>
                 </div>
               </section>

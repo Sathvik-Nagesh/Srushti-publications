@@ -23,7 +23,7 @@ export const getSiteSettings = cache(async () => {
       email: 'srushtinagesh@gmail.com',
       phone: '+91 98450 96668',
       whatsapp: '+91 98450 96668',
-      address: '123, 4ನೇ ಮುಖ್ಯ ರಸ್ತೆ, ಜಯನಗರ, ಬೆಂಗಳೂರು - 560041',
+      address: '121, 13th Main Rd, MC Layout, Vijayanagar, Bengaluru, Karnataka 560040',
       gstNumber: '',
       freeShippingMin: 500,
       defaultShipping: 50,
@@ -43,7 +43,7 @@ export const getSiteSettings = cache(async () => {
       saleTimerEnabled: false,
       socialProofEnabled: true,
       socialProofInterval: 15000,
-      whatsappNumber: '919876543210',
+      whatsappNumber: '919845096668',
       whatsappMessage: 'ನಮಸ್ಕಾರ',
       statsBooks: '200+',
       statsAuthors: '50+'

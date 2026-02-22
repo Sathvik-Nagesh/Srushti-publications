@@ -53,7 +53,7 @@ const emailHeader = (icon: string, heading: string, subheading: string, color = 
 
 const emailFooter = () => `
 <div style="background: #f8f9fa; padding: 28px 40px; border-radius: 0 0 16px 16px; text-align: center; border-top: 1px solid #e5e7eb;">
-  <p style="margin: 0 0 6px 0; font-size: 13px; color: #6b7280;">ಸಂಪರ್ಕ: <a href="mailto:support@srushtipublications.com" style="color: #d97706; text-decoration: none;">support@srushtipublications.com</a></p>
+  <p style="margin: 0 0 6px 0; font-size: 13px; color: #6b7280;">ಸಂಪರ್ಕ: <a href="mailto:srushtinagesh@gmail.com" style="color: #d97706; text-decoration: none;">srushtinagesh@gmail.com</a> | 📞 +91 98450 96668</p>
   <p style="margin: 0; font-size: 12px; color: #9ca3af;">© ${new Date().getFullYear()} ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್. ಎಲ್ಲಾ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.</p>
 </div>`
 

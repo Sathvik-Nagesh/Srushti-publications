@@ -63,7 +63,7 @@ const defaultSettings: SiteSettings = {
   socialProofEnabled: true,
   socialProofInterval: 15000,
   
-  whatsappNumber: '919876543210',
+  whatsappNumber: '919845096668',
   whatsappMessage: 'ನಮಸ್ಕಾರ, ನನಗೆ ಪುಸ್ತಕಗಳ ಬಗ್ಗೆ ಮಾಹಿತಿ ಬೇಕು.',
   
   footerDescription: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳ ಪ್ರಕಾಶನ ಮತ್ತು ಮಾರಾಟ.',
@@ -539,7 +539,7 @@ export default function SiteConfigPage() {
                   value={settings.whatsappNumber}
                   onChange={handleInputChange}
                   className="input"
-                  placeholder="919876543210"
+                  placeholder="919845096668"
                 />
                 <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
                   ದೇಶದ ಕೋಡ್ ಸೇರಿಸಿ (ಉದಾ: 91 for India)

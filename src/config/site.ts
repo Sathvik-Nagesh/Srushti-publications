@@ -13,7 +13,7 @@ export const siteConfig = {
     phone: '+91 98450 96668', 
     phoneDisplay: '+91 98450 96668', // Format for display
     whatsapp: '919845096668', // Format for API links (no spaces or +)
-    address: '121, 13ನೇ ಮುಖ್ಯ ರಸ್ತೆ,ಎಂ.ಸಿ. ಲೇಔಟ್ ವಿಜಯನಗರ, ಬೆಂಗಳೂರು - 560040', // Update with your real address
+    address: '121, 13th Main Rd, MC Layout, Vijayanagar, Bengaluru, Karnataka 560040',
     mapLink: 'https://maps.app.goo.gl/RNdifVqyLB6HvLrq7', // Update with your real Google Maps link
   },
 

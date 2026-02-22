@@ -34,7 +34,7 @@ export default function DynamicHero() {
         marginTop: '-0.5rem',
         marginBottom: '0.5rem'
       }}>
-        Buy Kannada books online — translated literature, educational books &amp; children&apos;s books. Free shipping on ₹500+
+        Buy Kannada books online — world-renowned international books translated into Kannada. Only Srushti Publications originals. Free shipping on ₹500+
       </p>
       <div className="hero-actions">
         <Link href={hero.buttonLink} className="btn btn-primary btn-lg">

@@ -71,12 +71,17 @@ export default function Header() {
             <span className="logo-text hide-mobile">{siteConfig.name}</span>
           </Link>
           
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - uses next-intl translations */}
           <nav className={`nav ${isMenuOpen ? 'open' : ''}`}>
-            {siteConfig.nav.main.map((link) => (
+            {[
+              { key: 'home', href: '/' },
+              { key: 'books', href: '/books' },
+              { key: 'categories', href: '/categories' },
+              { key: 'about', href: '/about' },
+              { key: 'contact', href: '/contact' },
+            ].map((link) => (
                <Link key={link.href} href={link.href} className="nav-link" onClick={() => setIsMenuOpen(false)}>
-                 {/* Fallback to translation key if needed, but config uses direct text now */}
-                 {link.name}
+                 {t(link.key)}
                </Link>
             ))}
           </nav>

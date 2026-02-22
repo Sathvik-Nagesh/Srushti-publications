@@ -196,9 +196,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32' },
-      { url: '/logo.jpg', sizes: '192x192', type: 'image/jpeg' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
     ],
-    apple: { url: '/logo.jpg', sizes: '180x180' },
+    apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
   },
   alternates: {
     canonical: BASE_URL,

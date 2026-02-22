@@ -254,13 +254,14 @@ export default async function HomePage() {
                 About Srushti Publications | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ ಬಗ್ಗೆ
               </h2>
               <p style={{ color: 'var(--color-text-light)', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>
-                <strong>Srushti Publications</strong> is a trusted Kannada book publisher based in Bengaluru, Karnataka, India. 
-                Since 2010, we have been publishing high-quality Kannada translated literature, educational books, children's books, 
-                and examination guides. With over 200 titles and 50+ authors, we serve thousands of readers across India.
+                <strong>Srushti Publications</strong> is a leading Kannada publishing house based in Bengaluru, Karnataka, specializing in 
+                translating world-renowned international books into Kannada. We bring the best of global literature — bestselling novels, 
+                influential non-fiction, and acclaimed works — to Kannada readers. Every book on this store is a Srushti Publications original, 
+                ensuring premium quality printing and authentic translations by expert Kannada translators.
               </p>
               <p style={{ color: 'var(--color-text-light)', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>
-                <strong>ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</strong> ಬೆಂಗಳೂರಿನ ವಿಶ್ವಾಸಾರ್ಹ ಕನ್ನಡ ಪುಸ್ತಕ ಪ್ರಕಾಶಕರು. 
-                2010 ರಿಂದ ಗುಣಮಟ್ಟದ ಕನ್ನಡ ಅನುವಾದ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಪುಸ್ತಕಗಳು, ಮಕ್ಕಳ ಪುಸ್ತಕಗಳನ್ನು ಪ್ರಕಟಿಸುತ್ತಿದ್ದೇವೆ. 
+                <strong>ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</strong> ಬೆಂಗಳೂರಿನ ಪ್ರಮುಖ ಕನ್ನಡ ಪ್ರಕಾಶನ ಸಂಸ್ಥೆ. 
+                ವಿಶ್ವಪ್ರಸಿದ್ಧ ಅಂತಾರಾಷ್ಟ್ರೀಯ ಪುಸ್ತಕಗಳನ್ನು ಕನ್ನಡಕ್ಕೆ ಅನುವಾದಿಸುವುದರಲ್ಲಿ ನಾವು ವಿಶೇಷತೆ ಹೊಂದಿದ್ದೇವೆ.
                 ₹500 ಮೇಲಿನ ಆರ್ಡರ್‌ಗಳಿಗೆ ಉಚಿತ ಶಿಪ್ಪಿಂಗ್.
               </p>
               <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>

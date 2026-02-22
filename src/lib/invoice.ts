@@ -151,6 +151,7 @@ export function generateInvoiceHTML(data: InvoiceData): string {
     <div class="header">
       <div>
         <div class="logo">
+          <img src="https://srushtipublications.com/logo.jpg" alt="Srushti Publications" style="width: 60px; height: auto; border-radius: 8px; margin-bottom: 8px;" />
           <span class="logo-kannada">ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</span>
         </div>
         <div style="font-size: 14px; margin-top: 5px;">Srushti Publications</div>
@@ -352,10 +353,10 @@ export function prepareInvoiceData(order: {
     orderNumber: order.orderNumber,
     
     sellerName: 'Srushti Publications',
-    sellerAddress: 'Bangalore, Karnataka, India - 560001',
+    sellerAddress: '121, 13th Main Rd, MC Layout, Vijayanagar, Bengaluru, Karnataka 560040',
     sellerGstin: process.env.GST_NUMBER || '29XXXXX1234X1Z5',
-    sellerPhone: '+91 XXXXXXXXXX',
-    sellerEmail: 'support@srushtipublications.com',
+    sellerPhone: '+91 98450 96668',
+    sellerEmail: 'srushtinagesh@gmail.com',
     
     buyerName: order.customerName,
     buyerAddress: `${order.shippingAddress}, ${order.shippingCity} - ${order.shippingPincode}`,
