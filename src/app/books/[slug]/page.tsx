@@ -30,6 +30,8 @@ const BookReviews = dynamicImport(() => import('@/components/BookReviews'), {
 // force-dynamic = server-render on every request (still fast via Vercel Edge).
 export const dynamic = 'force-dynamic'
 
+const BASE_URL = 'https://srushtipublications.com'
+
 // Generate static params for the most popular books to speed up build and initial hits
 export async function generateStaticParams() {
   const books = await prisma.book.findMany({
@@ -61,14 +63,42 @@ export async function generateMetadata(
     }
   }
 
+  const description = (book.description || `Buy ${book.title} by ${book.author} online at Srushti Publications. Authentic Kannada book with fast delivery across India.`).substring(0, 160)
+
   return {
-    title: `${book.title} by ${book.author} | Srushti Publications`,
-    description: (book.description || '').substring(0, 160),
+    title: `${book.title} by ${book.author} | Buy Online`,
+    description,
+    alternates: {
+      canonical: `${BASE_URL}/books/${slug}`,
+    },
     openGraph: {
-      title: book.title,
-      description: (book.description || '').substring(0, 160),
-      images: book.coverImage ? [book.coverImage] : [],
+      title: `${book.title} by ${book.author} – Srushti Publications`,
+      description,
+      url: `${BASE_URL}/books/${slug}`,
       type: 'book',
+      images: book.coverImage
+        ? [
+            {
+              url: book.coverImage,
+              width: 600,
+              height: 800,
+              alt: `${book.title} - Kannada Book by ${book.author}`,
+            },
+          ]
+        : [
+            {
+              url: `${BASE_URL}/logo.jpg`,
+              width: 512,
+              height: 512,
+              alt: 'Srushti Publications',
+            },
+          ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${book.title} by ${book.author}`,
+      description,
+      images: book.coverImage ? [book.coverImage] : [`${BASE_URL}/logo.jpg`],
     },
   }
 }

@@ -13,6 +13,9 @@ export default function DynamicHero() {
         {hero.tagline}
       </span>
       <h1 className="hero-title">
+        <span style={{ display: 'block', fontSize: '0.5em', fontWeight: 500, opacity: 0.85, marginBottom: '0.25rem', letterSpacing: '0.05em' }}>
+          Srushti Publications
+        </span>
         {hero.title.includes('ಪಬ್ಲಿಕೇಷನ್ಸ್') ? (
           <>
             {hero.title.split('ಪಬ್ಲಿಕೇಷನ್ಸ್')[0]}
@@ -24,6 +27,14 @@ export default function DynamicHero() {
       </h1>
       <p className="hero-description">
         {hero.description}
+      </p>
+      <p style={{ 
+        fontSize: '0.95rem', 
+        color: 'var(--color-text-light)', 
+        marginTop: '-0.5rem',
+        marginBottom: '0.5rem'
+      }}>
+        Buy Kannada books online — translated literature, educational books &amp; children&apos;s books. Free shipping on ₹500+
       </p>
       <div className="hero-actions">
         <Link href={hero.buttonLink} className="btn btn-primary btn-lg">

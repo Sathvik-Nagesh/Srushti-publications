@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://srushtipublications.com'
+  const baseUrl = 'https://srushtipublications.com'
   
   return {
     rules: [
@@ -13,8 +13,16 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/checkout',
           '/order-confirmation',
+          '/order-success',
           '/wishlist',
-          '/_next/',
+          '/account',
+          '/login',
+          '/register',
+          '/forgot-password',
+          '/reset-password',
+          '/cart',
+          '/compare',
+          '/offline',
         ]
       },
       {
@@ -23,6 +31,10 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/admin/',
           '/api/',
+          '/checkout',
+          '/order-confirmation',
+          '/order-success',
+          '/account',
         ]
       }
     ],

@@ -243,6 +243,34 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+        {/* SEO: About Srushti Publications Section */}
+        <section className="section" style={{
+          background: 'white',
+          borderTop: '1px solid var(--color-border)'
+        }}>
+          <div className="container">
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
+                About Srushti Publications | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ ಬಗ್ಗೆ
+              </h2>
+              <p style={{ color: 'var(--color-text-light)', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>
+                <strong>Srushti Publications</strong> is a trusted Kannada book publisher based in Bengaluru, Karnataka, India. 
+                Since 2010, we have been publishing high-quality Kannada translated literature, educational books, children's books, 
+                and examination guides. With over 200 titles and 50+ authors, we serve thousands of readers across India.
+              </p>
+              <p style={{ color: 'var(--color-text-light)', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>
+                <strong>ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</strong> ಬೆಂಗಳೂರಿನ ವಿಶ್ವಾಸಾರ್ಹ ಕನ್ನಡ ಪುಸ್ತಕ ಪ್ರಕಾಶಕರು. 
+                2010 ರಿಂದ ಗುಣಮಟ್ಟದ ಕನ್ನಡ ಅನುವಾದ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಪುಸ್ತಕಗಳು, ಮಕ್ಕಳ ಪುಸ್ತಕಗಳನ್ನು ಪ್ರಕಟಿಸುತ್ತಿದ್ದೇವೆ. 
+                ₹500 ಮೇಲಿನ ಆರ್ಡರ್‌ಗಳಿಗೆ ಉಚಿತ ಶಿಪ್ಪಿಂಗ್.
+              </p>
+              <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+                <Link href="/about" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  Learn More About Us | ನಮ್ಮ ಬಗ್ಗೆ ಇನ್ನಷ್ಟು <ArrowRight size={18} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       
       <Footer />

@@ -12,6 +12,7 @@ import ErrorBoundaryWrapper from '@/components/ErrorBoundaryWrapper'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ServiceWorkerProvider } from '@/lib/hooks/useServiceWorker'
 import { Noto_Sans_Kannada } from 'next/font/google'
+import { siteConfig } from '@/config/site'
 
 const notoSansKannada = Noto_Sans_Kannada({
   subsets: ['latin', 'kannada'],
@@ -22,51 +23,226 @@ const notoSansKannada = Noto_Sans_Kannada({
 
 import './globals.css'
 
-const jsonLd = {
+const BASE_URL = 'https://srushtipublications.com'
+
+// ─── Structured Data: Organization ─────────────────────────────────────────
+const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
+  '@id': `${BASE_URL}/#organization`,
   name: 'Srushti Publications',
-  url: 'https://srushtipublications.com',
-  logo: 'https://srushtipublications.com/logo.jpg',
-  contactPoint: {
-    '@type': 'ContactPoint',
-    telephone: '+91-9876543210',
-    contactType: 'customer service',
-    areaServed: 'IN',
-    availableLanguage: ['en', 'kn']
+  alternateName: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+  url: BASE_URL,
+  logo: {
+    '@type': 'ImageObject',
+    url: `${BASE_URL}/logo.jpg`,
+    width: 512,
+    height: 512,
+  },
+  description: 'Srushti Publications is a leading Kannada book publisher offering translated literature, educational books, and children\'s books online. Serving readers across India since 2010.',
+  foundingDate: '2010',
+  founder: {
+    '@type': 'Person',
+    name: 'Nagesh',
+  },
+  contactPoint: [
+    {
+      '@type': 'ContactPoint',
+      telephone: siteConfig.contact.phone,
+      contactType: 'customer service',
+      areaServed: 'IN',
+      availableLanguage: ['en', 'kn'],
+    },
+    {
+      '@type': 'ContactPoint',
+      telephone: siteConfig.contact.phone,
+      contactType: 'sales',
+      areaServed: 'IN',
+      availableLanguage: ['en', 'kn'],
+    }
+  ],
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '121, 13th Main Road, M.C. Layout',
+    addressLocality: 'Vijayanagar, Bengaluru',
+    addressRegion: 'Karnataka',
+    postalCode: '560040',
+    addressCountry: 'IN',
   },
   sameAs: [
-    'https://facebook.com/srushtipublications',
-    'https://instagram.com/srushtipublications'
-  ]
+    siteConfig.social.facebook,
+    siteConfig.social.instagram,
+  ].filter(Boolean),
+}
+
+// ─── Structured Data: LocalBusiness ─────────────────────────────────────────
+const localBusinessJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Store',
+  '@id': `${BASE_URL}/#localbusiness`,
+  name: 'Srushti Publications',
+  alternateName: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+  image: `${BASE_URL}/logo.jpg`,
+  url: BASE_URL,
+  telephone: siteConfig.contact.phone,
+  email: siteConfig.contact.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '121, 13th Main Road, M.C. Layout',
+    addressLocality: 'Vijayanagar, Bengaluru',
+    addressRegion: 'Karnataka',
+    postalCode: '560040',
+    addressCountry: 'IN',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 12.9716,
+    longitude: 77.5946,
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    opens: '10:00',
+    closes: '18:00',
+  },
+  priceRange: '₹',
+  servesCuisine: undefined,
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Kannada Books',
+    itemListElement: [
+      {
+        '@type': 'OfferCatalog',
+        name: 'Translated Literature',
+      },
+      {
+        '@type': 'OfferCatalog',
+        name: 'Educational Books',
+      },
+      {
+        '@type': 'OfferCatalog',
+        name: "Children's Books",
+      }
+    ]
+  }
+}
+
+// ─── Structured Data: WebSite with SearchAction ─────────────────────────────
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${BASE_URL}/#website`,
+  name: 'Srushti Publications',
+  alternateName: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+  url: BASE_URL,
+  publisher: {
+    '@id': `${BASE_URL}/#organization`,
+  },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${BASE_URL}/search?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+  inLanguage: ['kn', 'en'],
+}
+
+// ─── Structured Data: WebPage (homepage) ────────────────────────────────────
+const webPageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': `${BASE_URL}/#webpage`,
+  url: BASE_URL,
+  name: 'Srushti Publications – Buy Kannada Books Online | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+  description: 'Buy Kannada books online from Srushti Publications. Browse translated literature, educational books, children\'s books, and more. Free shipping on orders above ₹500. Trusted publisher since 2010.',
+  isPartOf: {
+    '@id': `${BASE_URL}/#website`,
+  },
+  about: {
+    '@id': `${BASE_URL}/#organization`,
+  },
+  inLanguage: ['kn', 'en'],
 }
 
 export const metadata: Metadata = {
-  title: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ | ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ',
-  description: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಖರೀದಿಸಿ. ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ - ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳ ಜಗತ್ತು.',
-  keywords: 'ಕನ್ನಡ ಪುಸ್ತಕಗಳು, kannada books, kannada literature, ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
-  authors: [{ name: 'Srushti Publications' }],
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'Srushti Publications – Buy Kannada Books Online | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+    template: '%s | Srushti Publications',
+  },
+  description:
+    'Buy Kannada books online from Srushti Publications. Browse translated literature, educational books, children\'s books, and more. ಕನ್ನಡ ಪುಸ್ತಕಗಳನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಖರೀದಿಸಿ. Free shipping on orders above ₹500.',
+  keywords: [
+    'Srushti Publications',
+    'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+    'Kannada books',
+    'ಕನ್ನಡ ಪುಸ್ತಕಗಳು',
+    'Kannada literature',
+    'ಕನ್ನಡ ಸಾಹಿತ್ಯ',
+    'buy Kannada books online',
+    'Kannada translated books',
+    'ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳು',
+    'Kannada children books',
+    'Kannada educational books',
+    'Karnataka books',
+    'srushtipublications',
+  ],
+  authors: [{ name: 'Srushti Publications', url: BASE_URL }],
+  creator: 'Srushti Publications',
+  publisher: 'Srushti Publications',
   manifest: '/manifest.json',
   icons: {
-    icon: '/logo.jpg',
-    apple: '/logo.jpg'
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/logo.jpg', sizes: '192x192', type: 'image/jpeg' },
+    ],
+    apple: { url: '/logo.jpg', sizes: '180x180' },
+  },
+  alternates: {
+    canonical: BASE_URL,
   },
   openGraph: {
-    title: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ | ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ',
-    description: 'ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಖರೀದಿಸಿ.',
+    title: 'Srushti Publications – Buy Kannada Books Online | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+    description:
+      'Buy Kannada books online. Browse translated literature, educational, and children\'s books. ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು.',
     type: 'website',
     locale: 'kn_IN',
-    siteName: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+    siteName: 'Srushti Publications',
+    url: BASE_URL,
+    images: [
+      {
+        url: `${BASE_URL}/logo.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'Srushti Publications - Kannada Books Online Store',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
-    description: 'ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ',
+    title: 'Srushti Publications – Buy Kannada Books Online',
+    description:
+      'ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ | Buy Kannada translated books, literature, and educational books online.',
+    images: [`${BASE_URL}/logo.jpg`],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
+  verification: {
+    // Add your Google Search Console verification code here
+    // google: 'YOUR_GOOGLE_VERIFICATION_CODE',
+  },
+  category: 'Books & Literature',
 }
 
 export default async function RootLayout({
@@ -85,11 +261,30 @@ export default async function RootLayout({
         {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="dns-prefetch" href="https://api.razorpay.com" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        {/* Preconnect for Google Fonts (used by Next.js font optimization) */}
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
+        {/* Organization structured data */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        {/* LocalBusiness structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
+        {/* WebSite structured data with SearchAction */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        {/* WebPage structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
         />
         {/* Accessibility: Skip to main content link */}
         <SkipToContent />

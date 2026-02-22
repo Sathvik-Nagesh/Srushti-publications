@@ -1,9 +1,27 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import { BookOpen, ChevronRight, Sparkles, GraduationCap, Baby, FileText, MoreHorizontal, MessageCircle, Star } from 'lucide-react'
 import prisma from '@/lib/prisma'
+
+const BASE_URL = 'https://srushtipublications.com'
+
+export const metadata: Metadata = {
+  title: 'Book Categories | ಪುಸ್ತಕ ವಿಭಾಗಗಳು – Srushti Publications',
+  description:
+    'Browse Kannada book categories at Srushti Publications — Literature, Educational, Children\'s Books, Exam Guides, and more. Find the perfect Kannada book for you.',
+  alternates: {
+    canonical: `${BASE_URL}/categories`,
+  },
+  openGraph: {
+    title: 'Book Categories – Srushti Publications',
+    description:
+      'Explore Kannada book categories: Literature, Educational, Children\'s Books, Exam Guides. Browse by category to find your next read.',
+    url: `${BASE_URL}/categories`,
+  },
+}
 
 const iconMap: Record<string, any> = {
   'literature': Sparkles,
