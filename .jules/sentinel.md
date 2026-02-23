@@ -63,3 +63,8 @@
 **Vulnerability:** The `/api/orders/verify-payment` endpoint verified Razorpay signatures based on the request body but failed to verify that the `razorpay_order_id` in the request matched the one associated with the order in the database. This allowed attackers to use valid payment signatures from cheaper orders to mark expensive orders as paid.
 **Learning:** Signature verification alone proves the payment is valid, but not that it belongs to the *intended* order. Always verify the link between the payment gateway's order ID and your internal order record.
 **Prevention:** In payment verification webhooks or callbacks, strictly validate that the gateway's order ID matches the stored `razorpayOrderId` for the specific internal order before updating its status.
+
+## 2025-02-24 - Legacy Auth Code Cleanup
+**Vulnerability:** Found `src/lib/adminAuth.ts` containing hardcoded default credentials ('admin123') and insecure in-memory session storage, completely unused by the active application which uses `src/lib/auth-edge.ts`.
+**Learning:** Legacy or "initial setup" code often gets left behind and can serve as a backdoor or confuse developers.
+**Prevention:** Regularly audit codebase for unused files, especially those matching patterns like `*auth*`, `*secret*`, or `*admin*`. Use tools like `knip` or `ts-prune` to find dead code.
