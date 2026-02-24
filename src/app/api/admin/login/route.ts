@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sign } from '@/lib/auth-edge'
 import prisma from '@/lib/prisma'
-import { verifyPassword, hashPassword, secureCompare } from '@/lib/password'
+import { verifyPassword, hashPassword, secureCompare, verifyDummy } from '@/lib/password'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export async function POST(request: NextRequest) {
@@ -137,15 +137,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Sentinel: Mitigation for Timing Attacks
-    // If user is not found in DB and env auth fails, we must simulate the time taken
-    // by verifyPassword to prevent username enumeration via timing analysis.
-    //
-    // Without this, invalid emails return faster (DB lookup + env check) than
-    // valid emails with wrong passwords (DB lookup + verifyPassword).
-    // verifyPassword does PBKDF2 derivation which is intentionally slow.
-    const DUMMY_HASH = '281460c9a61d6f0a1a27bc928e3c4d82c746b4f5dddf855094dba658358217f5:c201606a0f614674fc5e6c68ba2afdc34da9032a22581c31e5892fcf3cd6e3b15f34bf5348efbad23de4d38f3b6bc02b1d247dd915c29767129c1c900298a4d3'
     if (!adminUser) {
-      await verifyPassword(password, DUMMY_HASH)
+      await verifyDummy(password)
     }
 
     return NextResponse.json(

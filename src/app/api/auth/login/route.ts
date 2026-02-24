@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { verifyPassword, generateSessionToken } from '@/lib/password'
+import { verifyPassword, generateSessionToken, verifyDummy } from '@/lib/password'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // POST /api/auth/login - Customer login
@@ -32,6 +32,8 @@ export async function POST(request: NextRequest) {
     })
 
     if (!customer) {
+      // Sentinel: Prevent timing attacks (user enumeration)
+      await verifyDummy(password)
       return NextResponse.json(
         { success: false, error: 'ತಪ್ಪು ಇ-ಮೇಲ್ ಅಥವಾ ಪಾಸ್ವರ್ಡ್' },
         { status: 401 }

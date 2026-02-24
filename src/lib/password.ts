@@ -229,3 +229,14 @@ export async function verifySessionToken(token: string): Promise<{
     return { valid: false }
   }
 }
+
+// Sentinel: Mitigation for Timing Attacks
+// A pre-calculated hash for a dummy user to simulate the time taken by verifyPassword.
+const DUMMY_HASH = '281460c9a61d6f0a1a27bc928e3c4d82c746b4f5dddf855094dba658358217f5:c201606a0f614674fc5e6c68ba2afdc34da9032a22581c31e5892fcf3cd6e3b15f34bf5348efbad23de4d38f3b6bc02b1d247dd915c29767129c1c900298a4d3'
+
+/**
+ * Verify a password against a dummy hash to prevent timing attacks (user enumeration)
+ */
+export async function verifyDummy(password: string): Promise<boolean> {
+  return verifyPassword(password, DUMMY_HASH)
+}
