@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { sendOrderConfirmation } from '@/lib/email'
 import { hash } from 'bcryptjs'
 import { verifySessionToken } from '@/lib/password'
+import { sign } from '@/lib/auth-edge'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
@@ -311,12 +312,32 @@ export async function POST(request: NextRequest) {
         console.error('Failed to send confirmation email:', err)
     })
 
-    return NextResponse.json({
+    // Sentinel: Create secure session for guest order access
+    const orderPayload = JSON.stringify({
+      orderId: finalOrder.id,
+      orderNumber: finalOrder.orderNumber,
+      exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    })
+    const signature = await sign(orderPayload)
+    const recentOrderToken = `${btoa(orderPayload)}.${signature}`
+
+    const response = NextResponse.json({
       success: true,
       message: 'Order created successfully',
       orderId: finalOrder.id,
       orderNumber: finalOrder.orderNumber
     }, { status: 201 })
+
+    // Set secure, HTTP-only cookie
+    response.cookies.set('recent_order', recentOrderToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24 // 1 day
+    })
+
+    return response
 
   } catch (error: unknown) {
     // Log full error details SERVER-SIDE only
