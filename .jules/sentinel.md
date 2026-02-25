@@ -1,4 +1,4 @@
-# Sentinel's Journal
+# Sentinel Journal
 
 ## 2025-02-12 - Critical: Hardcoded Credentials in Client-Side Code
 **Vulnerability:** Found hardcoded admin email and password in `src/app/admin/login/page.tsx`, a Client Component. This exposed full admin access to anyone viewing the source code.
