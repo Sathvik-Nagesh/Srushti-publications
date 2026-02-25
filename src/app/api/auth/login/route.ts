@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
 
     // Customer might not have password (guest converted)
     if (!customer.passwordHash) {
+      // Sentinel: Prevent timing attacks (user enumeration)
+      await verifyDummy(password)
       return NextResponse.json(
         { success: false, error: 'ಈ ಖಾತೆಗೆ ಪಾಸ್ವರ್ಡ್ ಹೊಂದಿಸಿಲ್ಲ. ಪಾಸ್ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ.' },
         { status: 401 }

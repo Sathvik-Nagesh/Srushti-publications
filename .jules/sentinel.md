@@ -63,3 +63,8 @@
 **Vulnerability:** The `/api/orders/verify-payment` endpoint verified Razorpay signatures based on the request body but failed to verify that the `razorpay_order_id` in the request matched the one associated with the order in the database. This allowed attackers to use valid payment signatures from cheaper orders to mark expensive orders as paid.
 **Learning:** Signature verification alone proves the payment is valid, but not that it belongs to the *intended* order. Always verify the link between the payment gateway's order ID and your internal order record.
 **Prevention:** In payment verification webhooks or callbacks, strictly validate that the gateway's order ID matches the stored `razorpayOrderId` for the specific internal order before updating its status.
+
+## 2026-02-25 - High: User Enumeration via Timing Attack (Guest Accounts)
+**Vulnerability:** The customer login endpoint (`/api/auth/login`) returned immediately if a user existed but had no password (e.g., guest account). This allowed attackers to enumerate guest accounts by measuring response times (~5ms vs ~100ms for normal logins).
+**Learning:** Returning early for specific error conditions (like missing password) without simulating the work of a successful request creates a side-channel leak.
+**Prevention:** Always ensure that all authentication paths (success or failure) take roughly the same amount of time. Use `verifyDummy` to simulate password hashing for invalid or incomplete accounts.
