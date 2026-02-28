@@ -68,3 +68,8 @@
 **Vulnerability:** The customer login endpoint (`/api/auth/login`) returned immediately if a user existed but had no password (e.g., guest account). This allowed attackers to enumerate guest accounts by measuring response times (~5ms vs ~100ms for normal logins).
 **Learning:** Returning early for specific error conditions (like missing password) without simulating the work of a successful request creates a side-channel leak.
 **Prevention:** Always ensure that all authentication paths (success or failure) take roughly the same amount of time. Use `verifyDummy` to simulate password hashing for invalid or incomplete accounts.
+
+## 2025-02-28 - High: User Enumeration via Error Messages
+**Vulnerability:** The `/api/auth/login` endpoint returned specific error messages when an account lacked a password (e.g. "ಈ ಖಾತೆಗೆ ಪಾಸ್ವರ್ಡ್ ಹೊಂದಿಸಿಲ್ಲ. ಪಾಸ್ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ."). This allowed attackers to definitively know if an email address was registered in the database, even though timing mitigations were in place.
+**Learning:** Protecting against timing attacks is insufficient if the application explicitly tells the attacker the user's state through distinct error messages.
+**Prevention:** Always return a generic error message (like "Invalid email or password") for all authentication failures (user not found, incorrect password, account locked/incomplete) to prevent user enumeration.
