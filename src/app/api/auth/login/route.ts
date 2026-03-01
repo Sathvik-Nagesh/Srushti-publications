@@ -44,8 +44,9 @@ export async function POST(request: NextRequest) {
     if (!customer.passwordHash) {
       // Sentinel: Prevent timing attacks (user enumeration)
       await verifyDummy(password)
+      // Sentinel: Use generic error message to prevent user enumeration
       return NextResponse.json(
-        { success: false, error: 'ಈ ಖಾತೆಗೆ ಪಾಸ್ವರ್ಡ್ ಹೊಂದಿಸಿಲ್ಲ. ಪಾಸ್ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ.' },
+        { success: false, error: 'ತಪ್ಪು ಇ-ಮೇಲ್ ಅಥವಾ ಪಾಸ್ವರ್ಡ್' },
         { status: 401 }
       )
     }
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
     const isValid = await verifyPassword(password, customer.passwordHash)
 
     if (!isValid) {
+      // Sentinel: Use generic error message to prevent user enumeration
       return NextResponse.json(
         { success: false, error: 'ತಪ್ಪು ಇ-ಮೇಲ್ ಅಥವಾ ಪಾಸ್ವರ್ಡ್' },
         { status: 401 }
