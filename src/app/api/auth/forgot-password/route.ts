@@ -2,21 +2,39 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { sendPasswordReset } from '@/lib/email'
 import crypto from 'crypto'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { schemas } from '@/lib/sanitization'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
-
-    if (!email) {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`forgot_password:${ip}`, { windowMs: 60 * 60 * 1000, maxRequests: 5 })
+    if (!rateCheck.allowed) {
       return NextResponse.json(
-        { success: false, error: 'ಇಮೇಲ್ ವಿಳಾಸ ಅಗತ್ಯವಿದೆ' },
+        { success: false, error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
+    const body = await request.json()
+    const { email } = body
+
+    // Input Validation using Zod Schema
+    const emailResult = schemas.email.safeParse(email)
+
+    if (!emailResult.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email address' },
         { status: 400 }
       )
     }
 
+    const validEmail = emailResult.data
+
     // Find user
     const customer = await prisma.customer.findUnique({
-      where: { email }
+      where: { email: validEmail }
     })
 
     // Security: Don't reveal if user exists or not, but for UX we often do validation.
@@ -39,8 +57,8 @@ export async function POST(request: NextRequest) {
       })
 
       // Send email
-      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`
-      await sendPasswordReset(email, customer.name, resetLink)
+      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}&email=${encodeURIComponent(validEmail)}`
+      await sendPasswordReset(validEmail, customer.name, resetLink)
     }
 
     return NextResponse.json({
