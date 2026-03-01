@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { hashPassword, generateSessionToken } from '@/lib/password'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // POST /api/auth/create-account - Create account from guest order
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`create_account:${ip}`, { windowMs: 60000, maxRequests: 5 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { email, password, name, phone, orderNumber } = body
 
