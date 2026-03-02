@@ -200,7 +200,7 @@ export default function NewBookPage() {
               folder="books"
               aspectRatio="book"
               label="ಮುಖಪುಟ ಚಿತ್ರ"
-              helpText="ಶಿಫಾರಸು: 600x800 ಪಿಕ್ಸೆಲ್. JPEG, PNG, WebP. ಗರಿಷ್ಠ 5MB."
+              helpText="ಶಿಫಾರಸು: 600x800 ಪಿಕ್ಸೆಲ್. JPEG, PNG, WebP. ಗರಿಷ್ಠ 10MB."
             />
           </div>
 

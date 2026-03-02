@@ -24,7 +24,7 @@ export async function uploadImage(
       folder: `srushti-publications/${folder}`,
       resource_type: 'image',
       transformation: [
-        { width: 800, height: 1200, crop: 'limit' }, // Max dimensions
+        { width: 1200, height: 1800, crop: 'limit' }, // Max dimensions (retina-ready)
         { quality: 'auto', fetch_format: 'auto' }, // Auto-optimize
       ],
     })

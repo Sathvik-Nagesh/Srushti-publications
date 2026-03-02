@@ -289,7 +289,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
               folder="books"
               aspectRatio="book"
               label="ಮುಖಪುಟ ಚಿತ್ರ"
-              helpText="ಶಿಫಾರಸು: 600x800 ಪಿಕ್ಸೆಲ್. JPEG, PNG, WebP. ಗರಿಷ್ಠ 5MB."
+              helpText="ಶಿಫಾರಸು: 600x800 ಪಿಕ್ಸೆಲ್. JPEG, PNG, WebP. ಗರಿಷ್ಠ 10MB."
             />
           </div>
 

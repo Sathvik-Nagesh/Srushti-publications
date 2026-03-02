@@ -1,0 +1,63 @@
+# Srushti Publications - llms.txt
+# This file helps AI language models and agents understand our website.
+# Format: https://llmstxt.org
+
+# About
+> Srushti Publications is a Bengaluru-based Kannada publishing house specializing in translating world-renowned international books into Kannada. We sell exclusively our own original publications.
+
+## Key Facts
+- **Name**: Srushti Publications (ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್)
+- **Founded**: 2010
+- **Location**: 121, 13th Main Rd, MC Layout, Vijayanagar, Bengaluru, Karnataka 560040
+- **Phone**: +91 98450 96668
+- **Email**: srushtinagesh@gmail.com
+- **Website**: https://srushtipublications.com
+
+## What We Do
+Srushti Publications translates and publishes Kannada editions of internationally acclaimed books. We specialize in making global literature accessible to Kannada-speaking readers across India. Every book on this website is a Srushti Publications original — we do not sell third-party books.
+
+## Categories
+- Translated International Literature (ಅನುವಾದಿತ ಅಂತಾರಾಷ್ಟ್ರೀಯ ಸಾಹಿತ್ಯ)
+- Kannada Novels & Fiction
+- Non-Fiction & Self-Help Books in Kannada
+- Educational Books in Kannada
+- Children's Books in Kannada (ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು)
+- History & Biography in Kannada
+
+## Website Sections
+- [Home](https://srushtipublications.com) — Featured books, new releases, bestsellers
+- [All Books](https://srushtipublications.com/books) — Complete catalog
+- [Categories](https://srushtipublications.com/categories) — Books by genre
+- [About Us](https://srushtipublications.com/about) — Our story and mission
+- [Contact](https://srushtipublications.com/contact) — Get in touch
+- [FAQ](https://srushtipublications.com/faq) — Common questions
+- [Shipping Info](https://srushtipublications.com/shipping) — Delivery details
+- [Refund Policy](https://srushtipublications.com/refund) — Returns and refunds
+- [Privacy Policy](https://srushtipublications.com/privacy) — Data practices
+- [Terms & Conditions](https://srushtipublications.com/terms) — Legal terms
+
+## Shopping Information
+- **Free Shipping**: Orders above ₹500 in Karnataka; ₹1000+ for other states
+- **Payment Methods**: UPI, Credit/Debit Card, Net Banking, Cash on Delivery (COD)
+- **Payment Gateway**: Razorpay (secure)
+- **Delivery Time**: 2-3 days Bengaluru, 3-5 days Karnataka, 5-7 days South India, 7-10 days rest of India
+- **Returns**: 7-day return window for damaged/incorrect books
+
+## Ordering
+Customers can:
+1. Browse books at /books or /categories
+2. Add to cart
+3. Register/Login or checkout as guest
+4. Pay securely via Razorpay
+5. Track orders via /track-order
+
+## Technical Details
+- **Platform**: Next.js 15 (App Router)
+- **Language**: Bilingual — Kannada (primary) and English
+- **Currency**: Indian Rupee (INR ₹)
+- **Shipping**: India-wide
+- **GST**: Included in all prices
+
+## Social Media
+- Facebook: https://facebook.com/srushtipublications
+- Instagram: https://instagram.com/srushtipublications

@@ -36,9 +36,27 @@ export default function robots(): MetadataRoute.Robots {
           '/order-success',
           '/account',
         ]
-      }
+      },
+      // Allow AI crawlers to index public content for AI search
+      {
+        userAgent: 'GPTBot',
+        allow: ['/', '/books', '/categories', '/about', '/contact', '/sitemap-page', '/llms.txt'],
+        disallow: ['/admin/', '/api/', '/checkout', '/account'],
+      },
+      {
+        userAgent: 'ClaudeBot',
+        allow: ['/', '/books', '/categories', '/about', '/sitemap-page', '/llms.txt'],
+        disallow: ['/admin/', '/api/'],
+      },
+      {
+        userAgent: 'PerplexityBot',
+        allow: ['/', '/books', '/categories', '/about', '/sitemap-page', '/llms.txt'],
+        disallow: ['/admin/', '/api/'],
+      },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: [
+      `${baseUrl}/sitemap.xml`,
+    ],
     host: baseUrl
   }
 }

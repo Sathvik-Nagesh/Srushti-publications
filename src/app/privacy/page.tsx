@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
               boxShadow: 'var(--shadow-md)'
             }}>
               <p style={{ color: 'var(--color-text-light)', marginBottom: '2rem' }}>
-                ಕೊನೆಯ ನವೀಕರಣ: ಜನವರಿ 2024
+                ಕೊನೆಯ ನವೀಕರಣ: ಮಾರ್ಚ್ 2026
               </p>
 
               {/* Introduction */}

@@ -30,7 +30,7 @@ export default function ImageUpload({
   folder = 'books',
   aspectRatio = 'book',
   label = 'ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
-  helpText = 'JPEG, PNG, WebP ಅಥವಾ GIF. ಗರಿಷ್ಠ 5MB.'
+  helpText = 'JPEG, PNG, WebP ಅಥವಾ GIF. ಗರಿಷ್ಠ 10MB.'
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -56,9 +56,9 @@ export default function ImageUpload({
       return
     }
 
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ. ಗರಿಷ್ಠ 5MB ಅನುಮತಿಸಲಾಗಿದೆ.')
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ. ಗರಿಷ್ಠ 10MB ಅನುಮತಿಸಲಾಗಿದೆ.')
       return
     }
     

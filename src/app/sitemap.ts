@@ -72,6 +72,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.4,
     },
+    {
+      url: `${BASE_URL}/sitemap-page`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8, // High priority — this is the crawl-optimised hub page
+    },
   ]
 
   // Get all active books for the sitemap

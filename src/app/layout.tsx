@@ -11,6 +11,7 @@ import { ScreenReaderAnnouncer } from '@/components/AccessibilityUtils'
 import ErrorBoundaryWrapper from '@/components/ErrorBoundaryWrapper'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ServiceWorkerProvider } from '@/lib/hooks/useServiceWorker'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { Noto_Sans_Kannada } from 'next/font/google'
 import { siteConfig } from '@/config/site'
 
@@ -195,29 +196,35 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
+    shortcut: '/favicon-32x32.png',
     apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    other: [
+      { rel: 'mask-icon', url: '/favicon-32x32.png' },
+    ]
   },
   alternates: {
     canonical: BASE_URL,
   },
   openGraph: {
-    title: 'Srushti Publications – Buy Kannada Books Online | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
+    title: 'Srushti Publications – Buy Kannada Books Online',
     description:
-      'Buy Kannada books online. Browse translated literature, educational, and children\'s books. ಕನ್ನಡ ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು.',
+      'Buy Kannada books online – World-renowned international books translated into Kannada. Novels, non-fiction, and children\'s books. Free shipping on orders above ₹500.',
     type: 'website',
-    locale: 'kn_IN',
+    locale: 'en_IN',
+    alternateLocale: ['kn_IN'],
     siteName: 'Srushti Publications',
     url: BASE_URL,
     images: [
       {
-        url: `${BASE_URL}/logo.jpg`,
+        url: `${BASE_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: 'Srushti Publications - Kannada Books Online Store',
+        alt: 'Srushti Publications - Buy Kannada Books Online',
       },
     ],
   },
@@ -225,8 +232,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Srushti Publications – Buy Kannada Books Online',
     description:
-      'ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಆನ್‌ಲೈನ್ ಮಳಿಗೆ | Buy Kannada translated books, literature, and educational books online.',
-    images: [`${BASE_URL}/logo.jpg`],
+      'Buy Kannada books online – World-renowned international books translated into Kannada. Free shipping on ₹500+.',
+    images: [`${BASE_URL}/og-image.jpg`],
   },
   robots: {
     index: true,
@@ -257,7 +264,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning className={notoSansKannada.variable}>
       <head>
-        <link rel="icon" href="/logo.jpg" />
+        {/* Remove logo.jpg favicon override - use proper favicons from metadata instead */}
         <meta name="theme-color" content="#d97706" />
         {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
@@ -338,6 +345,8 @@ export default async function RootLayout({
           </ScreenReaderAnnouncer>
         </NextIntlClientProvider>
         
+        {/* Google Analytics 4 */}
+        <GoogleAnalytics />
         {/* Vercel Analytics - Only active in production on Vercel */}
         <Analytics />
       </body>

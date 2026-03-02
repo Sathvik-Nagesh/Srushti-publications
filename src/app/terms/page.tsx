@@ -28,7 +28,7 @@ export default function TermsPage() {
         <section className="section">
           <div className="container" style={{ maxWidth: '800px' }}>
             <div style={{ background: 'white', borderRadius: 'var(--radius-xl)', padding: '2.5rem', boxShadow: 'var(--shadow-md)' }}>
-              <p style={{ color: 'var(--color-text-light)', marginBottom: '2rem' }}>ಕೊನೆಯ ನವೀಕರಣ: ಜನವರಿ 2024</p>
+              <p style={{ color: 'var(--color-text-light)', marginBottom: '2rem' }}>ಕೊನೆಯ ನವೀಕರಣ: ಮಾರ್ಚ್ 2026</p>
 
               <section style={{ marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>ಒಪ್ಪಂದದ ಸ್ವೀಕಾರ</h2>
