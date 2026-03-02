@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession, verifySessionToken as verifyGuestToken } from '@/lib/auth-edge'
+import { verifySessionToken as verifyCustomerToken } from '@/lib/password'
+
 
 // GET /api/invoice/[orderNumber] - Generate invoice for order
 export async function GET(
@@ -21,7 +24,52 @@ export async function GET(
         { status: 404 }
       )
     }
-    
+
+    // 🛡️ SECURITY: Authorization Check
+    let authorized = false
+
+    // 1. Admin Access
+    if (await verifyAdminSession(request)) {
+      authorized = true
+    }
+
+    // 2. Customer Access (Owner)
+    if (!authorized) {
+      const customerSession = request.cookies.get('customer_session')?.value
+      if (customerSession) {
+        const tokenData = await verifyCustomerToken(customerSession)
+        if (tokenData.valid) {
+          // Check if customer ID matches or if customer email matches
+          if (
+            (order.customerId && order.customerId === tokenData.userId) ||
+            (tokenData.email && order.customerEmail === tokenData.email)
+          ) {
+            authorized = true
+          }
+        }
+      }
+    }
+
+    // 3. Guest Access (Recent Order Token)
+    if (!authorized) {
+      const recentOrderToken = request.cookies.get('recent_order')?.value
+      if (recentOrderToken) {
+        const payload = await verifyGuestToken(recentOrderToken)
+        if (payload) {
+          if (payload.orderId === order.id || payload.orderNumber === order.orderNumber) {
+            authorized = true
+          }
+        }
+      }
+    }
+
+    if (!authorized) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized access to invoice' },
+        { status: 403 }
+      )
+    }
+
     const invoiceNumber = order.invoiceNumber || `INV-${orderNumber}`
     const orderDate = new Date(order.createdAt).toLocaleDateString('kn-IN', {
       year: 'numeric',
