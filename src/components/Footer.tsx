@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react'
 import { siteConfig } from '@/config/site'
+import ObfuscatedEmail from '@/components/ObfuscatedEmail'
 
 const socialIconStyle: React.CSSProperties = {
   display: 'flex',
@@ -123,10 +124,14 @@ export default function Footer() {
             <h3 className="footer-title">ಸಂಪರ್ಕಿಸಿ</h3>
             <ul className="footer-links">
               <li>
-                <a href={`mailto:${siteConfig.contact.email}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Mail size={16} />
-                  {siteConfig.contact.email}
-                </a>
+                  <ObfuscatedEmail
+                    email={siteConfig.contact.email}
+                    className="footer-link"
+                    style={{ display: 'inline' }}
+                  />
+                </span>
               </li>
               <li>
                 <a href={`tel:${siteConfig.contact.phone.replace(/\s/g,'')}`} className="footer-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -135,16 +140,28 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a 
-                  href={siteConfig.contact.mapLink}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="footer-link" 
-                  style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}
+                <address
+                  itemScope
+                  itemType="https://schema.org/PostalAddress"
+                  style={{ fontStyle: 'normal' }}
                 >
-                  <MapPin size={16} style={{ flexShrink: 0, marginTop: '4px' }} />
-                  {siteConfig.contact.address}
-                </a>
+                  <a
+                    href={siteConfig.contact.mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-link"
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}
+                  >
+                    <MapPin size={16} style={{ flexShrink: 0, marginTop: '4px' }} />
+                    <span>
+                      <span itemProp="streetAddress">121, 13th Main Rd, MC Layout</span>,{' '}
+                      <span itemProp="addressLocality">Vijayanagar, Bengaluru</span>,{' '}
+                      <span itemProp="addressRegion">Karnataka</span>{' '}
+                      <span itemProp="postalCode">560040</span>,{' '}
+                      <span itemProp="addressCountry">India</span>
+                    </span>
+                  </a>
+                </address>
               </li>
             </ul>
           </div>

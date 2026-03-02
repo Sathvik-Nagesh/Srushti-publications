@@ -65,7 +65,7 @@ export default async function SitemapPage() {
             { label: 'Specialization', value: 'Kannada Translations of International Books' },
             { label: 'Location', value: 'Vijayanagar, Bengaluru, Karnataka, India' },
             { label: 'Phone', value: '+91 98450 96668' },
-            { label: 'Email', value: 'srushtinagesh@gmail.com' },
+            { label: 'Email', value: 'Use contact form' },
             { label: 'Languages', value: 'Kannada (ಕನ್ನಡ) & English' },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: '#fef3c7', padding: '1rem', borderRadius: 8, borderLeft: '4px solid #d97706' }}>
@@ -191,7 +191,7 @@ export default async function SitemapPage() {
       {/* Structured data for crawlers */}
       <footer style={{ borderTop: '1px solid #e5e7eb', paddingTop: '2rem', color: '#6b7280', fontSize: '0.875rem' }}>
         <p>© {new Date().getFullYear()} Srushti Publications. All rights reserved.</p>
-        <p>121, 13th Main Rd, MC Layout, Vijayanagar, Bengaluru, Karnataka 560040 | +91 98450 96668 | srushtinagesh@gmail.com</p>
+        <p>121, 13th Main Rd, MC Layout, Vijayanagar, Bengaluru, Karnataka 560040 | +91 98450 96668</p>
         <p style={{ marginTop: '0.5rem' }}>
           <Link href="/sitemap.xml" style={{ color: '#d97706' }}>sitemap.xml</Link>
           {' · '}

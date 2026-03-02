@@ -12,6 +12,7 @@ import ErrorBoundaryWrapper from '@/components/ErrorBoundaryWrapper'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ServiceWorkerProvider } from '@/lib/hooks/useServiceWorker'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import FacebookPixel from '@/components/FacebookPixel'
 import { Noto_Sans_Kannada } from 'next/font/google'
 import { siteConfig } from '@/config/site'
 
@@ -347,6 +348,8 @@ export default async function RootLayout({
         
         {/* Google Analytics 4 */}
         <GoogleAnalytics />
+        {/* Facebook Pixel */}
+        <FacebookPixel />
         {/* Vercel Analytics - Only active in production on Vercel */}
         <Analytics />
       </body>

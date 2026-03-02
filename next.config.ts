@@ -79,6 +79,57 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+
+  // Security + performance headers  
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          // HTTPS enforcement (HSTS)
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          // Prevent MIME type sniffing
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          // Clickjacking protection
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          // XSS protection  
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          // Referrer policy
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          // Permissions policy
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+      // Cache static assets aggressively
+      {
+        source: '/(.*)\\.(png|jpg|jpeg|gif|webp|svg|ico|woff|woff2)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
 };
 
 export default withBundleAnalyzer(withNextIntl(nextConfig));
