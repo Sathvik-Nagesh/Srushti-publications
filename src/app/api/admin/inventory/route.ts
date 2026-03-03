@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/admin/inventory - Get inventory status
 export async function GET(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const filter = searchParams.get('filter') // 'low_stock', 'out_of_stock', 'all'
@@ -92,6 +100,13 @@ export async function GET(request: NextRequest) {
 
 // PATCH /api/admin/inventory - Update stock for a book
 export async function PATCH(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json()
     const { bookId, stockQuantity, lowStockAlert, action, quantity } = body
