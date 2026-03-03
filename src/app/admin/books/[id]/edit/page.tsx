@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Save, BookOpen, Tag, Package, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import ImageUpload from '@/components/ImageUpload'
+import DiscountPanel from '@/components/admin/DiscountPanel'
 
 interface Category { id: string; name: string; nameEn?: string }
 
@@ -358,6 +359,25 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                 <input type="number" name="lowStockAlert" value={formData.lowStockAlert} onChange={handleChange} className="input" placeholder="5" />
               </div>
             </div>
+          </div>
+
+          {/* Discount Panel */}
+          <div style={{ background: 'white', borderRadius: 'var(--radius-xl)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              🏷️ ರಿಯಾಯಿತಿ ನಿರ್ವಹಣೆ
+            </h2>
+            <DiscountPanel
+              mrp={parseFloat(formData.mrp) || 0}
+              sellingPrice={parseFloat(formData.sellingPrice) || 0}
+              isOnSale={formData.isOnSale}
+              onDiscountChange={(newSellingPrice, isOnSale) => {
+                setFormData(prev => ({
+                  ...prev,
+                  sellingPrice: String(newSellingPrice),
+                  isOnSale,
+                }))
+              }}
+            />
           </div>
 
           {/* Book Details */}

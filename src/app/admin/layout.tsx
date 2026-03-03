@@ -15,6 +15,7 @@ import {
   Menu,
   Package,
   TrendingUp,
+  TrendingDown,
   Users,
   FolderOpen,
   Star,
@@ -29,7 +30,8 @@ const navItems = [
   { label: 'ವಿಭಾಗಗಳು', labelEn: 'Categories', href: '/admin/categories', icon: FolderOpen },
   { label: 'ಸ್ಟಾಕ್', labelEn: 'Inventory', href: '/admin/inventory', icon: Boxes },
   { label: 'ವಿಮರ್ಶೆಗಳು', labelEn: 'Reviews', href: '/admin/reviews', icon: Star },
-  { label: 'ರಿಯಾಯಿತಿಗಳು', labelEn: 'Offers', href: '/admin/offers', icon: Tag },
+  { label: 'ರಿಯಾಯಿತಿ', labelEn: 'Offers', href: '/admin/offers', icon: Tag },
+  { label: 'ಪ್ರಮೋಷನ್ಸ್', labelEn: 'Promotions', href: '/admin/promotions', icon: TrendingDown },
   { label: 'ಸೆಟ್ಟಿಂಗ್ಸ್', labelEn: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 

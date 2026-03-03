@@ -91,11 +91,10 @@ function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
             src={book.coverImage || '/placeholder-book.jpg'}
             alt={book.title}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
-            style={{ 
+            sizes="(max-width: 480px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            style={{
               objectFit: 'contain',
               objectPosition: 'center',
-              background: '#f8f5ef',
             }}
           />
         </Link>
@@ -217,41 +216,24 @@ function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
       <div className="card-body">
         {/* Category */}
         {book.category && (
-          <span style={{
-            fontSize: '0.75rem',
-            color: 'var(--color-primary)',
-            fontWeight: 600
-          }}>
+          <span className="book-category">
             {book.category.name}
           </span>
         )}
         
         {/* Title */}
         <Link href={`/books/${book.slug}`} className="block decoration-none">
-          <h3 style={{
-            fontSize: '1rem',
-            fontWeight: 600,
-            color: 'var(--color-text)',
-            marginTop: '0.25rem',
-            marginBottom: '0.25rem',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            lineHeight: 1.4
-          }}>
+          <h3 className="book-title">
             {book.title}
           </h3>
         </Link>
         
         {/* Author */}
-        <p style={{
-          fontSize: '0.875rem',
-          color: 'var(--color-text-light)',
-          marginBottom: '0.75rem'
-        }}>
+        <p className="book-author">
           {book.author}
         </p>
+
+        <div className="card-spacer" />
         
         {/* Price */}
         <div className="price-group">
