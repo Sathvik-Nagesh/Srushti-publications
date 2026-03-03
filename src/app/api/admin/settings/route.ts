@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/admin/settings - Get site settings
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     // Find the first settings record, or create default if none exists
     let settings = await prisma.siteSettings.findFirst()
@@ -39,6 +47,13 @@ export async function GET() {
 
 // PATCH /api/admin/settings - Update settings
 export async function PATCH(request: NextRequest) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json()
     
