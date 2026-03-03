@@ -386,6 +386,7 @@ model Review {
   
   @@index([bookId])
   @@index([isApproved])
+  @@index([bookId, authorEmail], name: "review_book_author_idx")
 }
 
 // ============================================

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { sendOrderConfirmation } from '@/lib/email'
 import { hash } from 'bcryptjs'
 import { verifySessionToken } from '@/lib/password'
 import { sign } from '@/lib/auth-edge'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { sendOrderConfirmation, sendAdminOrderNotification } from '@/lib/email'
 
 interface OrderItemInput {
   bookId: string
@@ -64,7 +64,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { customer, shipping, items, totals, couponCode, notes, createAccount, password } = body
+    const {
+      customer, shipping, items, totals, couponCode, notes,
+      createAccount, password,
+      // paymentMethod from frontend: 'COD' (default) or 'RAZORPAY' / 'ONLINE'
+      paymentMethod: bodyPaymentMethod
+    } = body
+
+    // Determine if this is an online payment order.
+    // For online (Razorpay) orders: confirmation email is sent from verify-payment
+    // AFTER successful payment — NOT here at order creation.
+    const isOnlinePayment = bodyPaymentMethod &&
+      ['RAZORPAY', 'ONLINE', 'razorpay', 'online'].includes(bodyPaymentMethod)
 
     // 1. Basic Validation
     if (!customer || !shipping || !items || items.length === 0 || !totals) {
@@ -205,7 +216,7 @@ export async function POST(request: NextRequest) {
              if (offer) {
                  // Verify limits
                  if (offer.usageLimit && offer.usedCount >= offer.usageLimit) {
-                     // Coupon exhausted - ignore it (or could throw error)
+                     // Coupon exhausted - ignore it
                  } else if (offer.minPurchase && serverSubtotal < offer.minPurchase) {
                      // Min purchase not met - ignore
                  } else {
@@ -252,10 +263,10 @@ export async function POST(request: NextRequest) {
               
               status: 'PENDING',
               paymentStatus: 'PENDING', 
-              paymentMethod: 'COD',
+              paymentMethod: isOnlinePayment ? 'RAZORPAY' : 'COD',
               
               notes: notes,
-              customerId: customerId, // Link the customer
+              customerId: customerId,
               
               items: {
                   create: items.map((item: OrderItemInput) => {
@@ -280,37 +291,49 @@ export async function POST(request: NextRequest) {
         })
     })
 
-    // 4. Send Confirmation Email (Async, don't block response)
-    // We map the database order structure to the email utility's expected format
+    // 4. Send emails — strategy:
+    //    COD orders:    customer confirmation + admin notification sent HERE immediately
+    //    Online orders: emails sent from verify-payment AFTER payment is confirmed
     const emailData = {
-        orderNumber: finalOrder.orderNumber,
-        orderId: finalOrder.id,          // ← so email can build invoice URL
-        customerName: finalOrder.customerName,
-        customerEmail: finalOrder.customerEmail,
-        customerPhone: finalOrder.customerPhone,
-        items: finalOrder.items.map(item => ({
-            title: item.bookTitle,
-            author: item.bookAuthor,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.totalPrice
-        })),
-        subtotal: finalOrder.subtotal,
-        discount: finalOrder.discount,
-        shippingCharge: finalOrder.shippingCharge,
-        taxAmount: finalOrder.taxAmount,
-        totalAmount: finalOrder.totalAmount,
-        shippingAddress: finalOrder.shippingAddress,
-        shippingCity: finalOrder.shippingCity,
-        shippingState: finalOrder.shippingState,
-        shippingPincode: finalOrder.shippingPincode,
-        paymentMethod: finalOrder.paymentMethod || 'COD'
+      orderNumber: finalOrder.orderNumber,
+      orderId: finalOrder.id,
+      customerName: finalOrder.customerName,
+      customerEmail: finalOrder.customerEmail,
+      customerPhone: finalOrder.customerPhone,
+      items: finalOrder.items.map(item => ({
+        title: item.bookTitle,
+        author: item.bookAuthor,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice
+      })),
+      subtotal: finalOrder.subtotal,
+      discount: finalOrder.discount,
+      shippingCharge: finalOrder.shippingCharge,
+      taxAmount: finalOrder.taxAmount,
+      totalAmount: finalOrder.totalAmount,
+      shippingAddress: finalOrder.shippingAddress,
+      shippingCity: finalOrder.shippingCity,
+      shippingState: finalOrder.shippingState,
+      shippingPincode: finalOrder.shippingPincode,
+      paymentMethod: finalOrder.paymentMethod || 'COD'
     }
 
-    // Trigger email send
-    sendOrderConfirmation(emailData).catch(err => {
-        console.error('Failed to send confirmation email:', err)
-    })
+    if (!isOnlinePayment) {
+      // COD: send customer confirmation immediately
+      sendOrderConfirmation(emailData).catch((err: unknown) => {
+        console.error('[orders/create] Customer confirmation email failed:', err)
+      })
+      // COD: send admin notification immediately
+      sendAdminOrderNotification(emailData).catch((err: unknown) => {
+        console.error('[orders/create] Admin notification email failed:', err)
+      })
+    }
+    // For online (Razorpay) orders: emails are sent in verify-payment after payment succeeds
+
+    // Revalidate paths so updated stock/data is reflected
+    revalidatePath('/books')
+    revalidatePath('/')
 
     // Sentinel: Create secure session for guest order access
     const orderPayload = JSON.stringify({

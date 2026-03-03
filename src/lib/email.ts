@@ -260,6 +260,64 @@ const emailTemplates = {
     }
   },
 
+  // ─── Admin Order Notification (English, for internal use) ────────────────
+  adminOrderNotification: (data: OrderEmailData) => {
+    const paymentBadge = (!data.paymentMethod || data.paymentMethod === 'COD')
+      ? `<span style="background:#f59e0b;color:white;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;">COD</span>`
+      : `<span style="background:#10b981;color:white;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;">PAID ONLINE</span>`
+
+    const html = emailWrapper(`
+      ${emailHeader('🔔', 'New Order Received!', `Order #${data.orderNumber} — ₹${data.totalAmount.toFixed(2)}`, '#7c3aed')}
+
+      <div style="background: white; padding: 32px 40px;">
+        <div style="background: #f5f3ff; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-size:11px;color:#7c3aed;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Order Number</div>
+            <div style="font-size:22px;font-weight:700;color:#4c1d95;">#${data.orderNumber}</div>
+          </div>
+          <div>${paymentBadge}</div>
+        </div>
+
+        <h3 style="margin:0 0 12px;font-size:14px;color:#374151;border-bottom:2px solid #f3f4f6;padding-bottom:8px;">👤 Customer Details</h3>
+        <table style="width:100%;margin-bottom:24px;">
+          <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;width:100px;">Name</td><td style="font-size:13px;font-weight:600;">${data.customerName}</td></tr>
+          <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Email</td><td style="font-size:13px;">${data.customerEmail}</td></tr>
+          <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Phone</td><td style="font-size:13px;">${data.customerPhone}</td></tr>
+          <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Address</td><td style="font-size:13px;">${data.shippingAddress}, ${data.shippingCity}, ${data.shippingState} – ${data.shippingPincode}</td></tr>
+        </table>
+
+        <h3 style="margin:0 0 12px;font-size:14px;color:#374151;border-bottom:2px solid #f3f4f6;padding-bottom:8px;">📚 Items Ordered</h3>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+          ${data.items.map(item => `
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px 0;font-size:13px;">${item.title} <span style="color:#9ca3af;">× ${item.quantity}</span></td>
+            <td style="text-align:right;padding:8px 0;font-size:13px;font-weight:600;">₹${item.totalPrice.toFixed(2)}</td>
+          </tr>`).join('')}
+          ${data.discount > 0 ? `<tr><td style="padding:6px 0;font-size:13px;color:#059669;">Discount</td><td style="text-align:right;font-size:13px;color:#059669;">-₹${data.discount.toFixed(2)}</td></tr>` : ''}
+          <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Shipping</td><td style="text-align:right;font-size:13px;">${data.shippingCharge === 0 ? '<span style="color:#059669;">Free</span>' : `₹${data.shippingCharge.toFixed(2)}`}</td></tr>
+          <tr style="border-top:2px solid #e5e7eb;">
+            <td style="padding:12px 0;font-weight:700;font-size:15px;">Total</td>
+            <td style="text-align:right;padding:12px 0;font-weight:700;font-size:20px;color:#7c3aed;">₹${data.totalAmount.toFixed(2)}</td>
+          </tr>
+        </table>
+
+        <div style="text-align:center;">
+          <a href="${APP_URL}/admin/orders" style="display:inline-block;background:#7c3aed;color:white;padding:12px 32px;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">
+            📋 View in Admin Dashboard →
+          </a>
+        </div>
+      </div>
+
+      ${emailFooter()}
+    `)
+
+    return {
+      subject: `🔔 New Order #${data.orderNumber} — ₹${data.totalAmount.toFixed(2)} [${data.paymentMethod || 'COD'}]`,
+      html,
+      text: `New Order Received!\nOrder: #${data.orderNumber}\nCustomer: ${data.customerName} (${data.customerEmail})\nPhone: ${data.customerPhone}\nAddress: ${data.shippingAddress}, ${data.shippingCity} - ${data.shippingPincode}\nTotal: ₹${data.totalAmount.toFixed(2)}\nPayment: ${data.paymentMethod || 'COD'}\n\nView: ${APP_URL}/admin/orders`
+    }
+  },
+
   deliveryConfirmation: (data: { orderNumber: string, customerName: string, customerEmail: string }) => {
     const html = emailWrapper(`
       ${emailHeader('🎉', 'ಡೆಲಿವರಿ ಯಶಸ್ವಿ!', `ಆರ್ಡರ್ #${data.orderNumber} ತಲುಪಿದೆ`, '#059669')}
@@ -299,11 +357,18 @@ const emailTemplates = {
   }
 }
 
-// Log email to database
-async function logEmail(type: string, to: string, subject: string, orderId?: string, templateData?: unknown) {
+// Log email to database — store only minimal data (orderNumber) to keep EmailLog rows small
+async function logEmail(type: string, to: string, subject: string, orderId?: string, orderNumber?: string) {
   try {
     return await prisma.emailLog.create({
-      data: { type, to, subject, orderId, templateData: templateData as any, status: 'pending' }
+      data: {
+        type,
+        to,
+        subject,
+        orderId,
+        templateData: orderNumber ? { orderNumber } : undefined,
+        status: 'pending'
+      }
     })
   } catch (error) {
     console.error('Failed to log email:', error)
@@ -357,10 +422,13 @@ async function sendEmail(to: string, subject: string, html: string, text: string
   }
 }
 
+// The owner/admin email address for all order notifications
+const ADMIN_NOTIFICATION_EMAIL = 'srushtinagesh@gmail.com'
+
 // Public API functions
 export async function sendOrderConfirmation(data: OrderEmailData): Promise<boolean> {
   const template = emailTemplates.orderConfirmation(data)
-  const emailLog = await logEmail('order_confirmation', data.customerEmail, template.subject, undefined, data)
+  const emailLog = await logEmail('order_confirmation', data.customerEmail, template.subject, undefined, data.orderNumber)
   const success = await sendEmail(data.customerEmail, template.subject, template.html, template.text)
   if (emailLog) await updateEmailStatus(emailLog.id, success ? 'sent' : 'failed')
   return success
@@ -368,7 +436,7 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<boole
 
 export async function sendShippingUpdate(data: ShippingUpdateData): Promise<boolean> {
   const template = emailTemplates.shippingUpdate(data)
-  const emailLog = await logEmail('shipping_update', data.customerEmail, template.subject, undefined, data)
+  const emailLog = await logEmail('shipping_update', data.customerEmail, template.subject, undefined, data.orderNumber)
   const success = await sendEmail(data.customerEmail, template.subject, template.html, template.text)
   if (emailLog) await updateEmailStatus(emailLog.id, success ? 'sent' : 'failed')
   return success
@@ -380,15 +448,26 @@ export async function sendPasswordReset(email: string, name: string, resetLink: 
 }
 
 export async function sendDeliveryConfirmation(data: {
-  orderNumber: string,
-  customerName: string,
+  orderNumber: string
+  customerName: string
   customerEmail: string
 }): Promise<boolean> {
   const template = emailTemplates.deliveryConfirmation(data)
-  const emailLog = await logEmail('delivery_confirmation', data.customerEmail, template.subject, undefined, data)
+  const emailLog = await logEmail('delivery_confirmation', data.customerEmail, template.subject, undefined, data.orderNumber)
   const success = await sendEmail(data.customerEmail, template.subject, template.html, template.text)
   if (emailLog) await updateEmailStatus(emailLog.id, success ? 'sent' : 'failed')
   return success
+}
+
+/**
+ * Send order received notification to the store owner.
+ * - Fires on every new order (COD: in orders/create, Online: in verify-payment)
+ * - Does NOT write to EmailLog to avoid extra DB writes
+ * - Target: srushtinagesh@gmail.com
+ */
+export async function sendAdminOrderNotification(data: OrderEmailData): Promise<boolean> {
+  const template = emailTemplates.adminOrderNotification(data)
+  return sendEmail(ADMIN_NOTIFICATION_EMAIL, template.subject, template.html, template.text)
 }
 
 export { emailTemplates, logEmail, updateEmailStatus }

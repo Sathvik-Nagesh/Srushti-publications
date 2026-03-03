@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, ...cached, cached: true })
     }
     
-    // Get approved reviews only (for public display)
-    const [reviews, total] = await Promise.all([
+    // Get approved reviews, total count, and rating stats — all in parallel
+    const [reviews, total, allRatings] = await Promise.all([
       prisma.review.findMany({
         where: {
           bookId,
@@ -49,15 +49,13 @@ export async function GET(request: NextRequest) {
       }),
       prisma.review.count({
         where: { bookId, isApproved: true }
+      }),
+      prisma.review.aggregate({
+        where: { bookId, isApproved: true },
+        _avg: { rating: true },
+        _count: { rating: true }
       })
     ])
-    
-    // Calculate average rating
-    const allRatings = await prisma.review.aggregate({
-      where: { bookId, isApproved: true },
-      _avg: { rating: true },
-      _count: { rating: true }
-    })
     
     const result = {
       data: reviews,

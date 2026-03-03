@@ -65,7 +65,10 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
     
-    const existing = await prisma.order.findUnique({ where: { id } })
+    const existing = await prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
+    })
     if (!existing) {
       return NextResponse.json(
         { success: false, error: 'Order not found' },
@@ -73,7 +76,7 @@ export async function PATCH(
       )
     }
     
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     // Update status
     if (body.status) {
@@ -103,8 +106,8 @@ export async function PATCH(
     // Send email notification for dispatch
     if (body.status === 'DISPATCHED' && existing.status !== 'DISPATCHED') {
       try {
-        const courier = updateData.courierName || existing.courierName || 'Courier'
-        const trackingNo = updateData.trackingNumber || existing.trackingNumber || ''
+        const courier = (updateData.courierName as string) || existing.courierName || 'Courier'
+        const trackingNo = (updateData.trackingNumber as string) || existing.trackingNumber || ''
         
         await sendShippingUpdate({
           orderNumber: existing.orderNumber,
@@ -121,19 +124,27 @@ export async function PATCH(
       }
     }
     
-    // If status changed to DELIVERED, update book sales count and send email
+    // If status changed to DELIVERED, update book sales count and send email.
+    // 🛡️ FIX: Only increment salesCount for COD orders here.
+    // For Razorpay (online) orders, salesCount is already incremented inside the
+    // verify-payment atomic transaction. Incrementing again here would cause
+    // double-counting on all paid online orders.
     if (body.status === 'DELIVERED' && existing.status !== 'DELIVERED') {
-      // Update sales counts
-      for (const item of order.items) {
-        await prisma.book.update({
-          where: { id: item.bookId },
-          data: {
-            salesCount: { increment: item.quantity }
-          }
-        })
+      const wasAlreadyPaidOnline = existing.paymentStatus === 'SUCCESS'
+
+      if (!wasAlreadyPaidOnline) {
+        // COD order delivered — increment salesCount now (not done at payment time for COD)
+        await Promise.all(
+          existing.items.map((item) =>
+            prisma.book.update({
+              where: { id: item.bookId },
+              data: { salesCount: { increment: item.quantity } },
+            })
+          )
+        )
       }
       
-      // Send delivery confirmation email
+      // Send delivery confirmation email regardless of payment method
       try {
         await sendDeliveryConfirmation({
           orderNumber: existing.orderNumber,
