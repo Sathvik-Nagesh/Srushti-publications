@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { sendShippingUpdate, sendDeliveryConfirmation } from '@/lib/email'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // Helper to generate tracking URL
 function getTrackingUrl(courier: string, trackingNumber: string): string {
@@ -26,6 +27,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const { id } = await params
     
@@ -61,6 +69,13 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await verifyAdminSession(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   try {
     const { id } = await params
     const body = await request.json()
