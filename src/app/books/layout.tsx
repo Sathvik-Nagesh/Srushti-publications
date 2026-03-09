@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { safeJsonLdStringify } from '@/lib/jsonld'
 
 const BASE_URL = 'https://srushtipublications.com'
 
@@ -54,7 +55,7 @@ export default function BooksLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       {children}
     </>

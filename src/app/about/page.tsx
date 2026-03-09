@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { safeJsonLdStringify } from '@/lib/jsonld'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -56,7 +57,7 @@ export default function AboutPage() {
       {/* Breadcrumb structured data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       <Header />
       <main style={{ minHeight: '100vh' }}>
