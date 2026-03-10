@@ -1,4 +1,5 @@
 import Script from 'next/script'
+import { safeJsonLdStringify } from '@/lib/jsonld'
 
 interface JsonLdProps {
   data: Record<string, unknown> | Record<string, unknown>[]
@@ -18,7 +19,7 @@ export function JsonLd({ data }: JsonLdProps) {
           key={index}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(item, null, 0)
+            __html: safeJsonLdStringify(item)
           }}
         />
       ))}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { safeJsonLdStringify } from '@/lib/jsonld'
 
 const BASE_URL = 'https://srushtipublications.com'
 
@@ -82,7 +83,7 @@ export default function FAQLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(faqStructuredData) }}
       />
       {children}
     </>

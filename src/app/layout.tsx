@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { safeJsonLdStringify } from '@/lib/jsonld'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { Toaster } from 'react-hot-toast'
@@ -278,22 +279,22 @@ export default async function RootLayout({
         {/* Organization structured data */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
         />
         {/* LocalBusiness structured data */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(localBusinessJsonLd) }}
         />
         {/* WebSite structured data with SearchAction */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
         />
         {/* WebPage structured data */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(webPageJsonLd) }}
         />
         {/* Accessibility: Skip to main content link */}
         <SkipToContent />
