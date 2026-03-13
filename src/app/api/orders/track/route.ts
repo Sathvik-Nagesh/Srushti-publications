@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting to prevent order enumeration attacks
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`track_order:${ip}`, { windowMs: 60000, maxRequests: 10 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many attempts. Please wait.' },
+        { status: 429 }
+      )
+    }
+
     const { orderNumber } = await request.json()
 
     if (!orderNumber) {
