@@ -97,3 +97,8 @@
 **Vulnerability:** Similar to previous discoveries, several endpoints under `/api/admin` (`/api/admin/inventory`, `/api/admin/orders/export`, `/api/admin/settings`) lacked explicit `verifyAdminSession` authorization checks in their route handlers. They relied completely on Next.js path-based middleware for protection. If the middleware failed or was bypassed, unauthenticated users could manipulate inventory, download full order histories containing PII, or change global site settings.
 **Learning:** Defense-in-depth is crucial and needs to be systematically applied. Route-level explicit authorization checks act as the primary defense mechanism against middleware configuration errors, bypasses, or accidental public exposure of administrative routes.
 **Prevention:** Enforce a strict policy where *every* administrative or restricted API route handler explicitly invokes an authorization verification function (e.g., `verifyAdminSession`) at the very beginning of its execution, regardless of the overarching middleware. Regularly audit API route handlers for missing authorization checks.
+
+## 2025-03-11 - High: Missing Rate Limiting on Password Reset
+**Vulnerability:** The `/api/auth/reset-password` endpoint lacked rate limiting, making it vulnerable to brute-force attacks against reset tokens and potential Denial of Service (DoS) attacks.
+**Learning:** All authentication-related endpoints, including password resets, must be protected against abuse to prevent unauthorized access and resource exhaustion.
+**Prevention:** Always implement strict rate limiting (e.g., 5 requests per hour per IP) on endpoints handling sensitive operations like password resets, utilizing centralized rate limiting utilities.
