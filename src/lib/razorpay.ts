@@ -1,4 +1,5 @@
 import Razorpay from 'razorpay'
+import crypto from 'crypto'
 
 // Initialize Razorpay instance
 export const razorpay = new Razorpay({
@@ -29,14 +30,21 @@ export function verifyRazorpaySignature(
   paymentId: string,
   signature: string
 ): boolean {
-  const crypto = require('crypto')
   const body = orderId + '|' + paymentId
   const expectedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
     .update(body)
     .digest('hex')
   
-  return expectedSignature === signature
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(expectedSignature),
+      Buffer.from(signature)
+    )
+  } catch (_) {
+    // timingSafeEqual throws if buffers are of different lengths
+    return false
+  }
 }
 
 // Get payment details
