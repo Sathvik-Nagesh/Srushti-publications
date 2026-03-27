@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { sendOrderConfirmation } from '@/lib/email'
-import { hash } from 'bcryptjs'
-import { verifySessionToken } from '@/lib/password'
+import { verifySessionToken, hashPassword } from '@/lib/password'
 import { sign } from '@/lib/auth-edge'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
@@ -171,7 +170,7 @@ export async function POST(request: NextRequest) {
                     state: shipping.state,
                     pincode: shipping.pincode,
                     isVerified: false,
-                    passwordHash: password ? await hash(password, 10) : null
+                    passwordHash: password ? await hashPassword(password) : null
                 }
             })
             customerId = newCustomer.id
