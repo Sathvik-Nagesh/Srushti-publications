@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { sendOrderConfirmation } from '@/lib/email'
-import { hash } from 'bcryptjs'
-import { verifySessionToken } from '@/lib/password'
+import { verifySessionToken, hashPassword } from '@/lib/password'
 import { sign } from '@/lib/auth-edge'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
@@ -20,7 +19,12 @@ function generateOrderNumber() {
   const year = date.getFullYear().toString().slice(-2)
   const month = (date.getMonth() + 1).toString().padStart(2, '0')
   const day = date.getDate().toString().padStart(2, '0')
-  const random = Math.floor(1000 + Math.random() * 9000).toString()
+
+  // Generate secure 4-digit random number
+  const randomBuffer = new Uint32Array(1)
+  crypto.getRandomValues(randomBuffer)
+  const random = (1000 + (randomBuffer[0] % 9000)).toString()
+
   return `ORD-${year}${month}${day}-${random}`
 }
 
@@ -166,7 +170,7 @@ export async function POST(request: NextRequest) {
                     state: shipping.state,
                     pincode: shipping.pincode,
                     isVerified: false,
-                    passwordHash: password ? await hash(password, 10) : null
+                    passwordHash: password ? await hashPassword(password) : null
                 }
             })
             customerId = newCustomer.id
