@@ -2,47 +2,38 @@
 
 import Link from 'next/link'
 import { Books } from '@phosphor-icons/react'
+import { useTranslations } from 'next-intl'
 import { siteConfig } from '@/config/site'
 
 export default function DynamicHero() {
-  const { hero, stats } = siteConfig
+  const { stats } = siteConfig
+  const tHero = useTranslations('hero')
 
   return (
     <div className="hero-content">
       <span className="hero-tagline">
-        {hero.tagline}
+        {tHero('tagline')}
       </span>
       <h1 className="hero-title">
         <span style={{ display: 'block', fontSize: '0.5em', fontWeight: 500, opacity: 0.85, marginBottom: '0.25rem', letterSpacing: '0.05em' }}>
-          Srushti Publications
+          {tHero('title')}
         </span>
-        {hero.title.includes('ಪಬ್ಲಿಕೇಷನ್ಸ್') ? (
+        {tHero('title').includes('ಪಬ್ಲಿಕೇಷನ್ಸ್') ? (
           <>
-            {hero.title.split('ಪಬ್ಲಿಕೇಷನ್ಸ್')[0]}
+            {tHero('title').split('ಪಬ್ಲಿಕೇಷನ್ಸ್')[0]}
             <span>ಪಬ್ಲಿಕೇಷನ್ಸ್</span>
           </>
         ) : (
-          hero.title
+          tHero('title')
         )}
       </h1>
       <p className="hero-description">
-        {hero.description}
-      </p>
-      <p style={{ 
-        fontSize: '0.95rem', 
-        color: 'var(--color-text-light)', 
-        marginTop: '-0.5rem',
-        marginBottom: '0.5rem'
-      }}>
-        Buy Kannada books online — world-renowned international books translated into Kannada. Only Srushti Publications originals. Free shipping on ₹500+
+        {tHero('description')}
       </p>
       <div className="hero-actions">
-        <Link href={hero.buttonLink} className="btn btn-primary btn-lg">
+        <Link href="/books" className="btn btn-primary btn-lg">
           <Books size={22} weight="bold" />
-          {hero.buttonText}
-        </Link>
-        <Link href="/books?filter=new" className="btn btn-outline btn-lg">
-          ಹೊಸ ಬಿಡುಗಡೆಗಳು
+          {tHero('viewNewReleases')}
         </Link>
       </div>
       
@@ -59,13 +50,13 @@ export default function DynamicHero() {
             fontWeight: 700, 
             color: 'var(--color-primary)' 
           }}>
-            {stats.books}
+            {tHero('booksCount').split(' ')[0]}
           </div>
           <div style={{ 
             fontSize: '0.875rem', 
             color: 'var(--color-text-light)' 
           }}>
-            ಪುಸ್ತಕಗಳು
+            {tHero('booksCount').substring(tHero('booksCount').indexOf(' ') + 1)}
           </div>
         </div>
         <div>
@@ -74,13 +65,13 @@ export default function DynamicHero() {
             fontWeight: 700, 
             color: 'var(--color-primary)' 
           }}>
-            {stats.authors}
+            {tHero('authorsCount').split(' ')[0]}
           </div>
           <div style={{ 
             fontSize: '0.875rem', 
             color: 'var(--color-text-light)' 
           }}>
-            ಲೇಖಕರು
+            {tHero('authorsCount').substring(tHero('authorsCount').indexOf(' ') + 1)}
           </div>
         </div>
         <div>
@@ -89,13 +80,13 @@ export default function DynamicHero() {
             fontWeight: 700, 
             color: 'var(--color-primary)' 
           }}>
-            {stats.years}
+            {tHero('customersCount').split(' ')[0]}
           </div>
           <div style={{ 
             fontSize: '0.875rem', 
             color: 'var(--color-text-light)' 
           }}>
-             ವರ್ಷಗಳ ಸೇವೆ
+             {tHero('customersCount').substring(tHero('customersCount').indexOf(' ') + 1)}
           </div>
         </div>
       </div>

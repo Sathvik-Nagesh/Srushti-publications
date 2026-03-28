@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { TrendingUp, ArrowRight } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import DynamicHero from '@/components/DynamicHero'
@@ -16,8 +17,9 @@ import {
   LazyHomepageFAQ 
 } from '@/components/LazyComponents'
 
-// Enable ISR: Revalidate home page every hour (3600 seconds)
-export const revalidate = 3600
+export async function generateMetadata() {
+  return {} // Next.js handles this automatically with next-intl if configured
+}
 
 async function getHomePageData() {
   const [categories, featuredBooks] = await Promise.all([
@@ -38,8 +40,6 @@ async function getHomePageData() {
     })
   ])
 
-  // Process categories for client component
-  // We pass slug matching logic to the client component or just pass data
   const processedCats = categories.map((cat) => ({
     id: cat.id,
     name: cat.name,
@@ -52,6 +52,10 @@ async function getHomePageData() {
 
 export default async function HomePage() {
   const { categories, featuredBooks } = await getHomePageData()
+  
+  // Use server-side translations
+  const tCom = await getTranslations('common')
+  const tCta = await getTranslations('cta')
 
   return (
     <>
@@ -68,7 +72,6 @@ export default async function HomePage() {
             }}>
               <DynamicHero />
               
-              {/* Hero Image - kept as server rendered or basic HTML */}
               <div className="hero-image" style={{ position: 'relative' }}>
                 <div style={{
                   position: 'relative',
@@ -100,8 +103,6 @@ export default async function HomePage() {
                     zIndex: 0
                   }} />
                   
-                  {/* We can use a simple img tag or Next Image here directly */}
-                  {/* Using an inline style block for the card effect */}
                   <div 
                     style={{
                       position: 'relative',
@@ -137,7 +138,6 @@ export default async function HomePage() {
         {/* Sale Timer Banner */}
         <section className="section" style={{ background: 'var(--color-bg)', paddingTop: '1rem', paddingBottom: '1rem' }}>
           <div className="container">
-            {/* Sale Timer (Client Component) */}
             <LazySaleTimer />
           </div>
         </section>
@@ -157,10 +157,10 @@ export default async function HomePage() {
               gap: '1rem'
             }}>
               <h2 className="section-title" style={{ marginBottom: 0 }}>
-                ✨ ಹೊಸ ಬಿಡುಗಡೆಗಳು
+                ✨ {tCom('newReleases')}
               </h2>
               <Link href="/books?filter=new" className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                ಎಲ್ಲಾ ನೋಡಿ <ArrowRight size={18} />
+                {tCom('viewAll')} <ArrowRight size={18} />
               </Link>
             </div>
 
@@ -185,10 +185,10 @@ export default async function HomePage() {
             }}>
               <h2 className="section-title" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <TrendingUp size={28} style={{ color: 'var(--color-primary)' }} />
-                ಅತ್ಯುತ್ತಮ ಮಾರಾಟಗಾರರು
+                {tCom('bestSellers')}
               </h2>
               <Link href="/books?filter=bestseller" className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                ಎಲ್ಲಾ ನೋಡಿ <ArrowRight size={18} />
+                {tCom('viewAll')} <ArrowRight size={18} />
               </Link>
             </div>
 
@@ -200,16 +200,9 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Offers Banner */}
         <LazyHomeOffers />
-
-        {/* Recently Viewed Books */}
         <LazyRecentlyViewed maxItems={4} />
-
-        {/* Why Choose Us */}
         <LazyHomeFeatures />
-
-        {/* FAQ Section */}
         <LazyHomepageFAQ />
 
         {/* Newsletter / CTA Section */}
@@ -228,47 +221,17 @@ export default async function HomePage() {
                 fontWeight: 700,
                 marginBottom: '1rem'
               }}>
-                📖 ಕನ್ನಡ ಓದುವ ಅಭ್ಯಾಸ ಪ್ರಾರಂಭಿಸಿ
+                📖 {tCta('title')}
               </h2>
               <p style={{
                 color: 'var(--color-text-light)',
                 marginBottom: '2rem'
               }}>
-                ನನ್ನ ಸಮೃದ್ಧ ಕನ್ನಡ ಪುಸ್ತಕಗಳ ಸಂಗ್ರಹವನ್ನು ಅನ್ವೇಷಿಸಿ. 
-                ಸಾಹಿತ್ಯ, ಶೈಕ್ಷಣಿಕ, ಮಕ್ಕಳ ಪುಸ್ತಕಗಳು ಮತ್ತು ಹೆಚ್ಚಿನವುಗಳನ್ನು ಕಂಡುಹಿಡಿಯಿರಿ.
+                {tCta('subtitle')}
               </p>
               <Link href="/books" className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                ಪುಸ್ತಕಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ <ArrowRight size={20} />
+                {tCom('exploreBooks')} <ArrowRight size={20} />
               </Link>
-            </div>
-          </div>
-        </section>
-        {/* SEO: About Srushti Publications Section */}
-        <section className="section" style={{
-          background: 'white',
-          borderTop: '1px solid var(--color-border)'
-        }}>
-          <div className="container">
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
-                About Srushti Publications | ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್ ಬಗ್ಗೆ
-              </h2>
-              <p style={{ color: 'var(--color-text-light)', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>
-                <strong>Srushti Publications</strong> is a leading Kannada publishing house based in Bengaluru, Karnataka, specializing in 
-                translating world-renowned international books into Kannada. We bring the best of global literature — bestselling novels, 
-                influential non-fiction, and acclaimed works — to Kannada readers. Every book on this store is a Srushti Publications original, 
-                ensuring premium quality printing and authentic translations by expert Kannada translators.
-              </p>
-              <p style={{ color: 'var(--color-text-light)', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>
-                <strong>ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್</strong> ಬೆಂಗಳೂರಿನ ಪ್ರಮುಖ ಕನ್ನಡ ಪ್ರಕಾಶನ ಸಂಸ್ಥೆ. 
-                ವಿಶ್ವಪ್ರಸಿದ್ಧ ಅಂತಾರಾಷ್ಟ್ರೀಯ ಪುಸ್ತಕಗಳನ್ನು ಕನ್ನಡಕ್ಕೆ ಅನುವಾದಿಸುವುದರಲ್ಲಿ ನಾವು ವಿಶೇಷತೆ ಹೊಂದಿದ್ದೇವೆ.
-                ₹500 ಮೇಲಿನ ಆರ್ಡರ್‌ಗಳಿಗೆ ಉಚಿತ ಶಿಪ್ಪಿಂಗ್.
-              </p>
-              <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-                <Link href="/about" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                  Learn More About Us | ನಮ್ಮ ಬಗ್ಗೆ ಇನ್ನಷ್ಟು <ArrowRight size={18} />
-                </Link>
-              </div>
             </div>
           </div>
         </section>
@@ -279,4 +242,3 @@ export default async function HomePage() {
     </>
   )
 }
-

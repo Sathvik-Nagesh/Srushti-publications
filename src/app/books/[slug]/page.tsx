@@ -24,20 +24,15 @@ const BookReviews = dynamicImport(() => import('@/components/BookReviews'), {
   loading: () => <div className="skeleton" style={{ height: 300, borderRadius: 'var(--radius-xl)' }} />
 })
 
-// The root layout uses next-intl which reads cookies() for locale detection.
-// This makes the entire page tree dynamic — we cannot use ISR (revalidate)
-// alongside dynamic cookie reads in a parent layout.
-// force-dynamic = server-render on every request (still fast via Vercel Edge).
 export const dynamic = 'force-dynamic'
 
 const BASE_URL = 'https://srushtipublications.com'
 
-// Generate static params for the most popular books to speed up build and initial hits
 export async function generateStaticParams() {
   const books = await prisma.book.findMany({
     where: { isActive: true },
     select: { slug: true },
-    take: 20, // Pre-build top 20 books
+    take: 20,
     orderBy: { viewCount: 'desc' }
   })
  
@@ -46,7 +41,6 @@ export async function generateStaticParams() {
   }))
 }
 
-// Generate dynamic metadata for SEO
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -115,12 +109,6 @@ async function getBook(slug: string) {
 
   if (!book) return null
 
-  // NOTE: View count increment moved to client-side beacon to avoid:
-  // 1. Blocking the page render
-  // 2. Running on every ISR revalidation
-  // 3. Incrementing for bot crawls
-  // The client component BookActions can call /api/books/[slug]/view endpoint
-
   return book
 }
 
@@ -145,6 +133,14 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
   }
 
   const relatedBooks = await getRelatedBooks(book.categoryId, book.id)
+  
+  // Calculate review aggregation for Product Schema
+  const reviewStats = await prisma.review.aggregate({
+    where: { bookId: book.id, isApproved: true },
+    _avg: { rating: true },
+    _count: { id: true }
+  })
+
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
 
   // Product JSON-LD with enhanced data
@@ -179,7 +175,14 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
         name: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್'
       },
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    }
+    },
+    ...(reviewStats._count.id > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: reviewStats._avg.rating?.toFixed(1) || "5.0",
+        reviewCount: reviewStats._count.id
+      }
+    } : {})
   }
 
   // Breadcrumb JSON-LD for navigation
@@ -216,19 +219,16 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <>
-      {/* Product structured data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      {/* Breadcrumb structured data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <Header />
       <main style={{ minHeight: '100vh', background: 'var(--color-bg-alt)' }}>
-        {/* Breadcrumb */}
         <div style={{ background: 'white', borderBottom: '1px solid var(--color-border)' }}>
           <div className="container" style={{ padding: '1rem' }}>
             <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
@@ -243,7 +243,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
           </div>
         </div>
         
-        {/* Book Details */}
         <section style={{ padding: '2rem 0' }}>
           <div className="container">
             <div style={{
@@ -255,7 +254,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
               padding: '2rem',
               boxShadow: 'var(--shadow-sm)'
             }}>
-              {/* Left - Book Image */}
               <div>
                 <div style={{
                   position: 'relative',
@@ -272,7 +270,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                       alt={book.title}
                    />
                   
-                  {/* Badges */}
                   <div style={{
                     position: 'absolute',
                     top: '1rem',
@@ -295,9 +292,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                 </div>
               </div>
               
-              {/* Right - Book Info */}
               <div>
-                {/* Category */}
                  {book.category && (
                     <Link 
                         href={`/categories/${book.category.slug}`}
@@ -317,7 +312,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                     </Link>
                 )}
                 
-                {/* Title */}
                 <h1 style={{ 
                   fontSize: '2rem', 
                   fontWeight: 700, 
@@ -327,7 +321,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                   {book.title}
                 </h1>
                 
-                {/* Author */}
                 <p style={{ 
                   fontSize: '1.125rem', 
                   color: 'var(--color-text-light)',
@@ -336,7 +329,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                   ಲೇಖಕ: <strong style={{ color: 'var(--color-text)' }}>{book.author}</strong>
                 </p>
                 
-                {/* Price Section */}
                 <div style={{
                   background: 'var(--color-cream-light)',
                   borderRadius: 'var(--radius-lg)',
@@ -371,10 +363,8 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                   </p>
                 </div>
                 
-                {/* Interactive Actions (Client Component) */}
                 <BookActions book={book as any} /> 
                 
-                {/* Delivery Info */}
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -409,7 +399,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
               </div>
             </div>
             
-            {/* Book Details Tabs */}
             <div style={{
               marginTop: '2rem',
               background: 'white',
@@ -426,7 +415,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                 gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                 gap: '2rem'
               }}>
-                {/* Description */}
                 <div>
                   <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>
                     ವಿವರಣೆ
@@ -440,7 +428,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                   </div>
                 </div>
                 
-                {/* Specifications */}
                 <div>
                   <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>
                     ವಿಶೇಷತೆಗಳು
@@ -480,7 +467,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
           </div>
         </section>
 
-        {/* Reviews Section */}
         <section className="section">
           <div className="container">
             <Suspense fallback={<div className="spinner" />}>
@@ -489,7 +475,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
           </div>
         </section>
         
-        {/* Related Books */}
         <section className="section" style={{ background: 'var(--color-cream-light)' }}>
           <div className="container">
             <h2 className="section-title">ಸಂಬಂಧಿತ ಪುಸ್ತಕಗಳು</h2>

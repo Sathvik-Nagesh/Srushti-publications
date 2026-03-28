@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ElementType } from 'react'
+import { useTranslations } from 'next-intl'
 import { 
   BookBookmark, GraduationCap, Baby, BookOpen, Sparkle,
   CaretRight 
@@ -33,6 +34,9 @@ const colorMap = [
 ]
 
 export default function HomeCategories({ categories }: { categories: Category[] }) {
+  const tCat = useTranslations('categories')
+  const tCom = useTranslations('common')
+  
   return (
     <section className="section" style={{ background: 'var(--color-bg)' }}>
       <div className="container">
@@ -45,10 +49,10 @@ export default function HomeCategories({ categories }: { categories: Category[] 
           gap: '1rem'
         }}>
           <h2 className="section-title" style={{ marginBottom: 0 }}>
-            📂 ವಿಭಾಗಗಳು
+            📂 {tCat('title')}
           </h2>
           <Link href="/books" className="btn btn-ghost">
-            ಎಲ್ಲಾ ನೋಡಿ <CaretRight size={18} />
+            {tCom('viewAll')} <CaretRight size={18} />
           </Link>
         </div>
         
@@ -59,6 +63,12 @@ export default function HomeCategories({ categories }: { categories: Category[] 
         }}>
           {categories.map((category, index) => {
             const Icon = iconMap[category.slug] || Sparkle
+            // Use translation if available, otherwise fallback to name
+            // Some keys in en.json are camelCase, like examGuides
+            let catKey = category.slug
+            if (catKey === 'exam-guides') catKey = 'examGuides'
+            const catName = tCat.has(catKey as any) ? tCat(catKey as any) : category.name;
+            
             return (
               <Link
                 key={category.id}
@@ -96,13 +106,13 @@ export default function HomeCategories({ categories }: { categories: Category[] 
                   marginBottom: '0.25rem',
                   textAlign: 'center'
                 }}>
-                  {category.name}
+                  {catName}
                 </h3>
                 <span style={{
                   fontSize: '0.875rem',
                   color: 'var(--color-text-light)'
                 }}>
-                  {category._count?.books || 0} ಪುಸ್ತಕಗಳು
+                  {category._count?.books || 0} {tCom('books')}
                 </span>
               </Link>
             )
