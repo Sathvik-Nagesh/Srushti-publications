@@ -10,6 +10,7 @@ import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import BookActions from '@/components/BookActions'
 import { formatCurrency, calculateDiscountPercentage } from '@/lib/utils'
+import { safeJsonLdStringify } from '@/lib/jsonld'
 import BookImage from '@/components/BookImage'
 import { 
   BookOpen, 
@@ -221,11 +222,11 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(productJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       <Header />
       <main style={{ minHeight: '100vh', background: 'var(--color-bg-alt)' }}>

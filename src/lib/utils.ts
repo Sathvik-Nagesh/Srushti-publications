@@ -50,7 +50,13 @@ export function formatDateTime(date: Date | string): string {
 // Generate unique order number
 export function generateOrderNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase()
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
+
+  // Generate secure random string
+  const randomBuffer = new Uint32Array(1)
+  crypto.getRandomValues(randomBuffer)
+  // 36^4 = 1679616 possible 4-character combinations in base36
+  const random = (randomBuffer[0] % 1679616).toString(36).toUpperCase().padStart(4, '0')
+
   return `SP${timestamp}${random}`
 }
 

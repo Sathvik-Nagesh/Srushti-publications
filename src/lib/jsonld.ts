@@ -194,3 +194,13 @@ export function generateCollectionJsonLd(
     }))
   }
 }
+
+/**
+ * Safely stringify JSON for embedding in <script> tags
+ * Prevents XSS attacks by escaping HTML tags (< and >) inside JSON values
+ */
+export function safeJsonLdStringify(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, '\\u003C')
+    .replace(/>/g, '\\u003E');
+}

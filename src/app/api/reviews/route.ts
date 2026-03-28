@@ -185,10 +185,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating review:', error)
-    // Serialize error safely
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    // Return generic error without exposing internal details
     return NextResponse.json(
-      { success: false, error: 'ವಿಮರ್ಶೆ ಸಲ್ಲಿಸಲು ವಿಫಲವಾಗಿದೆ', details: errorMessage },
+      { success: false, error: 'ವಿಮರ್ಶೆ ಸಲ್ಲಿಸಲು ವಿಫಲವಾಗಿದೆ' },
       { status: 500 }
     )
   }

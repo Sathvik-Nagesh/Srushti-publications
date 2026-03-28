@@ -1,5 +1,6 @@
 // JSON-LD Structured Data for SEO
 import { Book, Category } from '@/lib/types'
+import { safeJsonLdStringify } from '@/lib/jsonld'
 
 interface BookStructuredDataProps {
   book: Book
@@ -61,7 +62,7 @@ export function BookStructuredData({ book, url }: BookStructuredDataProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(cleanData) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(cleanData) }}
     />
   )
 }
@@ -85,7 +86,7 @@ export function OrganizationStructuredData({ name, url, logo }: OrganizationStru
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(structuredData) }}
     />
   )
 }
@@ -106,7 +107,7 @@ export function BreadcrumbStructuredData({ items }: BreadcrumbStructuredDataProp
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(structuredData) }}
     />
   )
 }
@@ -131,7 +132,7 @@ export function WebsiteStructuredData({ url, name }: { url: string; name: string
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(structuredData) }}
     />
   )
 }
@@ -171,7 +172,7 @@ export function PublisherStructuredData({
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(cleanData) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(cleanData) }}
     />
   )
 }

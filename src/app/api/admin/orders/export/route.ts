@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/auth-edge'
 
 // GET /api/admin/orders/export - Export orders for accounting (CSV format)
 export async function GET(request: NextRequest) {
   try {
+    if (!(await verifyAdminSession(request))) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     
     // Parse date range from query params
