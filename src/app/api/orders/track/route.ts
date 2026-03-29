@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(ip, 'track-order', { limit: 5, windowSecs: 60 })
+
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ತುಂಬಾ ಹೆಚ್ಚು ವಿನಂತಿಗಳು. ದಯವಿಟ್ಟು ಒಂದು ನಿಮಿಷ ಕಾಯಿರಿ.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rateCheck.resetAt.getTime() - Date.now()) / 1000).toString(),
+            'X-RateLimit-Remaining': '0',
+          }
+        }
+      )
+    }
+
     const { orderNumber } = await request.json()
 
     if (!orderNumber) {
