@@ -59,18 +59,47 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Generate slug
-    const slug = body.slug || body.name
+    // 1. Check if name already exists (since name is @unique in schema)
+    const existingCategory = await prisma.category.findUnique({
+      where: { name: body.name }
+    })
+    
+    if (existingCategory) {
+      return NextResponse.json(
+        { success: false, error: 'ಈ ಹೆಸರಿನ ವಿಭಾಗ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ (Category with this name already exists)' },
+        { status: 400 }
+      )
+    }
+
+    // 2. Generate slug with collision protection
+    let slug = body.slug || body.name
       .toLowerCase()
       .replace(/[^\w\s-\u0C80-\u0CFF]/g, '')
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '')
     
+    // Fallback for empty slug (if all chars were special/stripped)
+    if (!slug) {
+      slug = 'category-' + Date.now().toString(36)
+    }
+
+    // Ensure slug uniqueness (in case of collisions or manually entered slugs)
+    let finalSlug = slug
+    let counter = 1
+    while (true) {
+      const collision = await prisma.category.findUnique({
+        where: { slug: finalSlug }
+      })
+      if (!collision) break
+      finalSlug = `${slug}-${counter}`
+      counter++
+    }
+    
     const category = await prisma.category.create({
       data: {
         name: body.name,
         nameEn: body.nameEn,
-        slug,
+        slug: finalSlug,
         description: body.description,
         image: body.image,
         discount: body.discount ? parseFloat(body.discount) : null,
