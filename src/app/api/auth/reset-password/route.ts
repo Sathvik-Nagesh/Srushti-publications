@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { hashPassword } from '@/lib/password'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 // Use the SAME PBKDF2 hasher as login — bcryptjs hashes are incompatible with verifyPassword()
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`reset_password:${ip}`, { windowMs: 60 * 60 * 1000, maxRequests: 5 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
     const { token, password } = await request.json()
 
     if (!token || !password) {
