@@ -59,6 +59,7 @@
 **Vulnerability:** The order creation logic iterated over items individually to check stock, allowing a user to bypass stock limits by splitting the quantity of a single book across multiple item entries (e.g. purchasing 11 copies as 6+5 when only 10 were available).
 **Learning:** Iterating over user-controlled input lists without aggregation can lead to race conditions or logic bypasses against global constraints (like total stock).
 **Prevention:** Always aggregate resource usage (quantities, costs, etc.) by resource ID before validating against limits. Use `Map` or similar structures to sum up totals first.
+
 ## 2025-02-23 - Critical: Payment Verification Bypass (IDOR)
 **Vulnerability:** The `/api/orders/verify-payment` endpoint verified Razorpay signatures based on the request body but failed to verify that the `razorpay_order_id` in the request matched the one associated with the order in the database. This allowed attackers to use valid payment signatures from cheaper orders to mark expensive orders as paid.
 **Learning:** Signature verification alone proves the payment is valid, but not that it belongs to the *intended* order. Always verify the link between the payment gateway's order ID and your internal order record.
@@ -83,6 +84,7 @@
 **Vulnerability:** The `/api/admin/reviews` GET and PATCH endpoints relied entirely on path-based middleware (`src/middleware.ts`) for authentication. They lacked explicit authorization checks in their route handlers, which violates the principle of defense-in-depth. If middleware were misconfigured or the route path changed, anyone could fetch unapproved reviews or modify/delete them.
 **Learning:** Relying solely on path-based middleware creates a single point of failure. API routes must verify authorization context explicitly inside the handler for actions like reading sensitive moderation queues or modifying resource states.
 **Prevention:** Apply a defense-in-depth strategy where *every* API route handler explicitly verifies the required authorization context (e.g., calling `verifyAdminSession`) at the very beginning of the function.
+
 ## 2025-03-06 - [Information Disclosure in Review Creation Error Response]
 **Vulnerability:** The error response payload in `POST /api/reviews` leaked internal error details to the client when a generic `Error` was thrown during review creation. This could expose internal application logic or database implementation details.
 **Learning:** Detailed error messages (`error.message`) should not be serialized and returned directly to the client in API responses, as they may contain sensitive context or stack traces.
@@ -97,11 +99,23 @@
 **Vulnerability:** Similar to previous discoveries, several endpoints under `/api/admin` (`/api/admin/inventory`, `/api/admin/orders/export`, `/api/admin/settings`) lacked explicit `verifyAdminSession` authorization checks in their route handlers. They relied completely on Next.js path-based middleware for protection. If the middleware failed or was bypassed, unauthenticated users could manipulate inventory, download full order histories containing PII, or change global site settings.
 **Learning:** Defense-in-depth is crucial and needs to be systematically applied. Route-level explicit authorization checks act as the primary defense mechanism against middleware configuration errors, bypasses, or accidental public exposure of administrative routes.
 **Prevention:** Enforce a strict policy where *every* administrative or restricted API route handler explicitly invokes an authorization verification function (e.g., `verifyAdminSession`) at the very beginning of its execution, regardless of the overarching middleware. Regularly audit API route handlers for missing authorization checks.
+
 ## 2025-03-14 - [Authorization Bypass via Missing Route Verification]
 **Vulnerability:** The `/api/admin/change-password` endpoint lacked an explicit `verifyAdminSession(request)` check, relying instead on parsing the `userId` from the session token. However, if no valid token was provided, it fell back to allowing a password change if the user supplied the original `ADMIN_PASSWORD` (stored in env vars) as the "currentPassword", permitting unauthenticated users to change the admin password if they knew or guessed the environment variable.
 **Learning:** Middleware alone is insufficient for securing critical routes. Fallback mechanisms (like env-variable based auth for initialization) must be carefully guarded to ensure they do not become active for unauthenticated requests when they should only be accessible to authenticated users.
 **Prevention:** Always implement defense-in-depth by explicitly invoking authorization checks (e.g., `verifyAdminSession`) at the very beginning of the route handler for all sensitive API endpoints, regardless of any middleware protections or internal token parsing.
+
 ## 2024-03-15 - [Guest Order Password Creation Vulnerability]
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-03-24 - [Logout Route Authorization Anti-Pattern]
+**Vulnerability:** Adding an explicit `verifyAdminSession` check to `src/app/api/admin/logout/route.ts` caused a functional regression by returning a `401 Unauthorized` for expired sessions, preventing the client-side session cookie from being correctly destroyed.
+**Learning:** Logout endpoints must be designed idempotently and not enforce strict authorization requirements. If a session is already invalid on the server but still exists on the client, the logout process must gracefully clear the client cookie instead of exiting early with a 401 error.
+**Prevention:** Exclude logout endpoints from defense-in-depth authentication policies, as their purpose is solely to destroy session state, which does not constitute a security risk to be invoked unauthenticated.
+
+## 2025-03-24 - High: Missing Rate Limiting on Password Reset
+**Vulnerability:** The `POST /api/auth/reset-password` endpoint was missing rate-limiting protections entirely. Unlike `forgot-password` (which limits token generation requests), the actual reset endpoint could be brute-forced repeatedly by an attacker trying to guess the reset token for a targeted account, potentially leading to unauthorized account takeover.
+**Learning:** Any endpoint involving authentication, token verification, or credential updates must implement rate-limiting as a baseline defense against brute-forcing and enumeration attacks. It's insufficient to only protect the token creation step.
+**Prevention:** Apply consistent rate limiting to all authentication-related endpoints using a centralized middleware or utility function (e.g., `checkRateLimit` based on client IP).
