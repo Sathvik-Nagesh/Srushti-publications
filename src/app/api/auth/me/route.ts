@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
+import { schemas, sanitize } from '@/lib/sanitization'
+
+const profileUpdateSchema = z.object({
+  name: schemas.name.optional(),
+  phone: schemas.phone.optional(),
+  address: z.string().max(500, 'Address is too long').transform(sanitize).optional(),
+  city: z.string().max(100, 'City is too long').transform(sanitize).optional(),
+  state: z.string().max(100, 'State is too long').transform(sanitize).optional(),
+  pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits').optional()
+})
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -97,7 +108,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, city, state, pincode } = body
+
+    // Validate & Sanitize Input
+    const result = profileUpdateSchema.safeParse(body)
+
+    if (!result.success) {
+      // Format Zod errors
+      const errorMessage = result.error.issues[0]?.message || 'Invalid input'
+      return NextResponse.json(
+        { success: false, error: errorMessage },
+        { status: 400 }
+      )
+    }
+
+    const { name, phone, address, city, state, pincode } = result.data
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
