@@ -418,8 +418,8 @@ function BooksContent() {
         <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '280px 1fr',
-            gap: '2rem'
+            gap: '2rem',
+            width: '100%'
           }} className="books-layout">
             {/* Sidebar Filters - Desktop */}
             <aside className="hide-mobile" style={{
@@ -428,7 +428,8 @@ function BooksContent() {
               padding: '1.5rem',
               height: 'fit-content',
               position: 'sticky',
-              top: '90px'
+              top: '90px',
+              width: '280px'
             }}>
               <div style={{
                 display: 'flex',
@@ -468,7 +469,7 @@ function BooksContent() {
             </aside>
             
             {/* Main Content */}
-            <div>
+            <div style={{ width: '100%' }}>
               {/* Toolbar */}
               <div style={{
                 display: 'flex',
@@ -658,11 +659,14 @@ function BooksContent() {
       </main>
       <Footer />
       <ScrollToTop />
-
       <style jsx>{`
-        @media (max-width: 768px) {
+        .books-layout {
+          grid-template-columns: 280px 1fr;
+        }
+        @media (max-width: 992px) {
           .books-layout {
             grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
           }
         }
         @keyframes slideIn {

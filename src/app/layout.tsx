@@ -176,21 +176,21 @@ export const metadata: Metadata = {
     template: '%s | Srushti Publications',
   },
   description:
-    'Buy Kannada books online from Srushti Publications. Browse translated literature, educational books, children\'s books, and more. ಕನ್ನಡ ಪುಸ್ತಕಗಳನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಖರೀದಿಸಿ. Free shipping on orders above ₹500.',
+    'Srushti Publications offers a premium collection of world literature translated into Kannada, children\'s books, novels, and educational resources. Buy Kannada books online with fast delivery across India. Free shipping on orders over ₹500.',
   keywords: [
     'Srushti Publications',
     'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್',
-    'Kannada books',
+    'Buy Kannada books online',
     'ಕನ್ನಡ ಪುಸ್ತಕಗಳು',
-    'Kannada literature',
-    'ಕನ್ನಡ ಸಾಹಿತ್ಯ',
-    'buy Kannada books online',
-    'Kannada translated books',
+    'Kannada literature online India',
+    'translated Kannada novels',
     'ಕನ್ನಡ ಅನುವಾದ ಪುಸ್ತಕಗಳು',
-    'Kannada children books',
-    'Kannada educational books',
-    'Karnataka books',
-    'srushtipublications',
+    'Kannada children stories',
+    'educational books Kannada',
+    'Bengaluru book stores online',
+    'Srushti Publications',
+    'Srushti Books',
+    'Srushti Publications & Distributors',
   ],
   authors: [{ name: 'Srushti Publications', url: BASE_URL }],
   creator: 'Srushti Publications',
@@ -255,6 +255,13 @@ export const metadata: Metadata = {
   category: 'Books & Literature',
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#d97706',
+}
+
 export default async function RootLayout({
   children,
 }: {
@@ -266,37 +273,29 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning className={notoSansKannada.variable}>
       <head>
-        {/* Remove logo.jpg favicon override - use proper favicons from metadata instead */}
         <meta name="theme-color" content="#d97706" />
-        {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="dns-prefetch" href="https://api.razorpay.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        {/* Preconnect for Google Fonts (used by Next.js font optimization) */}
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
-        {/* Organization structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
         />
-        {/* LocalBusiness structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(localBusinessJsonLd) }}
         />
-        {/* WebSite structured data with SearchAction */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
         />
-        {/* WebPage structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(webPageJsonLd) }}
         />
-        {/* Accessibility: Skip to main content link */}
         <SkipToContent />
         
         <NextIntlClientProvider messages={messages}>
@@ -304,7 +303,7 @@ export default async function RootLayout({
             <Toaster
               position="bottom-right"
               containerStyle={{
-                bottom: 80, // Above WhatsApp button
+                bottom: 80,
                 right: 20,
                 zIndex: 9999
               }}

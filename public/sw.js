@@ -19,12 +19,15 @@ const CACHEABLE_API_ROUTES = [
   '/api/books',
 ];
 
-// Install event - cache static assets
+// Install event - cache static assets individually to be resilient to missing files
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then(function(cache) {
-        return cache.addAll(STATIC_ASSETS);
+        // Use individual adds so one failure doesn't stop the whole installation
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url => cache.add(url))
+        );
       })
       .then(function() {
         return self.skipWaiting();
