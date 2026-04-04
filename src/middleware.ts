@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyAdminSession } from '@/lib/auth-edge'
+import { kv } from '@vercel/kv'
 
 // Rate limiting map - in production, use Redis
 const rateLimit = new Map<string, { count: number; timestamp: number }>()
@@ -32,7 +33,7 @@ function getRateLimitKey(request: NextRequest): string {
   return ip
 }
 
-function isRateLimited(key: string, isWrite: boolean = false): boolean {
+function checkRateLimitMap(key: string, isWrite: boolean = false): boolean {
   const now = Date.now()
   const limitMap = isWrite ? writeRateLimit : rateLimit
   const maxRequests = isWrite ? MAX_WRITE_REQUESTS : MAX_REQUESTS
@@ -49,6 +50,25 @@ function isRateLimited(key: string, isWrite: boolean = false): boolean {
   
   entry.count++
   return false
+}
+
+async function isRateLimited(key: string, isWrite: boolean = false): Promise<boolean> {
+  // If KV is not configured, fallback to Map
+  if (!process.env.KV_REST_API_URL) {
+     return checkRateLimitMap(key, isWrite)
+  }
+
+  try {
+    const maxRequests = isWrite ? MAX_WRITE_REQUESTS : MAX_REQUESTS
+    const current = await kv.incr(key)
+    if (current === 1) {
+      await kv.expire(key, Math.ceil(RATE_LIMIT_WINDOW / 1000))
+    }
+    return current > maxRequests
+  } catch (err) {
+    // Graceful degradation
+    return checkRateLimitMap(key, isWrite)
+  }
 }
 
 // Check for suspicious requests
@@ -135,7 +155,7 @@ export async function middleware(request: NextRequest) {
     const key = getRateLimitKey(request)
     const isWriteOperation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)
     
-    if (isRateLimited(key, isWriteOperation)) {
+    if (await isRateLimited(key, isWriteOperation)) {
       const retryAfter = Math.ceil(RATE_LIMIT_WINDOW / 1000)
       return new NextResponse(
         JSON.stringify({ 

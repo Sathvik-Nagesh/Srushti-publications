@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sign } from '@/lib/auth-edge'
+import { signData } from '@/lib/auth-edge'
 import prisma from '@/lib/prisma'
 import { verifyPassword, hashPassword, secureCompare, verifyDummy } from '@/lib/password'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
@@ -51,15 +51,14 @@ export async function POST(request: NextRequest) {
         })
 
         // Create signed session token
-        const payload = JSON.stringify({
+        const payload = {
           type: 'admin',
           userId: adminUser.id,
           email: adminUser.email,
           role: adminUser.role,
           exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-        })
-        const signature = await sign(payload)
-        const token = `${btoa(payload)}.${signature}`
+        }
+        const token = await signData(payload)
 
         const response = NextResponse.json({ 
           success: true,
@@ -110,15 +109,14 @@ export async function POST(request: NextRequest) {
       })
 
       // Create signed session token
-      const payload = JSON.stringify({
+      const payload = {
         type: 'admin',
         userId: newAdmin.id,
         email: newAdmin.email,
         role: newAdmin.role,
         exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-      })
-      const signature = await sign(payload)
-      const token = `${btoa(payload)}.${signature}`
+      }
+      const token = await signData(payload)
 
       const response = NextResponse.json({ 
         success: true,

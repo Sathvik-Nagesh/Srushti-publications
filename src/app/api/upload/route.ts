@@ -15,6 +15,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // 🛡️ SECURITY: Prevent Out-Of-Memory (OOM) attacks by checking the content-length BEFORE processing the body streams
+    const contentLength = request.headers.get('content-length')
+    if (contentLength && parseInt(contentLength, 10) > 12 * 1024 * 1024) { // 12MB limit loosely
+      return NextResponse.json(
+        { success: false, error: 'Payload size limit exceeded' },
+        { status: 413 }
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const folder = formData.get('folder') as string | null

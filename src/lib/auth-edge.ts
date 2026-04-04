@@ -1,88 +1,34 @@
-// Edge-compatible authentication utilities using Web Crypto API
+// Edge-compatible authentication utilities using standard JWT
 import { NextRequest } from 'next/server'
 import { getAdminSecret } from './config'
+import { SignJWT, jwtVerify } from 'jose'
 
-async function getKey() {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(getAdminSecret());
-  return crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify']
-  );
+function getEncodedKey() {
+  return new TextEncoder().encode(getAdminSecret())
 }
 
 /**
- * Sign data using HMAC-SHA256
+ * Sign data using HMAC-SHA256 standard JWT
  */
-export async function sign(data: string): Promise<string> {
-  const key = await getKey();
-  const encoder = new TextEncoder();
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(data)
-  );
-
-  // Convert buffer to hex string
-  return Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-/**
- * Verify data against signature
- */
-export async function verify(data: string, signature: string): Promise<boolean> {
-  try {
-    const key = await getKey();
-    const encoder = new TextEncoder();
-
-    // Convert hex string to buffer
-    const signatureBuffer = new Uint8Array(
-      signature.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
-    );
-
-    return crypto.subtle.verify(
-      'HMAC',
-      key,
-      signatureBuffer,
-      encoder.encode(data)
-    );
-  } catch (error) {
-    console.error('Signature verification failed:', error)
-    return false
-  }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function signData(payload: any): Promise<string> {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(payload.exp ? Math.floor(payload.exp / 1000) : '24h')
+    .sign(getEncodedKey())
 }
 
 /**
  * Verify session token string
- * @param token The token string (payload.signature)
+ * @param token The standard JWT string
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function verifySessionToken(token: string): Promise<any | null> {
-  const parts = token.split('.')
-  if (parts.length !== 2) return null
-
-  const [encodedPayload, signature] = parts
-
   try {
-    const payload = atob(encodedPayload)
-    const isValid = await verify(payload, signature)
-
-    if (!isValid) return null
-
-    const data = JSON.parse(payload)
-
-    // Check expiration if present
-    if (data.exp && Date.now() > data.exp) {
-      return null
-    }
-
-    return data
-  } catch {
+    const { payload } = await jwtVerify(token, getEncodedKey())
+    return payload
+  } catch (error) {
     return null
   }
 }

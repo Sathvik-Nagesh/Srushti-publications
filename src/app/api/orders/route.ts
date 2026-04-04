@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken, hashPassword } from '@/lib/password'
-import { sign } from '@/lib/auth-edge'
+import { signData } from '@/lib/auth-edge'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
@@ -65,6 +65,15 @@ export async function POST(request: NextRequest) {
             'X-RateLimit-Remaining': '0',
           }
         }
+      )
+    }
+
+    // 🛡️ SECURITY: Prevent Out-Of-Memory (OOM) attacks by checking the content-length BEFORE processing the body streams
+    const contentLength = request.headers.get('content-length')
+    if (contentLength && parseInt(contentLength, 10) > 12 * 1024 * 1024) { // 12MB limit loosely
+      return NextResponse.json(
+        { success: false, error: 'Payload size limit exceeded' },
+        { status: 413 }
       )
     }
 
@@ -357,13 +366,12 @@ export async function POST(request: NextRequest) {
     revalidatePath('/')
 
     // Sentinel: Create secure session for guest order access
-    const orderPayload = JSON.stringify({
+    const orderPayload = {
       orderId: finalOrder.id,
       orderNumber: finalOrder.orderNumber,
       exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-    })
-    const signature = await sign(orderPayload)
-    const recentOrderToken = `${btoa(orderPayload)}.${signature}`
+    }
+    const recentOrderToken = await signData(orderPayload)
 
     const response = NextResponse.json({
       success: true,
