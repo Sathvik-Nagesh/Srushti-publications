@@ -196,6 +196,7 @@ model Order {
   razorpayPaymentId String?
   razorpaySignature String?
   paymentMethod   String?
+  paymentScreenshot String?
   paidAt          DateTime?
   
   // Order Status

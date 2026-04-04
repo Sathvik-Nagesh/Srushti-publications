@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, MapPin, Phone, User, Mail, Truck, CreditCard, ShieldCheck, Ticket, X, Check, Lock, Loader2 } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, User, Mail, Truck, CreditCard, ShieldCheck, Ticket, X, Check, Lock, Loader2, Copy } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCartStore, useCartTotals } from '@/lib/store'
 import { formatCurrency } from '@/lib/utils'
@@ -40,8 +40,16 @@ export default function CheckoutPage() {
   const [discountAmount, setDiscountAmount] = useState(0)
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
   
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'QR'>('COD')
+  const [paymentScreenshotBase64, setPaymentScreenshotBase64] = useState<string | null>(null)
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [mounted, setMounted] = useState(false)
+
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${type} ಕಾಪಿ ಮಾಡಲಾಗಿದೆ! (Copied!)`);
+  }
 
   // Avoid hydration mismatch and fetch coupons
   useEffect(() => {
@@ -162,7 +170,9 @@ export default function CheckoutPage() {
         notes: formData.notes,
         createAccount: formData.createAccount,
         password: formData.password,
-        saveAddress: formData.saveAddress
+        saveAddress: formData.saveAddress,
+        paymentMethod,
+        paymentScreenshotBase64
       }
 
       const response = await fetch('/api/orders', {
@@ -385,22 +395,46 @@ export default function CheckoutPage() {
 
                  <div className="form-group">
                     <label className="label">ರಾಜ್ಯ (State) *</label>
-                    <select 
+                    <input 
+                        type="text"
                         name="state"
                         required
+                        list="indian-states"
                         value={formData.state}
                         onChange={handleInputChange}
-                        className="input select"
-                    >
+                        className="input"
+                        placeholder="ರಾಜ್ಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ ಅಥವಾ ಟೈಪ್ ಮಾಡಿ..."
+                    />
+                    <datalist id="indian-states">
                         <option value="Karnataka">ಕರ್ನಾಟಕ (Karnataka)</option>
-                        <option value="Maharashtra">ಮಹಾರಾಷ್ಟ್ರ (Maharashtra)</option>
-                        <option value="Tamil Nadu">ತಮಿಳುನಾಡು (Tamil Nadu)</option>
-                        <option value="Kerala">ಕೇರಳ (Kerala)</option>
                         <option value="Andhra Pradesh">ಆಂಧ್ರಪ್ರದೇಶ (Andhra Pradesh)</option>
-                        <option value="Telangana">ತೆಲಂಗಾಣ (Telangana)</option>
+                        <option value="Arunachal Pradesh">ಅರುಣಾಚಲ ಪ್ರದೇಶ (Arunachal Pradesh)</option>
+                        <option value="Assam">ಅಸ್ಸಾಂ (Assam)</option>
+                        <option value="Bihar">ಬಿಹಾರ (Bihar)</option>
+                        <option value="Chhattisgarh">ಛತ್ತೀಸ್‌ಗಢ (Chhattisgarh)</option>
                         <option value="Goa">ಗೋವಾ (Goa)</option>
-                         {/* Add others as needed */}
-                    </select>
+                        <option value="Gujarat">ಗುಜರಾತ್ (Gujarat)</option>
+                        <option value="Haryana">ಹರಿಯಾಣ (Haryana)</option>
+                        <option value="Himachal Pradesh">ಹಿಮಾಚಲ ಪ್ರದೇಶ (Himachal Pradesh)</option>
+                        <option value="Jharkhand">ಜಾರ್ಖಂಡ್ (Jharkhand)</option>
+                        <option value="Kerala">ಕೇರಳ (Kerala)</option>
+                        <option value="Madhya Pradesh">ಮಧ್ಯಪ್ರದೇಶ (Madhya Pradesh)</option>
+                        <option value="Maharashtra">ಮಹಾರಾಷ್ಟ್ರ (Maharashtra)</option>
+                        <option value="Manipur">ಮಣಿಪುರ (Manipur)</option>
+                        <option value="Meghalaya">ಮೇಘಾಲಯ (Meghalaya)</option>
+                        <option value="Mizoram">ಮಿಜೋರಾಂ (Mizoram)</option>
+                        <option value="Nagaland">ನಾಗಾಲ್ಯಾಂಡ್ (Nagaland)</option>
+                        <option value="Odisha">ಒಡಿಶಾ (Odisha)</option>
+                        <option value="Punjab">ಪಂಜಾಬ್ (Punjab)</option>
+                        <option value="Rajasthan">ರಾಜಸ್ಥಾನ (Rajasthan)</option>
+                        <option value="Sikkim">ಸಿಕ್ಕಿಂ (Sikkim)</option>
+                        <option value="Tamil Nadu">ತಮಿಳುನಾಡು (Tamil Nadu)</option>
+                        <option value="Telangana">ತೆಲಂಗಾಣ (Telangana)</option>
+                        <option value="Tripura">ತ್ರಿಪುರಾ (Tripura)</option>
+                        <option value="Uttar Pradesh">ಉತ್ತರ ಪ್ರದೇಶ (Uttar Pradesh)</option>
+                        <option value="Uttarakhand">ಉತ್ತರಾಖಂಡ (Uttarakhand)</option>
+                        <option value="West Bengal">ಪಶ್ಚಿಮ ಬಂಗಾಳ (West Bengal)</option>
+                    </datalist>
                 </div>
                 
                 <div className="form-group">
@@ -566,27 +600,67 @@ export default function CheckoutPage() {
                         <h2 style={{ fontSize: '1.25rem', margin: 0 }}>ಪಾವತಿ ವಿಧಾನ (Payment Method)</h2>
                     </div>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-50)', cursor: 'pointer' }}>
-                             <input type="radio" name="payment" defaultChecked style={{ accentColor: 'var(--color-primary)', width: '20px', height: '20px' }} />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', border: paymentMethod === 'COD' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', background: paymentMethod === 'COD' ? 'var(--color-primary-50)' : 'transparent', cursor: 'pointer' }}>
+                             <input type="radio" name="payment" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} style={{ accentColor: 'var(--color-primary)', width: '20px', height: '20px' }} />
                              <div style={{ flex: 1 }}>
                                 <span style={{ display: 'block', fontWeight: 600 }}>ನಗದು ಪಾವತಿ (Cash on Delivery)</span>
                                 <span style={{ fontSize: '0.85rem', color: 'var(--color-text-light)' }}>ಉತ್ಪನ್ನ ತಲುಪಿದಾಗ ಹಣ ಪಾವತಿಸಿ</span>
                              </div>
                         </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', opacity: 0.6, cursor: 'not-allowed' }}>
-                             <input type="radio" name="payment" disabled style={{ width: '20px', height: '20px' }} />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', border: paymentMethod === 'QR' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', background: paymentMethod === 'QR' ? 'var(--color-primary-50)' : 'transparent', cursor: 'pointer' }}>
+                             <input type="radio" name="payment" checked={paymentMethod === 'QR'} onChange={() => setPaymentMethod('QR')} style={{ accentColor: 'var(--color-primary)', width: '20px', height: '20px' }} />
                              <div style={{ flex: 1 }}>
-                                <span style={{ display: 'block', fontWeight: 600 }}>ಆನ್‌ಲೈನ್ ಪಾವತಿ (Online Payment)</span>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--color-text-light)' }}>ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ (Coming Soon)</span>
+                                <span style={{ display: 'block', fontWeight: 600 }}>QR Code (UPI Payment)</span>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--color-text-light)' }}>Scan the QR code and upload screenshot</span>
                              </div>
                         </label>
+                        
+                        {paymentMethod === 'QR' && (
+                             <div style={{ padding: '1.5rem', background: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                                 <img src="/upi-qr.jpeg" alt="UPI QR Code" style={{ width: '100%', maxWidth: '250px', height: 'auto', borderRadius: '8px', border: '1px solid var(--color-border)', objectFit: 'contain' }} />
+                                 <p style={{ fontSize: '0.85rem', textAlign: 'center', color: 'var(--color-text)' }}>
+                                     Please scan this PhonePe QR code using any UPI app and pay <strong>{formatCurrency(total)}</strong>.<br/>
+                                     After payment, please upload the screenshot below. Your order will be processed once verified manually.
+                                 </p>
+                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'var(--color-bg-alt)' }}>
+                                         <span style={{ fontSize: '0.85rem' }}><strong>UPI ID:</strong> srushtinagesh4@axl</span>
+                                         <button type="button" onClick={() => copyToClipboard('srushtinagesh4@axl', 'UPI ID')} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Copy UPI ID"><Copy size={16} /></button>
+                                     </div>
+                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'var(--color-bg-alt)' }}>
+                                         <span style={{ fontSize: '0.85rem' }}><strong>Phone:</strong> 9845096668</span>
+                                         <button type="button" onClick={() => copyToClipboard('9845096668', 'Phone Number')} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Copy Phone Number"><Copy size={16} /></button>
+                                     </div>
+                                 </div>
+                                 <input type="file" accept="image/*" onChange={(e) => {
+                                     const file = e.target.files?.[0];
+                                     if (file) {
+                                         if (file.size > 10 * 1024 * 1024) {
+                                             toast.error('File too large (max 10MB)');
+                                             e.target.value = '';
+                                             return;
+                                         }
+                                         const reader = new FileReader();
+                                         reader.onloadend = () => {
+                                             setPaymentScreenshotBase64(reader.result as string);
+                                         };
+                                         reader.readAsDataURL(file);
+                                     } else {
+                                         setPaymentScreenshotBase64(null);
+                                     }
+                                 }} style={{ fontSize: '0.85rem', width: '100%', padding: '0.5rem', border: '1px dashed var(--color-border)', borderRadius: '4px' }} />
+                                 {paymentScreenshotBase64 && (
+                                     <span style={{ fontSize: '0.8rem', color: 'var(--color-success)' }}><Check size={14} style={{ display: 'inline' }} /> Screenshot attached</span>
+                                 )}
+                             </div>
+                        )}
                      </div>
                 </div>
 
                 <button 
                     type="submit" 
                     form="checkout-form"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (paymentMethod === 'QR' && !paymentScreenshotBase64)}
                     className="btn btn-primary btn-lg"
                     style={{ width: '100%', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >

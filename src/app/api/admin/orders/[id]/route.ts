@@ -111,6 +111,17 @@ export async function PATCH(
     
     // Update notes
     if (body.notes !== undefined) updateData.notes = body.notes
+
+    // Update payment status (e.g. manual verification for QR)
+    if (body.paymentStatus) {
+      updateData.paymentStatus = body.paymentStatus
+      if (body.paymentStatus === 'SUCCESS' && existing.paymentStatus !== 'SUCCESS') {
+        updateData.paidAt = new Date()
+        if (existing.status === 'PENDING' && !updateData.status) {
+          updateData.status = 'PROCESSING'
+        }
+      }
+    }
     
     const order = await prisma.order.update({
       where: { id },

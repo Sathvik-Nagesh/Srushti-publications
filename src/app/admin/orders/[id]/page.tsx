@@ -59,6 +59,8 @@ interface Order {
   dispatchedAt: string | null
   deliveredAt: string | null
   items: OrderItem[]
+  paymentMethod: string | null
+  paymentScreenshot: string | null
 }
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -269,8 +271,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Payment */}
           <div style={{ background: 'white', borderRadius: 'var(--radius-xl)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>ಪಾವತಿ ವಿವರಗಳು</h3>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>ಪಾವತಿ ವಿವರಗಳು (Payment)</h3>
             <div style={{ fontSize: '0.875rem' }}>
+              <p style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ color: 'var(--color-text-light)' }}>ವಿಧಾನ</span>
+                <span style={{ fontWeight: 600 }}>{order.paymentMethod === 'QR' ? 'QR Code (UPI)' : order.paymentMethod || 'COD'}</span>
+              </p>
               <p style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ color: 'var(--color-text-light)' }}>ಸ್ಥಿತಿ</span>
                 <span style={{ color: paymentInfo?.color, fontWeight: 600, padding: '0.125rem 0.5rem', background: `${paymentInfo?.color}15`, borderRadius: 'var(--radius-sm)' }}>{paymentInfo?.label}</span>
@@ -278,6 +284,46 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               {order.razorpayPaymentId && <p style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}><span style={{ color: 'var(--color-text-light)' }}>ಪಾವತಿ ID</span><span style={{ fontFamily: 'monospace', fontSize: '0.7rem' }}>{order.razorpayPaymentId}</span></p>}
               {order.paidAt && <p style={{ display: 'flex', justifyContent: 'space-between', margin: 0 }}><span style={{ color: 'var(--color-text-light)' }}>ಪಾವತಿ ದಿನಾಂಕ</span><span>{formatDateTime(new Date(order.paidAt))}</span></p>}
             </div>
+
+            {order.paymentMethod === 'QR' && order.paymentScreenshot && (
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed var(--color-border)' }}>
+                 <p style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>ಪಾವತಿ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ (Screenshot)</p>
+                 <a href={order.paymentScreenshot} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+                     <img src={order.paymentScreenshot} alt="Payment Screenshot" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                 </a>
+                 {order.paymentStatus === 'PENDING' && (
+                     <button 
+                         onClick={async () => {
+                             setIsSaving(true);
+                             try {
+                                 const res = await fetch(`/api/admin/orders/${order.id}`, {
+                                     method: 'PATCH',
+                                     headers: {'Content-Type': 'application/json'},
+                                     body: JSON.stringify({ paymentStatus: 'SUCCESS' })
+                                 });
+                                 const data = await res.json();
+                                 if(data.success) {
+                                     setOrder(data.data);
+                                     setStatus(data.data.status);
+                                     toast.success('ಪಾವತಿ ಪರಿಶೀಲಿಸಲಾಗಿದೆ! (Payment Verified)');
+                                 } else {
+                                     throw new Error(data.error);
+                                 }
+                             } catch(e) {
+                                 toast.error('ಪರಿಶೀಲನೆ ವಿಫಲವಾಗಿದೆ (Verification Failed)');
+                             } finally {
+                                 setIsSaving(false);
+                             }
+                         }}
+                         disabled={isSaving}
+                         className="btn btn-primary"
+                         style={{ width: '100%', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#10b981', borderColor: '#10b981' }}
+                     >
+                         <CheckCircle size={16} /> ಪಾವತಿ ಪರಿಶೀಲಿಸಿ (Verify Payment)
+                     </button>
+                 )}
+              </div>
+            )}
           </div>
 
           {/* Invoice */}

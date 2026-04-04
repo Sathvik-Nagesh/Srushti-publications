@@ -252,19 +252,6 @@ function BookCard({ book, showQuickAdd = true, onQuickView }: BookCardProps) {
           )}
         </div>
       </div>
-      
-      <style jsx>{`
-        .book-card:hover .book-card-actions,
-        .book-card-actions:focus-within {
-          opacity: 1 !important;
-        }
-
-        /* Ensure the title link inherits color properly and doesn't look like a standard blue link unless intended */
-        a {
-           text-decoration: none;
-           color: inherit;
-        }
-      `}</style>
     </div>
   )
 }

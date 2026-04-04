@@ -6,6 +6,7 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendOrderConfirmation, sendAdminOrderNotification } from '@/lib/email'
+import { uploadImage } from '@/lib/cloudinary'
 
 interface OrderItemInput {
   bookId: string
@@ -71,8 +72,9 @@ export async function POST(request: NextRequest) {
     const {
       customer, shipping, items, totals, couponCode, notes,
       createAccount, password,
-      // paymentMethod from frontend: 'COD' (default) or 'RAZORPAY' / 'ONLINE'
-      paymentMethod: bodyPaymentMethod
+      // paymentMethod from frontend: 'COD' (default) or 'RAZORPAY' / 'ONLINE' / 'QR'
+      paymentMethod: bodyPaymentMethod,
+      paymentScreenshotBase64
     } = body
 
     // Determine if this is an online payment order.
@@ -144,7 +146,21 @@ export async function POST(request: NextRequest) {
     // Calculate Shipping
     const serverShipping = serverSubtotal >= freeShippingMin ? 0 : defaultShipping
 
-    const finalOrder = await prisma.$transaction(async (tx) => {
+    // Upload Payment Screenshot if QR method is used
+    let paymentScreenshotUrl: string | null = null
+    if (bodyPaymentMethod === 'QR' && paymentScreenshotBase64) {
+      // 🛡️ SECURITY: Double-check payload size on server-side to prevent memory exhaustion and abuse
+      if (paymentScreenshotBase64.length > 15000000) { // roughly ~11MB base64 size limit
+         return NextResponse.json(
+            { success: false, error: 'Payment screenshot is too large. Max allowed is 10MB.' },
+            { status: 400 }
+         )
+      }
+      const uploadResult = await uploadImage(paymentScreenshotBase64, 'orders')
+      paymentScreenshotUrl = uploadResult.url
+    }
+
+    const finalOrder: any = await prisma.$transaction(async (tx) => {
         // Handle Customer Creation / Linking
         let customerId: string | null = null
         
@@ -266,8 +282,9 @@ export async function POST(request: NextRequest) {
               totalAmount: serverTotal,
               
               status: 'PENDING',
-              paymentStatus: 'PENDING', 
-              paymentMethod: isOnlinePayment ? 'RAZORPAY' : 'COD',
+              paymentStatus: bodyPaymentMethod === 'QR' ? 'PENDING' : 'PENDING', 
+              paymentMethod: bodyPaymentMethod || (isOnlinePayment ? 'RAZORPAY' : 'COD'),
+              paymentScreenshot: paymentScreenshotUrl,
               
               notes: notes,
               customerId: customerId,
@@ -304,7 +321,7 @@ export async function POST(request: NextRequest) {
       customerName: finalOrder.customerName,
       customerEmail: finalOrder.customerEmail,
       customerPhone: finalOrder.customerPhone,
-      items: finalOrder.items.map(item => ({
+      items: finalOrder.items.map((item: any) => ({
         title: item.bookTitle,
         author: item.bookAuthor,
         quantity: item.quantity,

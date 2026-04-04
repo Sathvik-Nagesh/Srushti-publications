@@ -419,8 +419,16 @@ function BooksContent() {
           <div style={{
             display: 'grid',
             gap: '2rem',
-            width: '100%'
-          }} className="books-layout">
+            width: '100%',
+            gridTemplateColumns: 'auto',
+            alignItems: 'start'
+          }}>
+            <style>{`
+              @media (min-width: 993px) {
+                #books-grid-wrapper { grid-template-columns: 280px 1fr !important; }
+              }
+            `}</style>
+            <div id="books-grid-wrapper" style={{ display: 'grid', gap: '2rem', width: '100%', gridTemplateColumns: '1fr', alignItems: 'start' }}>
             {/* Sidebar Filters - Desktop */}
             <aside className="hide-mobile" style={{
               background: 'white',
@@ -429,7 +437,8 @@ function BooksContent() {
               height: 'fit-content',
               position: 'sticky',
               top: '90px',
-              width: '280px'
+              width: '100%',
+              maxWidth: '280px'
             }}>
               <div style={{
                 display: 'flex',
@@ -585,6 +594,7 @@ function BooksContent() {
               {/* Pagination */}
               {renderPagination()}
             </div>
+            </div>
           </div>
         </div>
         
@@ -659,21 +669,6 @@ function BooksContent() {
       </main>
       <Footer />
       <ScrollToTop />
-      <style jsx>{`
-        .books-layout {
-          grid-template-columns: 280px 1fr;
-        }
-        @media (max-width: 992px) {
-          .books-layout {
-            grid-template-columns: 1fr !important;
-            gap: 1.5rem !important;
-          }
-        }
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-      `}</style>
     </>
   )
 }
