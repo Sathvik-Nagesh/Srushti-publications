@@ -136,11 +136,17 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
   const relatedBooks = await getRelatedBooks(book.categoryId, book.id)
   
   // Calculate review aggregation for Product Schema
-  const reviewStats = await prisma.review.aggregate({
-    where: { bookId: book.id, isApproved: true },
-    _avg: { rating: true },
-    _count: { id: true }
-  })
+  const [reviewStats, latestReview] = await Promise.all([
+    prisma.review.aggregate({
+      where: { bookId: book.id, isApproved: true },
+      _avg: { rating: true },
+      _count: { id: true }
+    }),
+    prisma.review.findFirst({
+      where: { bookId: book.id, isApproved: true },
+      orderBy: { createdAt: 'desc' }
+    })
+  ])
 
   const discountPercentage = calculateDiscountPercentage(book.mrp, book.sellingPrice)
 
@@ -175,13 +181,74 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
         '@type': 'Organization',
         name: 'ಸೃಷ್ಟಿ ಪಬ್ಲಿಕೇಷನ್ಸ್'
       },
-      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 7,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn'
+      },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: book.sellingPrice >= 500 ? 0 : 50,
+          currency: 'INR'
+        },
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'IN'
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 1,
+            maxValue: 2,
+            unitCode: 'DAY'
+          },
+          transitTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 3,
+            maxValue: 5,
+            unitCode: 'DAY'
+          }
+        }
+      }
     },
+    // Always include aggregateRating if we have at least one review to avoid GSC errors
+    // If no reviews, we provide a placeholder or skip (GSC preferred is having actual data)
     ...(reviewStats._count.id > 0 ? {
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: reviewStats._avg.rating?.toFixed(1) || "5.0",
-        reviewCount: reviewStats._count.id
+        reviewCount: reviewStats._count.id,
+        bestRating: "5",
+        worstRating: "1"
+      }
+    } : {
+      // Providing a default 5.0 rating for new books to satisfy GSC if preferred, 
+      // but usually it's better to just skip if truly no reviews. 
+      // However, to fix "Missing field", we can provide a default or handle it gracefully.
+      // Let's stick to actual data but include best/worst rating for completeness.
+    }),
+    ...(latestReview ? {
+      review: {
+        '@type': 'Review',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: latestReview.rating.toString(),
+          bestRating: "5",
+          worstRating: "1"
+        },
+        author: {
+          '@type': 'Person',
+          name: latestReview.authorName
+        },
+        reviewBody: latestReview.comment,
+        datePublished: latestReview.createdAt.toISOString().split('T')[0]
       }
     } : {})
   }
