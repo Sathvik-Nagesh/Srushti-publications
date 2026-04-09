@@ -105,3 +105,7 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+## 2025-03-20 - High: Missing Input Validation and Sanitization in Profile Update (DoS/XSS)
+**Vulnerability:** The `POST /api/auth/me/route.ts` endpoint did not validate or sanitize input fields like `address`, `city`, `state`, and `pincode` before saving them to the database. This could allow for Denial of Service (DoS) attacks by sending excessively large payloads, or potentially stored Cross-Site Scripting (XSS) if the data is displayed insecurely later.
+**Learning:** All endpoints accepting user input to modify the state of the application must perform rigorous validation (e.g., bounds checking) and sanitization (e.g., stripping HTML tags). Trust nothing, verify everything.
+**Prevention:** Implement strict Zod schemas for all input fields, checking max lengths and formats, and apply a sanitization transform to strip HTML tags from string inputs before updating the database.
