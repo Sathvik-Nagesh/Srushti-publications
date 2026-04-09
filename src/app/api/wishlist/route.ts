@@ -9,7 +9,9 @@ async function getSessionId(request: NextRequest): Promise<string> {
   let sessionId = cookieStore.get('wishlist_session')?.value
   
   if (!sessionId) {
-    sessionId = `ws_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    // 🛡️ SECURITY: Use crypto.randomUUID() instead of Math.random() for secure session ID generation
+    // Math.random() is predictable and unsuitable for session identifiers.
+    sessionId = `ws_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 9)}`
   }
   
   return sessionId
