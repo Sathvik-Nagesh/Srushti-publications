@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
+import { sanitize } from '@/lib/sanitization'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+
+const profileUpdateSchema = z.object({
+  name: z.string().min(2, 'Name is too short').max(100).transform(sanitize).optional(),
+  phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits').optional().nullable(),
+  address: z.string().max(500).transform(sanitize).optional().nullable(),
+  city: z.string().max(100).transform(sanitize).optional().nullable(),
+  state: z.string().max(100).transform(sanitize).optional().nullable(),
+  pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits').optional().nullable()
+})
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -78,6 +90,15 @@ export async function GET(request: NextRequest) {
 // POST /api/auth/me - Update customer profile
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`profile_update:${ip}`, { windowMs: 60000, maxRequests: 20 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ' },
+        { status: 429 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('customer_session')?.value
 
@@ -97,7 +118,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, city, state, pincode } = body
+    const parsedData = profileUpdateSchema.safeParse(body)
+
+    if (!parsedData.success) {
+      return NextResponse.json(
+        { success: false, error: 'ಮಾಹಿತಿ ಸರಿಯಾಗಿಲ್ಲ' },
+        { status: 400 }
+      )
+    }
+
+    const { name, phone, address, city, state, pincode } = parsedData.data
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
