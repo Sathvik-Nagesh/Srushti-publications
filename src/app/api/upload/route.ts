@@ -64,7 +64,29 @@ export async function POST(request: NextRequest) {
     // Convert file to base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
+
+    // 🛡️ SECURITY: Magic byte validation to prevent file type spoofing
+    const magicHex = buffer.toString('hex', 0, 4).toUpperCase()
+    let verifiedMimeType = ''
+
+    // JPEG (FFD8FF), PNG (89504E47), GIF (47494638)
+    if (magicHex.startsWith('FFD8FF')) verifiedMimeType = 'image/jpeg'
+    else if (magicHex.startsWith('89504E47')) verifiedMimeType = 'image/png'
+    else if (magicHex.startsWith('47494638')) verifiedMimeType = 'image/gif'
+    else if (magicHex.startsWith('52494646')) {
+      // WebP (RIFF....WEBP)
+      const webpMagic = buffer.toString('hex', 8, 12).toUpperCase()
+      if (webpMagic === '57454250') verifiedMimeType = 'image/webp'
+    }
+
+    if (!verifiedMimeType) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid file content. Spoofed file type detected.' },
+        { status: 400 }
+      )
+    }
+
+    const base64 = `data:${verifiedMimeType};base64,${buffer.toString('base64')}`
 
     // Upload to Cloudinary
     const result = await uploadImage(base64, folder || 'books')

@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-02-13 - File Type Spoofing in Image Upload
+**Vulnerability:** The `/api/upload/route.ts` endpoint previously validated the uploaded file type using the client-provided `file.type` header, which could be easily spoofed by a malicious client.
+**Learning:** Depending solely on client-provided metadata for security checks like file types allows attackers to bypass extension/MIME validation and upload potentially malicious payload configurations.
+**Prevention:** Implement "magic byte" (file signature) validation on the server-side by checking the first few bytes of the file buffer to accurately identify the file type (e.g., verifying `FFD8FF` for JPEGs or `89504E47` for PNGs) regardless of the client-provided MIME type.
