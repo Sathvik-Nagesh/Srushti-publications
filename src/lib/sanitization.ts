@@ -84,3 +84,12 @@ export const schemas = {
   uuid: z.string().uuid()
 }
 
+// Profile Update Schema
+export const updateProfileSchema = z.object({
+  name: z.string().min(2, 'ಹೆಸರು ತುಂಬಾ ಚಿಕ್ಕದಾಗಿದೆ').max(100).optional().transform(val => val ? sanitize(val) : val),
+  phone: z.string().regex(/^\d{10}$/, 'ದೂರವಾಣಿ ಸಂಖ್ಯೆ 10 ಅಂಕಿಗಳಿರಬೇಕು').optional().nullable(),
+  address: z.string().max(500).optional().nullable().transform(val => val ? sanitize(val) : val),
+  city: z.string().max(100).optional().nullable().transform(val => val ? sanitize(val) : val),
+  state: z.string().max(100).optional().nullable().transform(val => val ? sanitize(val) : val),
+  pincode: z.string().max(10).optional().nullable().transform(val => val ? sanitize(val) : val)
+});
