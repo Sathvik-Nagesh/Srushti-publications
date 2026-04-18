@@ -105,3 +105,7 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+## 2026-04-18 - Missing Input Validation in Profile Updates
+**Vulnerability:** The POST /api/auth/me endpoint updated the user profile directly from the request JSON without validation, allowing large payloads and unsanitized HTML (XSS/DoS risks).
+**Learning:** API routes must validate all fields rather than just plucking them from the body, especially when inputs reflect strings back to the UI.
+**Prevention:** Enforce strict validation using Zod for all request bodies in API routes.
