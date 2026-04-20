@@ -81,6 +81,14 @@ export const schemas = {
   password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().min(2, 'Name is too short').max(100).transform(sanitize),
   phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits').optional().nullable(),
-  uuid: z.string().uuid()
+  uuid: z.string().uuid(),
+  updateProfileSchema: z.object({
+    name: z.string().min(2, 'Name is too short').max(100).transform(sanitize).optional().nullable(),
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits').optional().nullable(),
+    address: z.string().max(500, 'Address is too long').transform(sanitize).optional().nullable(),
+    city: z.string().max(100, 'City is too long').transform(sanitize).optional().nullable(),
+    state: z.string().max(100, 'State is too long').transform(sanitize).optional().nullable(),
+    pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits').optional().nullable()
+  })
 }
 
