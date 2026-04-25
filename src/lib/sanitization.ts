@@ -84,3 +84,12 @@ export const schemas = {
   uuid: z.string().uuid()
 }
 
+// Profile Update Validation Schema
+export const updateProfileSchema = z.object({
+  name: schemas.name.optional(),
+  phone: schemas.phone.optional(),
+  address: z.string().max(200, 'Address is too long').transform(sanitize).optional().nullable(),
+  city: z.string().max(100, 'City is too long').transform(sanitize).optional().nullable(),
+  state: z.string().max(100, 'State is too long').transform(sanitize).optional().nullable(),
+  pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits').optional().nullable()
+})
