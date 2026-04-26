@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-03-20 - High: Weak Session ID Generation for Wishlist
+**Vulnerability:** The application used `Math.random()` to generate the `wishlist_session` identifier in the backend API `src/app/api/wishlist/route.ts`. `Math.random()` is not cryptographically secure, meaning generated session IDs are potentially predictable, leading to session hijacking or IDOR vulnerabilities where attackers could guess another user's wishlist session ID.
+**Learning:** In non-secure HTTP environments or older client-side code, `Math.random()` might be used due to a lack of `window.crypto`. However, in backend APIs (like Next.js Route Handlers), cryptographically secure random number generators (CSPRNG) are always available. Developers sometimes unknowingly carry over insecure frontend practices to backend services.
+**Prevention:** Always use `crypto.randomUUID()` or `crypto.getRandomValues()` for generating unique identifiers (like session IDs, order numbers, tokens) in backend APIs. Never use `Math.random()` for any security-sensitive or identifying information.
