@@ -64,6 +64,35 @@ export async function POST(request: NextRequest) {
     // Convert file to base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+
+    // Sentinel: Magic byte validation to prevent file type spoofing
+    const header = buffer.subarray(0, 4).toString('hex').toUpperCase()
+    let isValidType = false
+
+    // JPEG magic bytes: FFD8FFE0, FFD8FFE1, FFD8FFEE, FFD8FFDB
+    if (header.startsWith('FFD8')) {
+      isValidType = true
+    }
+    // PNG magic bytes: 89504E47
+    else if (header === '89504E47') {
+      isValidType = true
+    }
+    // GIF magic bytes: 47494638 (GIF8)
+    else if (header === '47494638') {
+      isValidType = true
+    }
+    // WebP magic bytes: RIFF (52494646) and WEBP (57454250) at offset 8
+    else if (header === '52494646' && buffer.subarray(8, 12).toString('hex').toUpperCase() === '57454250') {
+      isValidType = true
+    }
+
+    if (!isValidType) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid file content. Spoofed file type detected.' },
+        { status: 400 }
+      )
+    }
+
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
 
     // Upload to Cloudinary

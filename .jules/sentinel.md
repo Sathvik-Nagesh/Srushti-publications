@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-03-23 - [High] Prevent File Type Spoofing in File Uploads
+**Vulnerability:** The `/api/upload` endpoint relied solely on the insecure, client-provided `file.type` header to validate uploaded file formats. An attacker could bypass this by renaming a malicious file (e.g., `malware.exe` to `malware.png`) or modifying the `Content-Type` header, allowing unauthorized file types into Cloudinary.
+**Learning:** Never trust client-provided file types or file extensions for security validation. These are easily spoofed.
+**Prevention:** Implemented server-side "magic byte" (file signature) validation. By reading the first few bytes of the uploaded file buffer, the server can definitively verify if the file is a valid JPEG, PNG, GIF, or WebP format before processing it.
