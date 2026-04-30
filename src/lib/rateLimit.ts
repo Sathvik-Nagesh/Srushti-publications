@@ -188,5 +188,6 @@ export const API_RATE_LIMITS = {
   search: { windowMs: 60000, maxRequests: 60 },    // 60 searches/min
   dashboard: { windowMs: 60000, maxRequests: 30 }, // 30 dashboard loads/min  
   adminWrite: { windowMs: 60000, maxRequests: 20 }, // 20 write ops/min
-  general: { windowMs: 60000, maxRequests: 100 }   // 100 general requests/min
+  general: { windowMs: 60000, maxRequests: 100 },   // 100 general requests/min
+  tracking: { windowMs: 60000, maxRequests: 10 }    // 10 trackings/min to prevent enumeration
 }
