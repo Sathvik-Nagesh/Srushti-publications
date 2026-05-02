@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { cookies } from 'next/headers'
 
 // GET /api/auth/me - Get current customer session
@@ -78,6 +79,16 @@ export async function GET(request: NextRequest) {
 // POST /api/auth/me - Update customer profile
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting to prevent rapid profile update spamming
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`profile_update:${ip}`, { windowMs: 60000, maxRequests: 10 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ತುಂಬಾ ಹೆಚ್ಚು ವಿನಂತಿಗಳು. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.' },
+        { status: 429 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('customer_session')?.value
 
