@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { sanitize } from '@/lib/sanitization'
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -96,18 +98,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Rate limiting to prevent DoS via rapid profile updates
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`profile_update:${ip}`, { windowMs: 60000, maxRequests: 20 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { name, phone, address, city, state, pincode } = body
 
+    // Sanitize user input to prevent XSS and injection vulnerabilities
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
       data: {
-        name: name || undefined,
-        phone: phone || undefined,
-        address: address || undefined,
-        city: city || undefined,
-        state: state || undefined,
-        pincode: pincode || undefined
+        name: name ? sanitize(name) : undefined,
+        phone: phone ? sanitize(phone) : undefined,
+        address: address ? sanitize(address) : undefined,
+        city: city ? sanitize(city) : undefined,
+        state: state ? sanitize(state) : undefined,
+        pincode: pincode ? sanitize(pincode) : undefined
       },
       select: {
         id: true,
