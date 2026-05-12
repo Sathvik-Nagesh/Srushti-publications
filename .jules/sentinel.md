@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-05-12 - [Critical: XSS via Unsanitized Profile Updates]
+**Vulnerability:** The `/api/auth/me` endpoint accepted un-sanitized user input for fields like `name`, `phone`, `address`, `city`, `state`, and `pincode` when updating customer profiles. This direct passage of user input to the database creates a potential Cross-Site Scripting (XSS) vulnerability when the data is rendered.
+**Learning:** Always explicitly sanitize user inputs before updating database records to prevent XSS. We cannot rely solely on frontend validation or generic request parsing.
+**Prevention:** Use the `sanitize()` utility from `@/lib/sanitization` for all user-provided string fields during profile updates before calling the database.
