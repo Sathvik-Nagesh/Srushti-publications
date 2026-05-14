@@ -105,3 +105,7 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+## 2024-05-14 - Fix Insecure Random Generation in Wishlist API
+**Vulnerability:** The Wishlist API used Math.random() for generating sessionId, making it predictable.
+**Learning:** Using predictable identifiers for sessions can lead to session hijacking vulnerabilities.
+**Prevention:** Always use cryptographically secure methods like crypto.randomUUID() for generating sensitive identifiers.
