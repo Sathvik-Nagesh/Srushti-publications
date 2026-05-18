@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { sanitize } from '@/lib/sanitization'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -78,6 +80,16 @@ export async function GET(request: NextRequest) {
 // POST /api/auth/me - Update customer profile
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting to prevent DoS via rapid profile updates
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`update_profile:${ip}`, { windowMs: 60000, maxRequests: 5 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ಹೆಚ್ಚು ಪ್ರಯತ್ನಗಳು. ದಯವಿಟ್ಟು 1 ನಿಮಿಷ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.' },
+        { status: 429 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('customer_session')?.value
 
@@ -102,12 +114,12 @@ export async function POST(request: NextRequest) {
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
       data: {
-        name: name || undefined,
-        phone: phone || undefined,
-        address: address || undefined,
-        city: city || undefined,
-        state: state || undefined,
-        pincode: pincode || undefined
+        name: name ? sanitize(name) : undefined,
+        phone: phone ? sanitize(phone) : undefined,
+        address: address ? sanitize(address) : undefined,
+        city: city ? sanitize(city) : undefined,
+        state: state ? sanitize(state) : undefined,
+        pincode: pincode ? sanitize(pincode) : undefined
       },
       select: {
         id: true,
