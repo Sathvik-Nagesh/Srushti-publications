@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { sanitize, schemas } from '@/lib/sanitization'
+import { z } from 'zod'
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -97,7 +99,27 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, city, state, pincode } = body
+
+    const updateProfileSchema = z.object({
+      name: schemas.name.optional(),
+      phone: schemas.phone.optional(),
+      address: z.string().max(500).transform(sanitize).optional(),
+      city: z.string().max(100).transform(sanitize).optional(),
+      state: z.string().max(100).transform(sanitize).optional(),
+      pincode: z.string().regex(/^[1-9][0-9]{5}$/, 'Invalid pincode').optional().or(z.literal(''))
+    })
+
+    const result = updateProfileSchema.safeParse(body)
+
+    if (!result.success) {
+      const errorMessage = result.error.issues[0]?.message || 'Invalid input'
+      return NextResponse.json(
+        { success: false, error: errorMessage },
+        { status: 400 }
+      )
+    }
+
+    const { name, phone, address, city, state, pincode } = result.data
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
