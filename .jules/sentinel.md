@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-03-24 - High: DoS and XSS in Customer Profile Update
+**Vulnerability:** The `POST /api/auth/me` endpoint lacked both rate limiting and input validation/sanitization. This allowed attackers to perform a Denial of Service (DoS) attack by spamming profile updates, and exposed the application to Stored Cross-Site Scripting (XSS) via unescaped inputs (e.g., in the `address`, `city`, and `name` fields).
+**Learning:** Authenticated routes are not immune to DoS or XSS. Even seemingly benign user profile endpoints must restrict the frequency of updates and rigorously validate/sanitize all incoming data before it touches the database.
+**Prevention:** Apply endpoint-level rate limiting using `checkRateLimit` from `src/lib/rateLimit.ts` on mutative user endpoints. Additionally, always validate and sanitize user inputs using Zod schemas (`safeParse`) and custom sanitizers (`.transform(sanitize)`) before database insertion.
