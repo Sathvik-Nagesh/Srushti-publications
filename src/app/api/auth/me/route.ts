@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
+import { sanitize } from '@/lib/sanitization'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+
+const updateProfileSchema = z.object({
+  name: z.string().nullable().optional().transform(v => typeof v === 'string' ? sanitize(v) : (v || undefined)),
+  phone: z.string().nullable().optional().transform(v => typeof v === 'string' ? sanitize(v) : (v || undefined)),
+  address: z.string().nullable().optional().transform(v => typeof v === 'string' ? sanitize(v) : (v || undefined)),
+  city: z.string().nullable().optional().transform(v => typeof v === 'string' ? sanitize(v) : (v || undefined)),
+  state: z.string().nullable().optional().transform(v => typeof v === 'string' ? sanitize(v) : (v || undefined)),
+  pincode: z.string().nullable().optional().transform(v => typeof v === 'string' ? sanitize(v) : (v || undefined))
+})
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -78,6 +90,16 @@ export async function GET(request: NextRequest) {
 // POST /api/auth/me - Update customer profile
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`profile_update:${ip}`, { windowMs: 60000, maxRequests: 5 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again in 1 minute.' },
+        { status: 429 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('customer_session')?.value
 
@@ -97,18 +119,29 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, city, state, pincode } = body
+
+    // Validate and sanitize input
+    const validationResult = updateProfileSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { success: false, error: validationResult.error.issues[0]?.message || 'Invalid data' },
+        { status: 400 }
+      )
+    }
+
+    const { name, phone, address, city, state, pincode } = validationResult.data
+
+    const updateData: Record<string, string | undefined> = {}
+    if (name !== undefined) updateData.name = name
+    if (phone !== undefined) updateData.phone = phone
+    if (address !== undefined) updateData.address = address
+    if (city !== undefined) updateData.city = city
+    if (state !== undefined) updateData.state = state
+    if (pincode !== undefined) updateData.pincode = pincode
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
-      data: {
-        name: name || undefined,
-        phone: phone || undefined,
-        address: address || undefined,
-        city: city || undefined,
-        state: state || undefined,
-        pincode: pincode || undefined
-      },
+      data: updateData,
       select: {
         id: true,
         email: true,
