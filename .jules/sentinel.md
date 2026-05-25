@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2024-05-28 - Missing Rate Limiting & Input Sanitization in Auth API
+**Vulnerability:** The `POST /api/auth/me` endpoint lacked rate limiting and input sanitization, leading to a DoS vulnerability (profile update spamming) and a Stored XSS vulnerability (raw fields saved to DB).
+**Learning:** Always validate and sanitize user input before updating records, and apply rate-limiting to mutative API routes (e.g. `checkRateLimit('action:' + ip, ...)`).
+**Prevention:** Use `@/lib/rateLimit` for all mutative requests and `@/lib/sanitization` to strip HTML/scripts from user profiles.

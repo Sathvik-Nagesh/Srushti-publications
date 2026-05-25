@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { sanitize } from '@/lib/sanitization'
+import { z } from 'zod'
+
+const profileUpdateSchema = z.object({
+  name: z.string().transform(sanitize).optional(),
+  phone: z.string().transform(v => (v ? sanitize(v) : undefined)).optional(),
+  address: z.string().transform(v => (v ? sanitize(v) : undefined)).optional(),
+  city: z.string().transform(v => (v ? sanitize(v) : undefined)).optional(),
+  state: z.string().transform(v => (v ? sanitize(v) : undefined)).optional(),
+  pincode: z.string().transform(v => (v ? sanitize(v) : undefined)).optional()
+})
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -78,6 +91,16 @@ export async function GET(request: NextRequest) {
 // POST /api/auth/me - Update customer profile
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting (Sentinel: prevent rapid profile updates DoS)
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`update_profile:${ip}`, { windowMs: 60000, maxRequests: 5 })
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ಹೆಚ್ಚು ಪ್ರಯತ್ನಗಳು. ದಯವಿಟ್ಟು 1 ನಿಮಿಷ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.' },
+        { status: 429 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('customer_session')?.value
 
@@ -97,18 +120,31 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, city, state, pincode } = body
+
+    // Sentinel: Sanitize inputs safely with Zod
+    const validation = profileUpdateSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.error.issues[0].message || 'ಅಮಾನ್ಯ ಡೇಟಾ' },
+        { status: 400 }
+      )
+    }
+
+    const { name, phone, address, city, state, pincode } = validation.data
+
+    const updateData: Prisma.CustomerUpdateInput = {}
+
+    // Construct conditionally to allow clearing optional fields while maintaining backwards compatibility
+    if (name) updateData.name = name
+    if (phone !== undefined) updateData.phone = phone || undefined
+    if (address !== undefined) updateData.address = address || undefined
+    if (city !== undefined) updateData.city = city || undefined
+    if (state !== undefined) updateData.state = state || undefined
+    if (pincode !== undefined) updateData.pincode = pincode || undefined
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
-      data: {
-        name: name || undefined,
-        phone: phone || undefined,
-        address: address || undefined,
-        city: city || undefined,
-        state: state || undefined,
-        pincode: pincode || undefined
-      },
+      data: updateData,
       select: {
         id: true,
         email: true,
