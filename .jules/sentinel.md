@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-03-24 - High: Missing Rate Limiting on Logout Endpoints
+**Vulnerability:** The `/api/auth/logout` and `/api/admin/logout` endpoints were missing rate limiting, allowing attackers to spam the endpoints and potentially cause a Denial of Service (DoS) by rapidly clearing sessions or creating unnecessary server load.
+**Learning:** Even endpoints that seem innocuous, such as logging a user out, need to be rate-limited to prevent abuse. Attackers can exploit any un-throttled endpoint.
+**Prevention:** Apply rate limiting (e.g., using `checkRateLimit`) to all API routes, regardless of their function, to protect server resources and maintain availability.
