@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2025-03-24 - High: Missing Rate Limiting and Strict Input Validation (Stored XSS) in `/api/auth/me` Endpoint
+**Vulnerability:** The `/api/auth/me` profile update endpoint lacked rate-limiting, presenting a potential Denial of Service (DoS) vulnerability via rapid profile update spamming. Additionally, it lacked strict input validation and sanitization, directly passing data into `prisma.customer.update()`, creating a Stored Cross-Site Scripting (XSS) vulnerability.
+**Learning:** Endpoints updating user data should always enforce rate limits and strictly validate/sanitize input using tools like `zod` and DOM sanitization helpers to prevent malicious payloads from reaching the database.
+**Prevention:** Always use `checkRateLimit` for mutative routes and ensure data is strictly validated and sanitized with schemas (e.g. `z.object().transform(sanitize)`) before database execution.
