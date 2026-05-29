@@ -64,6 +64,24 @@ export async function POST(request: NextRequest) {
     // Convert file to base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+
+    // Sentinel: Verify Magic Bytes (File Signatures)
+    // JPEG: FF D8 FF
+    const isJPEG = buffer.length > 2 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+    // PNG: 89 50 4E 47
+    const isPNG = buffer.length > 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+    // WebP: RIFF .... WEBP
+    const isWebP = buffer.length > 12 && buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
+    // GIF: GIF87a or GIF89a
+    const isGIF = buffer.length > 6 && buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38 && (buffer[4] === 0x37 || buffer[4] === 0x39) && buffer[5] === 0x61;
+
+    if (!isJPEG && !isPNG && !isWebP && !isGIF) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid file content. File does not match expected image format.' },
+        { status: 400 }
+      )
+    }
+
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
 
     // Upload to Cloudinary
