@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2024-05-24 - Secure Session ID Generation
+**Vulnerability:** Insecure, Predictable Session ID Generation using `Math.random()`. The backend `wishlist/route.ts` API endpoint relied on `Math.random()` and `Date.now()` to generate session identifiers. This leads to low entropy and predictable session values, resulting in potential session hijacking vulnerabilities or ID collisions, especially since `Math.random()` is not cryptographically secure.
+**Learning:** `Math.random()` must never be used for security-critical contexts like session token or identifier generation. Its values are predictable and reproducible.
+**Prevention:** Always use `crypto.randomUUID()` or `crypto.getRandomValues()` provided by the Web Crypto API on backend systems to generate secure identifiers with high entropy.
