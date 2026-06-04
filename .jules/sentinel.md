@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2024-06-04 - [Missing Rate Limiting and Validation on Profile Updates]
+**Vulnerability:** The `POST /api/auth/me` endpoint lacked both rate limiting and input validation/sanitization. This exposed the application to DoS attacks via spamming profile updates and Stored XSS vulnerabilities by allowing malicious scripts to be injected into profile fields like `name` or `address`.
+**Learning:** Even endpoints protected by authentication/session tokens must validate inputs and limit request rates. The pattern `.union([z.string(), z.literal('')]).optional().transform(v => (v ? sanitize(v) : null))` is critical for safely allowing nullable string fields to be cleared using empty strings while preventing XSS.
+**Prevention:** Always combine `checkRateLimit` and Zod schemas (with `.transform(sanitize)`) for all state-mutating API routes, regardless of session protection.
