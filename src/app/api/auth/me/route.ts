@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifySessionToken } from '@/lib/password'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
+import { sanitize } from '@/lib/sanitization'
+import { checkRateLimit, API_RATE_LIMITS, getClientIp } from '@/lib/rateLimit'
+
+const profileUpdateSchema = z.object({
+  name: z.string()
+    .min(2, 'ಹೆಸರು ಕನಿಷ್ಠ 2 ಅಕ್ಷರಗಳಿರಬೇಕು')
+    .max(100, 'ಹೆಸರು 100 ಅಕ್ಷರಗಳಿಗಿಂತ ಹೆಚ್ಚಿರಬಾರದು')
+    .transform(v => sanitize(v))
+    .refine(v => v.length >= 2, 'ಅಮಾನ್ಯ ಹೆಸರು')
+    .optional(),
+  phone: z.union([z.string().regex(/^\d{10}$/, 'ದೂರವಾಣಿ ಸಂಖ್ಯೆ 10 ಅಂಕಿಗಳಿರಬೇಕು'), z.literal('')]).transform(v => (v ? sanitize(v) : null)).optional(),
+  address: z.string().max(500, 'ವಿಳಾಸ 500 ಅಕ್ಷರಗಳಿಗಿಂತ ಹೆಚ್ಚಿರಬಾರದು').transform(v => (v ? sanitize(v) : null)).optional(),
+  city: z.string().max(100, 'ನಗರ 100 ಅಕ್ಷರಗಳಿಗಿಂತ ಹೆಚ್ಚಿರಬಾರದು').transform(v => (v ? sanitize(v) : null)).optional(),
+  state: z.string().max(100, 'ರಾಜ್ಯ 100 ಅಕ್ಷರಗಳಿಗಿಂತ ಹೆಚ್ಚಿರಬಾರದು').transform(v => (v ? sanitize(v) : null)).optional(),
+  pincode: z.union([z.string().regex(/^\d{6}$/, 'ಪಿನ್‌ಕೋಡ್ 6 ಅಂಕಿಗಳಿರಬೇಕು'), z.literal('')]).transform(v => (v ? sanitize(v) : null)).optional()
+})
 
 // GET /api/auth/me - Get current customer session
 export async function GET(request: NextRequest) {
@@ -78,6 +95,16 @@ export async function GET(request: NextRequest) {
 // POST /api/auth/me - Update customer profile
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request)
+    const rateCheck = checkRateLimit(`profile_update:${ip}`, API_RATE_LIMITS.general)
+
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests' },
+        { status: 429 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('customer_session')?.value
 
@@ -97,18 +124,28 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, city, state, pincode } = body
+    const parsed = profileUpdateSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0].message || 'Invalid data' },
+        { status: 400 }
+      )
+    }
+
+    const { name, phone, address, city, state, pincode } = parsed.data
+
+    const updateData: any = {}
+    if (name !== undefined) updateData.name = name
+    if (phone !== undefined) updateData.phone = phone
+    if (address !== undefined) updateData.address = address
+    if (city !== undefined) updateData.city = city
+    if (state !== undefined) updateData.state = state
+    if (pincode !== undefined) updateData.pincode = pincode
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: tokenData.userId },
-      data: {
-        name: name || undefined,
-        phone: phone || undefined,
-        address: address || undefined,
-        city: city || undefined,
-        state: state || undefined,
-        pincode: pincode || undefined
-      },
+      data: updateData,
       select: {
         id: true,
         email: true,
