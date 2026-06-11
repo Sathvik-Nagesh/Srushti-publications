@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2026-06-11 - High: Missing Rate Limiting on Order Tracking
+**Vulnerability:** The `/api/orders/track` POST endpoint lacked rate limiting, exposing the application to potential order enumeration, brute-force attacks, and DoS by continually querying order statuses.
+**Learning:** Endpoints that allow users to query data based on public or semi-public identifiers (like order numbers) must be rate-limited to prevent abuse and data scraping.
+**Prevention:** Always implement IP-based rate limiting on sensitive or data-exposing endpoints, even if they don't require authentication, using the centralized `checkRateLimit` utility.
