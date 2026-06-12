@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2024-05-18 - [Missing Rate Limiting on Password Change Endpoint]
+ **Vulnerability:** The `/api/admin/change-password` API endpoint was missing rate limiting, allowing an attacker to launch brute-force attacks against the "current password" parameter of an existing active admin session.
+ **Learning:** Even endpoints protected by active session authorization must be rate limited to mitigate insider threats or session hijacking attempts where the attacker tries to escalate privileges or persist access by changing the password.
+ **Prevention:** Ensure all sensitive state-mutating endpoints, especially those involving authentication credentials, implement `checkRateLimit` (e.g., from `src/lib/rateLimit.ts`), independently of whether an active session check is present.
