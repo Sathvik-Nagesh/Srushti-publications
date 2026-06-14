@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       // Sentinel: Prevent timing attacks (user enumeration)
       await verifyDummy(password)
       return NextResponse.json(
-        { success: false, error: 'ಈ ಖಾತೆಗೆ ಪಾಸ್ವರ್ಡ್ ಹೊಂದಿಸಿಲ್ಲ. ಪಾಸ್ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ.' },
+        { success: false, error: 'ತಪ್ಪು ಇ-ಮೇಲ್ ಅಥವಾ ಪಾಸ್ವರ್ಡ್' },
         { status: 401 }
       )
     }
