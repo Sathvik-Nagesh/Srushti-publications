@@ -105,3 +105,8 @@
 **Vulnerability:** Inconsistent password hashing algorithm (`bcryptjs` instead of `PBKDF2`) was being used during guest checkout account creation, rendering created accounts unable to login.
 **Learning:** Hardcoded hashing logic specific to one module when a shared auth library exists creates fragmented authentication and security bugs. The application relied on `verifyPassword` (which uses PBKDF2) but created new accounts during checkout using `bcryptjs`.
 **Prevention:** All components must use the central `src/lib/password.ts` library for password operations (`hashPassword`, `verifyPassword`).
+
+## 2024-05-20 - [Fix user enumeration in login route]
+**Vulnerability:** The `POST /api/auth/login` endpoint contained a user enumeration vulnerability where the error message revealed whether an existing account had a password set (e.g., guest converted accounts), violating generic error message principles.
+**Learning:** Returning differential error messages ("This account doesn't have a password set. Reset password." vs "Invalid email or password") allows attackers to enumerate which email addresses belong to guest-converted accounts.
+**Prevention:** Always return a generic error message (e.g., "Invalid email or password") regardless of the specific reason for authentication failure. Ensure that timing attacks are mitigated by executing dummy verifications when early returns occur.
