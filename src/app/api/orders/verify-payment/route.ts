@@ -32,26 +32,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ─── 2. SIGNATURE VERIFICATION ────────────────────────────────────────────
-    const isValidSignature = verifyRazorpaySignature(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    )
-
-    if (!isValidSignature) {
-      // Update order as failed — only if order exists
-      await prisma.order.updateMany({
-        where: { orderNumber, paymentStatus: 'PENDING' },
-        data: { paymentStatus: 'FAILED', notes: 'Payment signature verification failed' },
-      })
-      return NextResponse.json(
-        { success: false, error: 'Payment verification failed' },
-        { status: 400 }
-      )
-    }
-
-    // ─── 3. FETCH ORDER ───────────────────────────────────────────────────────
+    // ─── 2. FETCH ORDER ───────────────────────────────────────────────────────
     const order = await prisma.order.findUnique({
       where: { orderNumber },
       include: { items: true },
@@ -64,7 +45,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ─── 4. IDEMPOTENCY GUARD ─────────────────────────────────────────────────
+    // ─── 3. IDEMPOTENCY GUARD ─────────────────────────────────────────────────
     // If already SUCCESS, this is a duplicate call (webhook retry / frontend retry).
     // Return success without re-processing to prevent double stock decrement.
     if (order.paymentStatus === 'SUCCESS') {
@@ -78,7 +59,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // ─── 5. IDOR / REPLAY ATTACK PREVENTION ──────────────────────────────────
+    // ─── 4. IDOR / REPLAY ATTACK PREVENTION ──────────────────────────────────
     // Ensure the razorpay_order_id in the request matches what's stored for this order.
     // Prevents reusing a valid signature from a different order.
     if (!order.razorpayOrderId || order.razorpayOrderId !== razorpay_order_id) {
@@ -88,6 +69,25 @@ export async function POST(request: NextRequest) {
       )
       return NextResponse.json(
         { success: false, error: 'Invalid payment verification details' },
+        { status: 400 }
+      )
+    }
+
+    // ─── 5. SIGNATURE VERIFICATION ────────────────────────────────────────────
+    const isValidSignature = verifyRazorpaySignature(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    )
+
+    if (!isValidSignature) {
+      // Update order as failed
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { paymentStatus: 'FAILED', notes: 'Payment signature verification failed' },
+      })
+      return NextResponse.json(
+        { success: false, error: 'Payment verification failed' },
         { status: 400 }
       )
     }
