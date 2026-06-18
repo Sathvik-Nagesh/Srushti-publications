@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // 🛡️ SECURITY: Rate limiting to prevent order number enumeration / brute force
+    const ip = getClientIp(request)
+    const rateLimit = checkRateLimit(ip, 'orders/track', { limit: 10, windowSecs: 60 })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'ಹೆಚ್ಚು ವಿನಂತಿಗಳು. ದಯವಿಟ್ಟು 1 ನಿಮಿಷದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.' },
+        { status: 429 }
+      )
+    }
+
     const { orderNumber } = await request.json()
 
     if (!orderNumber) {
