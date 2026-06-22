@@ -110,3 +110,8 @@
 **Vulnerability:** The profile update endpoint (`POST /api/auth/me`) was previously reading the user-provided request payload and passing it directly into the database update operation without any validation, sanitization, or rate-limiting. This allowed for Stored Cross-Site Scripting (XSS) via fields like `name` and `address`, and introduced a DoS risk since users could rapidly spam profile updates.
 **Learning:** Profile update endpoints directly exposed to user input must strictly validate all incoming data against a schema to ensure type safety and prevent injections. Combining this with sanitization ensures that HTML entities or script tags are stripped before reaching the database. Rate-limiting is essential even for authenticated routes to prevent abuse or denial-of-service.
 **Prevention:** Always use Zod schemas (with `.transform(sanitize)`) to validate and clean incoming API requests before utilizing the data. Protect all mutation endpoints with `checkRateLimit`.
+
+## 2024-05-24 - Rate Limiting on Logout Endpoints
+**Vulnerability:** DoS vulnerability via rapid session clear spamming on unauthenticated logout endpoints (`/api/auth/logout` and `/api/admin/logout`).
+**Learning:** Even though logout endpoints do not require authentication (to allow users to clear client-side state when server-side sessions expire), they still consume server resources to process the request, clear cookies, and generate a response. Without rate limiting, an attacker can spam these endpoints, potentially degrading performance or causing a denial of service.
+**Prevention:** Always apply rate limiting to logout endpoints, just as with login or registration endpoints, to prevent rapid abuse while still allowing legitimate users to log out.
