@@ -110,3 +110,8 @@
 **Vulnerability:** The profile update endpoint (`POST /api/auth/me`) was previously reading the user-provided request payload and passing it directly into the database update operation without any validation, sanitization, or rate-limiting. This allowed for Stored Cross-Site Scripting (XSS) via fields like `name` and `address`, and introduced a DoS risk since users could rapidly spam profile updates.
 **Learning:** Profile update endpoints directly exposed to user input must strictly validate all incoming data against a schema to ensure type safety and prevent injections. Combining this with sanitization ensures that HTML entities or script tags are stripped before reaching the database. Rate-limiting is essential even for authenticated routes to prevent abuse or denial-of-service.
 **Prevention:** Always use Zod schemas (with `.transform(sanitize)`) to validate and clean incoming API requests before utilizing the data. Protect all mutation endpoints with `checkRateLimit`.
+
+## 2025-03-24 - High: Order Enumeration / Information Disclosure via Order Tracking
+**Vulnerability:** The `/api/orders/track` endpoint accepted `orderNumber` as input and returned full order details (items, prices, addresses) without any authentication or rate limiting. Attackers could rapidly brute-force predictible order numbers to scrape customer data.
+**Learning:** Endpoints that allow looking up sensitive or PII-containing records by a predictable identifier without authentication must have strict rate limiting applied to prevent enumeration attacks.
+**Prevention:** Always protect unauthenticated lookup endpoints with rate limiting, such as `checkRateLimit` from `src/lib/rateLimit.ts` or `src/lib/rate-limit.ts`.
